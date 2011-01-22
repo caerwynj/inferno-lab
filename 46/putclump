@@ -1,0 +1,36 @@
+#!/dis/sh
+load expr arg
+
+args := $*
+arenasdir := /mnt/arenas
+(arg
+	d+ {arenasdir = $arg}
+	'*' {echo unkown option $opt}
+	- $args
+)
+if {! ~ $#* 2} {
+	echo usage: putclump '[-d arenadir]' type file > /fd/2
+	exit
+}
+
+#builtin cd $arenasdir || raise 'usage'
+type := $1
+file := $2
+Maxclumpsize=57344
+(perm device inst owner group size rest) := `{ls -l $file}
+if {ntest ${expr $size $Maxclumpsize gt }} {
+	echo file too big > /fd/2
+	exit
+}
+
+(sha f) := `{sha1sum $file}
+tmp:=/tmp/$sha.$type
+o := `{dbm/fetch $arenasdir/idx $sha >[2] /dev/null}
+if{~ $#o 0} {
+	(perm device inst owner group offset rest) := `{ls -l $arenasdir/arena}
+	cat $file > $tmp
+	puttar  $tmp |gzip >> $arenasdir/arena
+		echo $sha $offset |dbm/store $arenasdir/idx
+}
+rm -f $tmp
+echo $sha

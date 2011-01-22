@@ -1,0 +1,5 @@
+
+awk '{print $1, NR}' < /lib/words | tr -d '' > t1
+store < t1
+fetch < /lib/words > t2
+cmp t1 t2

@@ -1,0 +1,5 @@
+#!/dis/sh
+
+for (i in `{ls}) {
+	echo '<a href="' ^ `{cleanname -d `{pwd} $i |sed 's@/usr/caerwyn@http://caerwyn.home.comcast.net@'} ^ '">' ^ $i ^ '</a>'
+}

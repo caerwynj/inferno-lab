@@ -1,0 +1,6 @@
+#!/dis/sh.dis
+# wrapper to call mplayer
+load std
+for f in $* {
+	cat $"f | os mplayer -really-quiet -
+}

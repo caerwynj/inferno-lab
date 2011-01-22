@@ -1,0 +1,25 @@
+lab 53 - granulator
+
+I want to revisit the DSP code I worked on in earlier labs 
+(3, 4, 5, 6, 7, 10, 12, and 13). The STK C++ library it's based upon has been updated since then. The latest versions include an implementation of a granulator, which 
+is something I've wanted to do for a while.
+
+Granulation samples the music at tiny intervals then plays the grains back as many overlapping voices. With granulation the music speed can be dramatically slowed down but still retain its pitch. A good example of this is  <a href ="http://www.notam02.no/9/head.htm">9 beet stretch</a> a granulation of Beethoven's 9th symphony played over 24 hours.  I often listen to it at work. It blocks out surrounding chit-chat, and it isn't as distracting to me as most music. I can't listen to pop or classical music because I get tired of the repitition or else the music might interrupt my train of though. With granulated music I can setup a playlist of three hours of barely interesting noise, but it really helps my productivity. (At home I tend to listen to Drone Zone from <a href="http://www.somafm.com/">Soma</a> which has much the same effect as granulated Beethoven.)  
+
+I want to dump the signalfs code I did last year, and go back to just implementing the DSP library, translating the STK C++ code to limbo. This means I need to re-implement the sequencer module to load Instrument modules that are based directly on the DSP library. I think signalfs didn't work out too well. In the context of this application the whole filesystem structure and converting between real and PCM byte stream didn't seem worthwhile.
+
+In this lab I include the implementation of the granulator. At the moment it's setup to read and play one channel at 22050 rate. It's a start. Here's an example of recording some noise from the microphone, granulating it and playing it back.
+<pre>
+% bind -a '#A' /dev
+% echo rate 22050 > /dev/audioctl
+% echo chans 1 > /dev/audioctl
+% scope < /dev/audio > record1
+# kill scope when done
+% granulate < record1 > record2
+% stream record2 > /dev/audio
+</pre><p>
+
+I'll be working on  instruments and a new sequencer slowly over the next 40 years.
+
+If there's an overall goal I have for this it's not to build a sequencer or synthesizer like the many already available. I'd like to build something for the computer to generate music. Implementing the STK is my starting point to learn about computer music. I like projects like 9 beet stretch, or <a href="http://eigenradio.media.mit.edu/">Eigenradio</a>. I'd like a continual stream of Inferno music generated from combinations of environmental sounds, radio, samples, keyboard playing. Because Inferno rocks!
+

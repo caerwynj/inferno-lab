@@ -1,0 +1,60 @@
+.SH NAME
+lab 18 - mux
+.SH DESCRIPTION
+Much of my recent reading has led me back to various
+implementations of a multiplexer. This is an important and powerful
+abstraction and I want to understand it better. I know very little about
+it now.
+I'd like to implement
+one in limbo, for example to multiplex the link between sam and samterm
+as suggested in the 
+.A http://cm.bell-labs.com/who/cyoung/papers/hotos-final.pdf   protium 
+paper. Hence my interest in sam in the earlier lab.
+.PP
+Here is a some of the things I've been reading recently about multiplexers.
+See if you notice a pattern.
+J. Hickey's Master thesis at MIT implements
+.A http://www.pdos.lcs.mit.edu/papers/plan9:jmhickey-meng.pdf mux
+for plan9 which puts a 9p multiplexer into user space and provides
+asynchonous IO for user threads.
+.PP
+Search 9fans for
+.A http://groups.google.com/groups?hl=en&lr=&ie=ISO-8859-1&q=multiplexing&meta=group%3Dcomp.os.plan9 multiplexing
+where there is some interesting discussion on the use of multiplexers in plan9.
+.PP
+For example, an 
+.A http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&frame=right&th=cacc1588716799cb&seekm=499f328d8dc6462edbadb7e4894feaf8%40vitanuova.com#s idea
+by rog and russ's
+.A http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&selm=C9C19233.4D3B50B5%40mail.gmail.com response
+And futher proposals by russ:
+.A http://groups.google.com/groups?q=g:thl264888595d&dq=&hl=en&lr=&ie=UTF-8&selm=70b1be7bf1a870538ecd7c40d8b83810%40plan9.bell-labs.com proposal
+for mux, 
+.A http://groups.google.com/groups?q=russ+9p+auth&hl=en&lr=&ie=UTF-8&group=comp.os.plan9&selm=C6BFF847.5A05ABE1%40mail.gmail.com&rnum=6 local
+9p multiplexing and
+.A http://groups.google.com/groups?q=russ+9p+auth&hl=en&lr=&ie=UTF-8&group=comp.os.plan9&selm=C6B52136.4C686BD7%40mail.gmail.com&rnum=2 remote
+9p multiplexing.
+.PP
+See also an implementation of a generic rpc multiplexer, libmux, in
+.A http://swtch.com/plan9port plan9port
+.PP
+The various window systems by Rob Pike, mux, 8½, and rio are multiplexers
+for their environment, the screen, mouse and keyboard.
+.PP
+The spree game engine is a multiplexer at the application level
+for the object hierarchy managed by the server.
+.PP
+And in inferno
+.B /emu/port/devmnt.c
+is the multiplexer for 9p.
+.PP
+In the original 
+.A http://www.pdos.lcs.mit.edu/papers/hotos-jeremiad.ps exokernel 
+paper the authors argued the principal
+function of an operating system is to multiplex access to hardware,
+and should do nothing else. Multiplexers are vital to providing
+9p service and in protium the authors argue they are a vital
+piece of infrastructure for distributed applications. 
+.PP
+In summary, this is something I need to learn more about.
+I'll proceed in these labs with studying the code to libmux
+and devmnt and try to implement the mux for the sam session.

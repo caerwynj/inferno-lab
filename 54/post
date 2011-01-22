@@ -1,0 +1,22 @@
+lab 54 - mux for gba
+
+Noah Evans is working on the GBA port. Inferno running on GBA and DS would be cool to see. It's exciting to think about the possibilities of running inferno on small mobile devices, especially if networking is included because that would draw on the strengths of inferno.
+
+Inferno has already been ported to at least one PDA: the ipaq. But as far as I know there are no applications designed for use on a mobile device. Running acme or wm/sh on such a thing isn't worth making the port for. A GUI dedicated to the architecture has to be developed.
+
+Lets us DS as an example, but also imagine mobie phones/PDAs, where we assume inferno networking is available to the application developer. What applications are useful to run on  the DS (games count as useful)? What's the GUI going to look like?  
+
+The device's constraints make an interesting challenge.  Given a 240x160 resolution and cursor keys and A/B/L/R keys a new GUI and style of interaction different from anything else inside inferno must be developed. 
+
+Actually, maybe something suitable does exist. As a starting point to help expore the area I've updated the mux UI, which was intended for interactive TV using an IR remote. It's seems the closest thing that inferno currently has which does not assume mouse and keyboard interaction.
+
+Mux was dropped from 4th edition. It requires the libprefab module in Inferno. To build an emu that includes do the following.
+<ul>
+<li>add the prefab.$O to the /libinterp/mkfile
+<li>add prefab to the lib and mod sections in /emu/Host/emu config file
+<li>recompile
+</ul>
+
+The files for this lab include a mkfs archive that can be extracted ontop of an inferno distribution. It's been mostly updated to 4th edition. Not everything works. But the demos show off apps that if scaled down to a smaller resolution would make a coold demo for the DS too.
+
+

@@ -1,0 +1,61 @@
+# references:
+http://del.icio.us/caerwyn/dsp
+http://www.harmony-central.com/MIDI/Doc/tutorial.html
+http://ccrma.stanford.edu/~jos/filters
+http://www.jsbach.net/midi/midi_goldbergvariations.html
+
+win
+hget http://www.jsbach.net/midi/bwv988/bwv988x.zip > bwv988x.zip
+unzip bwv988x.zip	
+audio -
+audio +
+audio rate 44100
+kill Scope|sh
+kill Midi2skini | sh
+kill Sequencer | sh
+kill IInstrument | sh
+broken | sh
+
+# generate markov music
+for f in 988-v*.mid {
+	echo now playing $f
+	synth/midi2skini $f | markov | skinate |
+	synth/sequencer {master  {fm {waveloop sinewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5} {delay 0.105 0.2} {delay 0.505 0.05}  onezero} > /dev/audio
+	sleep 1
+}
+
+Edit 0,$ x/(NoteOn|NoteOff)\n(.+)\n(.+)\n(.+)\n(.+)/ s/\n/	/g
+
+cat > skinate <<EOF
+#!/dis/sh
+# if $1 is not provided just cat stdin
+cat $1 |
+	awk '/NoteOn|NoteOff/ {nl=NR; print line; line="";}
+	{
+	if ((NR-nl)<4){
+		if (line == "") {line=$0}
+		else {line=line "	" $0} 
+	}
+}'
+EOF
+chmod u+x skinate
+
+cat 988-v03m.ski |
+synth/sequencer {master  {fm {waveloop sinewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5} {delay 0.105 0.2} {delay 0.505 0.05}  onezero} > /dev/audio
+
+synth/midi2skini 988-v02.mid |
+synth/sequencer {master  {fm {waveloop sinewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5} {delay 0.105 0.2} {delay 0.505 0.05}  onezero} > /dev/audio
+
+synth/sequencer {master  {fm {waveloop sinewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5} {delay 0.105 0.2} {delay 0.505 0.05}  onezero} <988-v01.ski > /dev/audio
+
+synth/sequencer {master  {fm {waveloop sinewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5}{delay 0.105 0.2} {delay 0.505 0.05}  onezero} <988-v01.ski | scope -o -s 10 -c2 -r 44100 > /dev/audio
+
+for n in 0 2 4 6 8{
+	n=`{mc $n + 60}
+	echo NoteOn 0.5 2 $n 74
+	os sleep 0.5
+	echo NoteOff 0.5 2 $n 74
+	os sleep 0.5
+}	| 
+synth/sequencer {master  {fm {waveloop squarewave} {adsr 0.01 0.21 0.2 0.001} } {delay 0.035 0.5} {delay 0.105 0.2} {delay 0.505 0.05}  polezero} > /dev/audio
+

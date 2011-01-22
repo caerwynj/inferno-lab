@@ -1,0 +1,4 @@
+#!/dis/sh.dis
+# wrapper to call mplayer
+
+os mplayer -really-quiet $*

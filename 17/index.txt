@@ -1,0 +1,39 @@
+NAME
+     lab 17 - fixup inferno samterm
+
+DESCRIPTION
+     There's an inferno version of samterm intended for
+     connection to remote sam running on unix/nt/plan9. It looks
+     like it hasn't been updated for the latest tkclient
+     interface. Get it working.
+
+     Simple edits to add samtk.b:/^tkcmds/ and samtk.b:/^cmd/
+
+     One of the bigger changes I made is to spawn a new proc
+     samtk.b:/^tkproc/ for each  file to handle  events from the
+     toplevel chan. This was the quickest way I could think of
+     doing it. It might be more correct to create arrays of
+     channels like those already in samterm.m:/Context:/ but that
+     seemed like a lot more work.
+
+     I use the idiom of returning the pid samtk.b:711 so I can
+     kill the proc when the file is removed, otherwise the
+     windows would be left hanging around. I added the pid to
+     samterm.m:/pid/
+
+     Menus were placed wrongly when middle or right clicking in
+     an edit window. Menu(9) uses post command and takes x y
+     coords. Read bind(9) it should take %X %Y so placement is
+     relative to system screen instead of edit window.
+     samtk.b:51,50
+
+     Cut doesn't work. Or rather, paste doesn't work once I've
+     done a cut.
+
+CONLUSION
+     Mostly works. I tried some simple edits, opening and closing
+     files. Mount cmd(3) from different machines to get remote
+     connections to sam. All files names are relative to the
+     remote sam of course, not the inferno namespace.
+
+                         Inferno Manual

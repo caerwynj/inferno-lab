@@ -1,0 +1,36 @@
+</mkconfig
+
+TARG=\
+	mapred.dis\
+	adder.dis\
+	grep.dis\
+	sort.dis\
+	tokener.dis\
+	wordcount.dis\
+	identity.dis\
+	uniq.dis\
+	lineread.dis\
+	filter.dis\
+	worker.dis\
+
+MODULES=\
+	mapred.m\
+
+SYSMODULES=\
+	bufio.m\
+
+DISBIN=../../dis/mapreduce
+
+
+</mkfiles/mkdis
+
+install:V: $BINTARG ../../dis/mapreduce.dis
+%.install:V:	$DISBIN/%
+
+mapreduce.dis: $MODULES
+
+../../dis/mapreduce.dis: mapreduce.dis
+	rm -f $target && cp mapreduce.dis $target
+
+nuke:V:
+	rm -f ../../dis/mapreduce.dis

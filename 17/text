@@ -1,0 +1,65 @@
+.SH NAME
+lab 17 - fixup inferno samterm
+.SH DESCRIPTION
+There's an inferno version of samterm intended for connection
+to remote sam running on unix/nt/plan9.
+It looks like it hasn't been updated for the latest tkclient interface.
+Get it working.
+.PP
+Simple edits to add 
+.B samtk.b:/^tkcmds/ 
+and
+.B samtk.b:/^cmd/
+.PP
+One of the bigger changes I made is to spawn a new proc
+.B samtk.b:/^tkproc/ 
+for each  file to handle  events from
+the toplevel chan. This was the quickest way I could think of doing it.
+It might be more correct to create arrays of channels like those
+already in 
+.B samterm.m:/Context:/
+but that seemed like a lot more work.
+.PP
+I use the idiom of returning the pid 
+.B samtk.b:711
+so I can kill the proc when the file is removed, otherwise the
+windows would be left hanging around. I added the 
+.I pid
+to samterm.m:/pid/
+.PP
+Menus were placed wrongly when middle or right clicking in an edit window.
+.IR Menu (9)
+uses 
+.I post 
+command and takes 
+.I x y 
+coords.
+Read 
+.IR bind (9)
+it should take
+.I %X %Y
+so placement is relative to system screen instead of edit window.
+.B samtk.b:51,50
+.PP
+.I Cut
+doesn't work. Or rather, 
+.I paste 
+doesn't work once I've done a 
+.IR cut .
+.SH CONLUSION
+.I Mostly
+works. I tried some simple edits, 
+opening and closing files.
+Mount 
+.IR cmd(3)
+from different machines to get remote connections
+to sam. All files names are relative to the remote sam of course,
+not the inferno namespace.
+.SH FILES
+.A http://caerwyn.com/lab/17/mkfile mkfile
+.A http://caerwyn.com/lab/17/sam.b sam.b
+.A http://caerwyn.com/lab/17/samstub.b samstub.b
+.A http://caerwyn.com/lab/17/samstub.m samstub.m
+.A http://caerwyn.com/lab/17/samterm.m samterm.m
+.A http://caerwyn.com/lab/17/samtk.b samtk.b
+.A http://caerwyn.com/lab/17/samtk.m samtk.m

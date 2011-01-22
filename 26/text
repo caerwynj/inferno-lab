@@ -1,0 +1,90 @@
+.SH NAME
+lab 26 - Greenspun's rule
+.SH DESCRIPTION
+Let me state up front, I do not know much about lisp.
+I've always been aware of it but never saw it's benefits
+so never used it. However, recently I've begun to
+read more about it, particularly the 
+.A http://www.paulgraham.com/articles.html essays 
+by Paul Graham, and his
+.A http://www.paulgraham.com/onlisp.html book
+.I On Lisp
+(which I'm still reading, on and off).
+I went a bit further and read Steele and Sussman's 
+.A ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-453.pdf paper
+.I The Art of the Interpreter.
+Also, as a symptom of my
+.I Mathematica
+envy I became curious about symbolic programming languages,
+computer algebra systems, and how these are based on lisp dialects.
+I started playing with
+.A http://maxima.sourceforge.net/ Maxima
+and 
+.A http://www.xs4all.nl/~apinkus/yacas.html yacas
+and also
+.A http://http.cs.berkeley.edu/~fateman/ Mockmma
+.PP
+And so I think I finally 
+.I got
+what lisp was about. (I still have much more reading to do.
+It's funny how a large and rich subculture within computer science suddenly
+opens up to you when you read about its core language. 
+I have to ask myself, How could I not have noticed this for so long?
+The same surprise occurred to me
+when reading about smalltalk. It all makes me feel quite stupid and parochial.)
+.PP
+As an exercise in understanding lisp better I turned
+Inferno shell into a lisp dialect. I wrote a builtin module 
+that provides an eval command and the seven primitive
+operators: quote, atom, car, cdr, eq, cons and cond.
+.PP
+I followed approximately the code
+in Paul Graham's
+.A http://www.paulgraham.com/rootsoflisp.html paper
+.I The Roots of Lisp,
+and the interpreters described in the Steele and Sussman paper.
+.EX
+% load ./lisp0.dis
+% eval {atom `a}
+t
+% eval {atom `{a b c}}
+nil
+% eval {car `{a b c}}
+a
+.EE
+Functions can be defined by assigning to a variable
+in shell. Scope within eval is dynamic.
+.EX
+subst={{x y z} 
+	{cond {{atom z} 
+		   {cond {{eq z y} x} 
+			    {`t z}}}
+		{`t {cons {subst x y {car z}}
+			      {subst x y {cdr z}}}}}}
+
+% eval {subst `m `b `{a b { a b c} d} }
+{a m {a m c} d}
+.EE
+The backquote is used as an abbreviation for
+the
+.I quote
+primitive.
+.PP
+In the builtin I hijack the parse tree and read or transform it
+for each primitive operator. I also use the shell Context
+as my symbol table for function parameters, definitions
+and variable values.
+.SH CONCLUSION
+The attached file is the first of a few versions I'll provide
+as I add more features as described in Steele and Sussman,
+in particular lexical binding.
+.PP
+I wonder whether there is more value to having a dialect
+of lisp within the shell or whether a proper lisp implementation
+like scheme should be linked into the inferno VM or written in limbo.
+The shell already has a good interface to the whole system and mixing
+programming paradigms may have advantages. The problem
+is we may realize Greenspun's rule by being ad hoc, informally specified,
+bug ridden and slow.
+.SH FILES
+.A http://caerwyn.com/lab/26/lisp0.b lisp0.b

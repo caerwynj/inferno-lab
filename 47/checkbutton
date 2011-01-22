@@ -1,0 +1,10 @@
+run /lib/sh/win
+load expr
+tkmkwin checkbutton
+chan cbut
+tk namechan $wid cbut
+x checkbutton .cb -variable stat -command {send cbut stat}
+x pack .cb
+x update
+onscreen place
+{while {} {tk $wid variable ${recv cbut} } }&

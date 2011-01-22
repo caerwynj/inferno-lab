@@ -1,0 +1,13 @@
+lab 56 - cut & paste
+
+this work includes some enhancements for running inferno hosted on windows.
+
+these are small details, but do seem to make a difference.
+
+first is cut & paste between host and inferno. I copied the code from drawterm to do this. the file <b>/dev/snarf</b>
+contains the windows clipboard. typically one would say <b>bind /dev/snarf /chan/snarf</b> and everything works just great.
+
+second is window resizing. in this case the host window is resized but the inferno windows all stay the same. but this still improves it. it's nice to be able to resize the window.  however, for this to work the toolbar needs to be moved to the top instead of the bottom of the screen.
+
+finally, i added <b>/dev/fullscreen</b>. writing anything to the file cases inferno to toggle fullscreen mode. 
+

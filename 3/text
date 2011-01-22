@@ -1,0 +1,117 @@
+.SH NAME
+lab 3 - create a filesystem, wavefs, that
+serves a looped waveform.  This is our
+staring point for playing with DSP.
+.SH SETUP
+Inferno 4th edition release 20040830. Using
+.IR styxservers (2),
+.IR audio (3),
+.IR audio (6).
+and Synthesis Toolkit in C++
+.A http://ccrma.stanford.edu/software/stk stk.
+Emu is running hosted on Windows XP.
+(I haven't gotten the sound figured out yet using esd.)
+.SH DESCRIPTION
+I've been looking for tools to experiment with DSP.
+The synthesis toolkit has a good all round collection 
+of DSP routines and the code is easy enough to read.
+I wanted this "sound workbench" well integrated with inferno.
+Where possible make the resources files or file2chans.
+.PP
+The first step was to make a sound source; an oscillator.
+For this I created a file server that serves two files
+.IP
+.EX
+/ctl
+/data
+.EE
+.PP
+I started with the sample code from
+.IR styxservers-nametree (2).
+The server is given a raw audio file
+to loop. I took the example raw files included
+in the STK distribution. These are 16bit mono,
+big-endian two's complement.
+.PP
+The data file served is an unlimited stream of
+data in 16bit mono, little-endian, two's complement
+suitable for streaming to
+.B /dev/audio
+.IP
+.EX
+% mkdir /mnt/dsp
+% mount {wavefs sinewave.raw} /mnt/dsp
+% echo rate 22050 > /dev/audioctl
+% echo chans 1 > /dev/audioctl
+% read 40000 < /mnt/dsp/wave > /dev/audio
+.EE
+.PP
+Reading the ctl file describes attributes
+of the sound file, similar to 
+.B /dev/audioctl
+Change attributes, such as pitch, by writing to 
+.IR ctl . 
+For example to create a sinewave rising in pitch
+.IP
+.EX
+{for (i in `{seq 300 10 700}) {
+	echo pitch $i > /n/dsp/wavectl; 
+	read 4000 < /n/dsp/wave }
+}> /dev/audio
+.EE
+.PP
+.B seq 
+is a port of the plan9 command.
+.PP
+I made some helper programs to look at the wave
+form. 
+.IP
+.EX
+% read < 100 /mnt/dsp/wave |pcm |gr
+.EE
+.PP
+The
+.B ffts
+doesn't seem to work, or I misunderstand how to use it.
+.SH CONCLUSION
+These are the final versions:
+.A http://caerwyn.com/lab/3/pcm.b pcm.b
+.A http://caerwyn.com/lab/3/gr.b gr.b
+.A http://caerwyn.com/lab/3/wavefs.b wavefs.b
+.A http://caerwyn.com/lab/3/ffts.b ffts.b
+.A http://caerwyn.com/lab/3/seq.b seq.b
+And here is the sinewave from the STK package.
+.EX
+.A http://caerwyn.com/lab/3/sinewave.raw sinwave.raw
+.EE
+Given the above I have a model to build a family of
+fileservers. Each serves a 
+.I ctl
+and 
+.I data
+file. 
+Reading from 
+.I data
+always reads the sound samples in a format suitable
+for
+.B /dev/audio
+and writing to
+.I ctl
+controls the effect, filter, or oscillator.
+.PP
+The filesystems can be layered. So a filter
+is started by giving it as parameter the
+wave file
+.IP
+.EX
+% mount {wavefs sinewave.raw} /mnt/dsp
+% mount {lowpfs /mnt/dsp/wave} /mnt/dsp
+.EE
+.PP
+And so on.
+It'll be interesting to see how layering filesystems
+on a larger scale works out. 
+A patch bay of filesystems may be required.
+.PP
+This is also an excuse to learn about DSP. 
+

@@ -1,0 +1,23 @@
+</mkconfig
+
+TARG=\
+	eval.dis\
+	xy.dis\
+	xylib.dis\
+	mount.dis\
+	dial.dis\
+	void.dis\
+	auth.dis\
+	styxmon.dis\
+	styxpersist.dis\
+
+
+MODULES=\
+	xylib.m\
+
+SYSMODULES=\
+	sys.m\
+
+DISBIN=/dis/xy
+
+</mkfiles/mkdis

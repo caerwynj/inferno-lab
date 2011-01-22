@@ -1,0 +1,86 @@
+
+		BLOCK
+	SEQ
+word1	SEQ
+	word2	word3
+
+we want to end with a list (a b c)
+
+
+if left and right are not SEQ or ADJ make a new list
+of left :: right :: nil.
+
+if left is not SEQ or ADJ and right is SEQ or ADJ
+append left to right
+
+if right is not SEQ ....
+prepend right to left.
+
+if left and right are lists
+join the lists. append the left list to the right list
+right :: left
+
+
+islist() := ntype == n_ADJ || ntype == n_SEQ
+
+if (islist(left) && islist(right))
+	;
+else if (islist(left))
+	;
+else if (islist(right))
+	;
+else
+	Sexp.List(left :: right :: nil)
+
+
+stack of list
+
+top level
+
+push list onto stack.
+with each new block we push a list onto the stack.
+
+what happens when we pop.
+we pop the list and embed it in a Sexp and push that
+onto the head of the list at the new toplevel.
+
+Everything is an expression
+
+Integer[1243]
+Real[123.43]
+Rule[a,b]
+List[a,b,c]
+
+
+We can define a module load function for the
+sh lisp, and define the primop functions to
+call the builtins which are added to
+an internal symbol table. very similar
+to the shell builtin mechanism.
+Then all the math ops and everthing else
+can be defined outside the core evaluator.
+
+
+Need proper handling of tail recursion
+
+eval {define {subst x y z} 
+	{cond {{atom z} 
+		   {cond {{eq z y} x} 
+			    {`t z}}}
+		{`t {cons {subst x y {car z}}
+			      {subst x y {cdr z}}}}}}
+
+eval {subst `m `b `{a b { a b c} d} }
+
+(a m (a m c) d)
+
+eval {define {map f op id l}
+   {cond {{eq l `{} } id}
+	    {`t {op {f l}
+		{map f op id {cdr l}}}}}}
+
+
+why doesn't this work
+
+eval {{lambda {x} {cons x `{b}}} `a}
+

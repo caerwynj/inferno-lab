@@ -1,0 +1,72 @@
+# emu sh initialisation here
+load std
+fn ps {
+	sed '' /prog/*/status |sort -n
+}
+
+fn broke {
+	sed -n '/broke/s/^ +([0-9][0-9]*) +(.*)/echo kill >\/prog\/\1\/ctl # \2/p' /prog/*/status
+}
+
+fn kill {
+	sed -n '/' ^ $1 ^ '/s/^ +([0-9][0-9]*) +(.*)/echo kill >\/prog\/\1\/ctl # \2/p' /prog/*/status
+
+}
+
+fn winstart {
+	args := $*
+	dial -A tcp!localhost!17890 {echo $args}
+}
+
+fn netstat {
+	for i in /net/*/[0-9] {echo  $i `{cat $i/status $i/local $i/remote}}
+}
+
+fn xp {
+	cmd=$1
+	args=${tl $*}
+	cat $args > /tmp/xp.${pid}
+	$home/limbo/lexer/edit $cmd /tmp/xp.${pid}
+	rm -f /tmp/xp.${pid}
+}
+
+fn lookman {
+	look $* /man/index | sed 's/^.*	//' |sort |uniq |sed 's;/man/;;
+s;(.*)/(.*);man \1 \2 # \2(\1);'
+}
+
+fn who {
+	ps | sed '/Broken/d
+	/Exiting/d
+	s% +[0-9]+ +[0-9]+ +([a-zA-Z0-9]+) +.*$%\1%' | sort | uniq
+}
+
+fn src {
+	file := $1
+	if {ftest -e $file} {
+		mdb $file '$s'
+	} {ftest -e $file.dis} {
+		mdb $file.dis '$s'
+	} {ftest -e /dis/$file} {
+		mdb /dis/$file '$s'
+	} {ftest -e /dis/$file.dis} {
+		mdb /dis/$file.dis '$s'
+	} 
+}
+
+fn calendar {
+smon:='s/Jan/01/
+	s/Feb/02/
+	s/Mar/03/
+	s/Apr/04/
+	s/May/05/
+	s/Jun/06/
+	s/Jul/07/
+	s/Aug/08/
+	s/Sep/09/
+	s/Oct/10/
+	s/Nov/11/
+	s/Dec/12/'
+	(d m md tim tz yr) := `{date |sed $smon}
+	$home/limbo/lexer/edit ',x/(.+\n)+/ g/('^ $yr ^')?'^ $m ^ $md  ^ '/p' calendar
+}

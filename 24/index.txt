@@ -1,0 +1,94 @@
+NAME
+     lab 24 - call google api from inferno
+
+DESCRIPTION
+     I wanted to call the google api from within inferno.
+
+     I looked around to see what was available. Inferno has no
+     WSDL or SOAP support, and limited xml. However, most of the
+     SOAP messages are boiler plate, so we just need a program to
+     handle the http. The program svc/webget/webget is something
+     I hadn't noticed before. It serves a file /chan/webget which
+     we can write GET and POST messages to and read back the
+     result.
+
+     With this in mind I tried writing shell scripts to read and
+     write the SOAP messages to the google api url.
+
+     I needed to debug webget a little because the POST didn't
+     work. The changed files are attached below.
+
+     The google api download came with sample SOAP messages. I
+     inserted my key (removed from the attached files), and
+     placed the string PHRASE where the search phrase was to
+     appear. The shell script runs sed on the file replacing
+     PHRASE with the actual search phrase then writes the POST
+     message and SOAP message to /chan/webget
+     <> /chan/webget {
+     	phrase=$"*
+     	x := "{sed 's/PHRASE/' ^ 
+     		$phrase ^'/' doGoogleSearch.xml}
+     	size=${len $x}
+     	echo POST∎ ^ 
+     		$size ^ 
+     		∎0∎http://api.google.com/search/beta2 ^
+     		∎text/xml∎no-cache >[1=0]
+     	echo -n $x >[1=0]
+     	getlines {f = ${unquote $line}
+     		if { ~ ${hd $f} OK} {
+     			f = ${tl $f}
+     			read ${hd $f}
+     			exit
+     		} {exit}
+     	}
+     }
+     The first line read from /chan/webget is the result status.
+     Either 
+     OK length reqid type url
+     or
+     ERROR reqid message
+     I use the length returned from the OK message to read the
+     whole rest of the message to standard output.
+
+     To build copy the limbo *.[bm] files to /svc/webget/webget
+     and mk install. The google.sh and spell.sh files should be
+     changed to point to your .xml soap messages. Change the key
+     in the .xml files to your key. Then for example,
+     % svc/webget/webget&
+     % spell britany spars
+     britney spears
+     % 
+     % fn g {google $* |grep URL:}
+     % g plan9
+     URL: http://www.cs.bell-labs.com/plan9dist/
+     URL: http://www.cs.bell-labs.com/wiki/plan9/plan_9_wiki/
+     URL: http://www.plan9.org/
+     URL: http://www.ecf.toronto.edu/plan9/
+     URL: http://www.ecf.toronto.edu/plan9/plan9faq.html
+     URL: http://plan9.aichi-u.ac.jp/
+     URL: http://cm.bell-labs.com/
+     URL: http://www.fywss.com/plan9/plan9faq.html
+     URL: http://plan9.att.com/
+     URL: http://www.plan9.com/
+
+     This also works through an http proxy if you configure
+     the proxy in 
+     /services/webget/config.
+
+     I piped the SOAP output from through a command
+     called
+     rss
+     which I originally wrote to parse RSS XML.
+     This just removes the markup and makes it 
+     a little easier to read.
+
+CONCLUSION
+     How easy was that! Well it could be easier. Is all that SOAP
+     boilerplate really needed? <Insert your rant against SOAP
+     here>
+
+     I wonder if SOAP becomes more common this fast and loose
+     technique will continue to fly.
+
+FILES
+                         Inferno Manual

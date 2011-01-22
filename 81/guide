@@ -1,0 +1,44 @@
+
+quick guide to get inferno emu on ds. (work in progress)
+
+# Preparation
+tar xzvf dslinux-snapshot.tar.gz 
+tar xjvf dslinux-toolchain-2007-11-03-i686.tbz -C dslinux/
+svn checkout http://inferno-os.googlecode.com/svn/trunk/ inferno-os
+
+cd dslinux
+patch --dry-run -p0 < dslinux-configs.patch
+DSLINUX=$(pwd)
+PATH=$DSLINUX/dslinux-toolchain-2007-11-03-i686/bin/:$PATH
+
+INFERNO=$DSLINUX/inferno-os
+PATH=$INFERNO/Linux/386/bin/:$PATH
+cd inferno-os
+patch --dry-run -p0 < inferno-os-ds.patch
+
+Once the toolchain and sources are set up,
+cd $DSLINUX
+make menuconfig # don't override configs
+make	# compile dslinux with the changes in dslinux-configs.patch
+
+# notes about dslinux-configs.patch
+The funcion brk/sbrk is missing as it's not supported in uClinux as there's no MMU. -> Workaround this
+Large file support is not included in default dslinux, 
+moreover there're some devices needed to interface emu with the stylus, keys and audio: /dev/{event0,mixer}
+moreover the default dslinux build is around 30 Mb, with programs as Pixil that can be replaced by emu.
+
+# Compile inferno
+INFERNO=/path-to/inferno-os
+PATH=$INFERNO/Linux/386/bin:$PATH
+cd inferno-os/ # edit mkconfig and set ROOT=$INFERNO and OBJTYPE=arm
+cd emu/Linux-fb/; 
+remove the duplicated segflush in emu/Linux-fb/screen.c.
+mk CONF'='emu-ds-arm
+
+#refs
+- dslinux and toolchain
+	http://dslinux.org/cgi-bin/moin.cgi/CompilingDSLinux
+- inferno-os with inferno-fb and tsinput*.{c,h} and audio-oss.c
+	http://inferno-os.googlecode.com/svn/trunk
+	http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-08&m=2264068
+	http://inferno-lab.googlecode.com/svn/trunk/67/emu/

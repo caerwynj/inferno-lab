@@ -1,0 +1,192 @@
+<pre><b>NAME</b>
+     Inferno emu on Palm Tungsten T3<i> (and</i><i> under</i><i> similar</i>
+     <i>palm</i><i> handhelds,</i><i> see</i><i> notes).</i>
+
+<b>DESCRIPTION</b>
+     This lab collects some personal/informal notes
+     that I took while setting up setup Inferno emu
+     running hosted on a T3, the main reasons for doing
+     this are:
+
+     1.   Wanted to experiment with <a href="http://www.vitanuova.com">Inferno</a>
+
+     2.   Get tired of the 'traditional' way of using a
+          computer and by extension a handheld (both
+          POS and Linux), and wanting to employ my time
+          in more useful things.
+
+     3.   after some time using Inferno i've noticed
+          that it has all i need, and the pieces that
+          Inferno doesn't have (ogg, mp3, etc.) can be
+          borrowed from the host OS (Linux).
+
+     The first section covers the hardware available on
+     the T3, the second section talks about how to
+     setup Linux on the T3, and finishes talking about
+     the setup of Inferno itself to perform some
+     typical tasks, which includes brief notes on how
+     to compile and run emu on T3.
+
+  <b>Hardware</b>
+     I'm going to center in the hardware that is
+     currently <a href="http://www.handhelds.org/moin/moin.cgi/PalmTungstenT3Status">supported</a> under Linux, and hence
+     available for Inferno hosted, there are some good
+     reviews about the T3 one that it's worth mention
+     is <a href="http://www.pspilot.de/ppptun3/ppptun3.html">ppptun3</a>
+
+     In summary we can use:
+
+     -    SD card support for storage
+
+     -    a nice 320x480 TFT LCD for graphics
+
+     -    audio support both for playing and recording
+
+     -    and buttons and touchscreen for input
+
+     -    networking: we have are usb (usbnet), IR (not
+          tested, but should work) and BT (not working
+          due to lack of specs).
+
+     It's important to note that T3 as the other palm
+          handhelds have reset features that are useful
+          to recover of some errors, you can read about
+          at<a href="http://www.tankerbob.com/palm/resets.htm"> resets.</a>
+
+  <b>Setting</b><b> up</b><b> Linux</b>
+  <b>Booting</b>
+     The procedure for booting Inferno can be sumarized
+     in:
+     <b>1) boot POS (default from ROM) -></b>
+     <b>2)	run Garux (from SD Card, 1st partition FAT16) -></b>
+     <b>3)		start Linux (using rootfs from 1st partition of SD Card) -></b>
+     <b>4)			start Inferno emu-fb (from a /etc/init.d/inferno script)</b>
+
+     As Garux is run from Palm OS (POS), the SD card
+     where garux is stored needs to be recognized from
+     POS, which has a FAT16, hence maximum tested SD
+     card size is 1Gb.
+
+     This 1Gb SD card can be partitioned the following
+     way,
+
+          <i>part1</i> FAT16 30Mb, to store garux and the
+          rootfs, kernel modules and other files needed
+          to boot Linux.
+
+          <i>part2</i> ext3 970Mb, to store Inferno and media
+          (audio,docs,...).
+
+     All the files and a small howto with instructions
+     on how to boot Linux on a T3 can be found at <a href="http://trac.hackndev.com/projects/palmt3/wiki/">t3</a>
+     <a href="http://trac.hackndev.com/projects/palmt3/wiki/">linux</a> On the same place there's a guide to flash
+     the SmallRom partition which holds the POS
+     bootloader, to be able to suspend/resume the T3,
+     otherwise you have to reset the handheld each time
+     you want to power off and booting again takes it's
+     time.
+
+  <b>Setting</b><b> up</b><b> Inferno</b>
+     Given the hardware available on T3 (and handhelds
+     in general) it's wise to keep the system as small
+     and simple as possible. So the hardware devices
+     are managed by the linux kernel, which provices
+     access to them through the<b> /dev/</b> devices;<b> /dev/fbX</b>
+     for the graphics frame buffer,<b> /dev/input/eventX</b>
+     for input events (touchscreen and keys) and 
+     <b>/dev/dsp</b> for audio. This devices can be managed by
+     the emu-fb version written by Alexander Syschev
+     for the iPAQ 3970 (arm) and pc platforms that was
+     posted on the inferno-list see the <a href="http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-08&m=2264059">'Inferno emu</a>
+     <a href="http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-08&m=2264059">with Linux framebuffer support'</a> message and can be
+     easily addapted to work with T3¸ see the <a href="http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-11&m=2663182">'using</a>
+     <a href="http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-11&m=2663182">Inferno on Palm'</a> message on inferno-list too.
+
+     The advantage is that you don't need an X server
+     and all it's deps on such a small device you just
+     launch the emu-fb from the console. On the
+     drawbacks are that you loose the hability to lauch
+     ps/pdf viewers like gv/xpdf, anyway i haven't
+     found gv/postscript interpreters on Familiar, i
+     guess it's too much bloated for small devices.
+
+     The audio support could be done by using the
+     legacy OSS interface, there's emulation of it from
+     ALSA, because many old programs still rely on it,
+     which i send to the inferno-list with the subject
+     <a href="http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-10&t=2432767">'devaudio for Linux'</a> so audio support can be
+     easily added.
+
+     The next thing was having a WM/GUI suitable for
+     such small screen dimensions but by using the rio
+     like <a href="http://www.caerwyn.com/ipn/2004/12/lab-19-wm.html">wm/wm</a> from caerwyn, works fine.
+
+     And creating a nice <a href="http://caerwyn.com/lab/67/user/guide">guide</a> file with the frequently
+     launched commands, i.e. play music, raise/lower
+     audio volume, toggle backlight, etc.
+
+     This guide can be opened with acme -c1 -l
+     acme.dump, started by default from <a href="http://caerwyn.com/lab/67/user/lib/wmsetup">wmsetup.</a>
+
+     Only recommendation is that to take advantatge of
+     the small screen space available is a good
+     practice to keep the names of files/directories
+     short so they can fit in one like in the Acme
+     editor. And a nice thing is that you can even do
+     snarfing and chording easily with the stylus.
+
+     If you haven't heard about rio, acme and plumber
+     before, take a careful read to the Plan 9 papers
+     in the REFERENCES section.
+
+  <b>Experiments</b>
+     <i>9pod:</i> (kind of 9pod, like it was said some time
+     ago on 9fans.)
+
+     <i>voip:</i> 	one thing that i would like to be able to
+     do is to be able to share 	the audio device '#A'
+     with a remote computer (for start just one), this
+     will 	allow me to be able to talk with other
+     people, over the net, i know that there're 	are a
+     lot of projects out there that already give you
+     that, but i wanted something 	simple thus, the
+     most simple that i could think was:
+     <b>styxlisten tcp!firulillo!styx export '#A';</b>
+     <b>mount tcp!firulillo!styx /n/remote;</b>
+     <b>stream /dev/audio /n/remote/audio;</b>
+
+     	The above example sort of works, only drawback is
+     that sound is played slow 	on a 100Mb LAN
+     connection between two Linux hosts running Inferno
+     emu. 	So the next refinement could be to compress
+     the data before sending 	it and decompress on
+     receiving it:
+     <b>cat /n/local/home/salva/.mpd/music/misc/mymymy.mp3 | </b>
+     <b>	os madplay -Q -o wave:- - | wav2iaf | auplay -</b>
+
+<b>NOTES</b>
+     1.   A list of handhelds's running Linux, the
+          status of the ports and hardware list can be
+          consulted at <a href="http://www.handhelds.org/moin/moin.cgi/SupportedHandheldSummary">supported handhelds</a>
+
+     2.   This talk is about T3, changes to run Inferno
+          emu on another handheld model will be left
+          intentionally as an exercise to the
+          interested reader.
+
+<b>REFERENCES</b>
+     <a href="http://www.chunder.com/text/ididit.html">ididit</a>
+
+     <a href="http://www.hackndev.com/">hackndev</a>
+
+     <a href="http://www.handhelds.org/">handhelds</a>
+
+     <a href="http://handhelds.org/download/projects/toolchain">toolchains</a>
+
+     <a href="http://plan9.bell-labs.com/sys/doc/index.html">Plan 9 papers</a>
+
+<b>FILES</b>
+     <a href="http://caerwyn.com/lab/67">67</a>
+
+                    Inferno Manual
+</pre>

@@ -1,0 +1,17 @@
+</mkconfig
+
+TARG=\
+	edit.dis\
+	regx.dis\
+	ecmd.dis\
+	xp.dis\
+
+MODULES=\
+		regx.m\
+		edit.m\
+		ecmd.m\
+		xp.dis\
+
+SYSMODULES=
+
+</mkfiles/mkdis

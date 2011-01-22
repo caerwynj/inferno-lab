@@ -1,0 +1,12 @@
+cp /appl/wm/sam* .
+
+,x/tkclient->tkcmds/c/tkcmds/
+
+wm/man -f text
+
+man2html text > post.html
+man -f text > index.txt
+
+mk install
+
+sam

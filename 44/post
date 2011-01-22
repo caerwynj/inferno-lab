@@ -1,0 +1,10 @@
+<div id="post">
+<h2>NAME</h2><P>
+lab 44 - acme irc client
+<h2>NOTES</h2><p>
+I ported an IRC client originally taken from Russ Cox's code http://swtch.com/irc.tgz written for the Plan9 Acme.
+<p>
+The code is currently usable, but there is probably plenty of debugging to do. I'll update the code to this lab as I add fxes and append notes to this lab entry with changes made.
+
+
+</div>

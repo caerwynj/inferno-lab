@@ -1,0 +1,34 @@
+#!/dis/sh -n
+load expr file2chan arg
+
+blocksize := 1024
+pointersize := ${expr $blocksize 1219 x}
+
+# assumes Roottype => Pointertype1 => Pointertype0
+# and block aligned read/writes i.e. disk/kfs
+
+args := $*
+arenas := /mnt/arenas
+(arg
+	d+ {arenas = $arg}
+	'*' {echo unkown option $opt}
+	- $args
+)
+
+score := $1
+
+Roottype1 := `{getclump -d $arenas $score}
+#Pointertype1 := `{getclump -d $arenas $Roottype1}
+Pointertype1 := $Roottype1
+
+echo $#Pointertype1
+
+file2chan /chan/dump {
+	offset := ${rget offset}
+	pi := ${expr $offset $pointersize / 1 +}
+	rem := ${expr $offset $pointersize %}
+	line := ${expr $rem $blocksize / 1 +}
+	pscore := ${index $pi $Pointertype1}
+	score := `{getclump -d $arenas $pscore |sed -n $line^p}
+	getclump -d $arenas $score |putrdata
+} {}

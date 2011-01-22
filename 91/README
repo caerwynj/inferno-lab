@@ -1,0 +1,16 @@
+This lab attempts to create a libframe that uses libfreetype.
+
+http://freetype.sourceforge.net/freetype2/docs/tutorial/step1.html
+
+testfreetype  -  demo of libfreetype from vitanuova
+dbft2 - simplified demo of freetype module
+
+term & frame - demo of frame module using standard inferno fonts
+term2 & frame2 - demo of frame module using freetype fonts
+menuhit.* - support files for term demos
+
+graph2.b - modification of /appl/acme/graph.b to support freetype
+
+layout.b - modification of /appl/charon/layout.b to support freetype
+ ftfont.* - support files for charon mods
+ 

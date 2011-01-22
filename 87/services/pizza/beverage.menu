@@ -1,0 +1,15 @@
+beverage.menu:0:0:640:480:beverage.bit
+sm-coke:175:306:234:332:tick.bit
+sm-diet:175:334:234:362:tick.bit
+sm-root:175:366:234:392:tick.bit
+sm-7-up:175:394:234:420:tick.bit
+md-coke:252:306:312:332:tick.bit
+md-diet:252:334:312:362:tick.bit
+md-root:252:366:312:392:tick.bit
+md-7-up:252:394:312:420:tick.bit
+lg-coke:330:306:400:332:tick.bit
+lg-diet:330:334:400:362:tick.bit
+lg-root:330:366:400:392:tick.bit
+lg-7-up:330:394:400:420:tick.bit
+main.menu:100:424:200:446:main-sel.bit
+show.menu:206:424:350:446:show-sel.bit

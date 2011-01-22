@@ -1,0 +1,14 @@
+#!/dis/sh -n
+
+header := {
+pctl newpgrp
+run /usr/caerwyn/limbo/squeak/tklib
+newwidget  listbox
+}
+
+$header &
+
+#default config
+sleep 1
+echo -n .s insert end item1 item2 item3 > /chan/tk.$apid
+echo /chan/tk.$apid

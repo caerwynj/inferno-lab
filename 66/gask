@@ -1,0 +1,32 @@
+#!/dis/sh.dis
+# prepends "http://" to google results, so happy plumbing! (or use htmlfmt -u)
+# queryvars: q,num,oe,num,btnI
+# gcmds: define,related,link,...
+load std arg
+
+fn usage() { echo 'gask [-l|-p] [service] query'; exit }
+lflag := pflag := 0;
+args := $*
+(arg
+	lp { $opt ^ flag = 1 }
+	'*' {usage}
+	 - $args
+)
+
+srv=search
+if {~ ${hd $args} search images groups news scholar codesearch} {
+	srv=${hd $args}; args=${tl $args};
+}
+if {~ $lflag 1}{ # feeling lucky
+	args = ($args '&btnI')
+}
+q=`{echo $args | sed 's/ /+/g'}
+qurl='http://www.google.com/'^$srv^'?&oe=utf8&q='^$"q^'&'
+
+#echo $srv; echo $q; echo $qurl;
+if {~ $pflag 1}{
+	plumb $qurl
+}{
+	hget $qurl | 
+	os htmlfmt | sed '/Result Page/,$d; s|^www|http://www|'
+}

@@ -1,0 +1,23 @@
+#!/dis/sh script
+
+menu ''	''
+menu Kbd			{ wm/keyboard }
+menu Halt		{ wmrun shutdown -h }
+
+# rawdbfs $home/cal /mnt/schedule
+# wmrun wm/calendar $home/cal &
+
+if {test ${index 3 `{cat /chan/wmrect}} -le 320}{
+	acme-font=/fonts/lucidasans/euro.8.font 	# default
+	acme-Font=/fonts/charon/plain.normal.font 	# read
+}{test ${index 3 `{cat /chan/wmrect}} -le 1280}{
+	acme-font=/fonts/fixed/unicode.8x13.font	# code
+	acme-Font=/fonts/lucm/unicode.9.font
+}{
+	acme-font=/fonts/fixed/unicode.9x15.font	# code
+	acme-Font=/fonts/lucm/unicode.8.font
+}
+
+#wmrun auth/factotum
+wmrun wm/keyboard -t
+wmrun acme -a -c1 $home/guide & 

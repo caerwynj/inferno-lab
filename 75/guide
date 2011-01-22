@@ -1,0 +1,41 @@
+mk
+mk post.html
+mk clean
+
+# the idea is that scope looks ≃ like:
+http://www.tsc.uc3m.es/docencia/SyC/Fourier/SerieFourier.html
+
+# refs:
+http://en.wikipedia.org/wiki/Fourier_series
+http://en.wikipedia.org/wiki/Fourier_transform
+http://www.gii.upv.es/personal/gbenet/doctorat
+http://www.gii.upv.es/personal/gbenet/libro%20dsp_guide/ch8.pdf
+
+hget http://cs.marlboro.edu/term/fall01/computation/fourier/fft_c_code/fft.zip
+gunzip < fft.tar.gz > /n/local/tmp/fft.tar
+Local tarfs /n/local/tmp/fft.tar fft
+Local unmount fft/
+scope -c1 -r 22050 </n/local/tmp/bachfugue.pcm
+scope -o -s 25 -c1 -r 22050 </n/local/tmp/bachfugue.pcm > /dev/audio
+scope -o -c1 -r 22050 </dev/audio > /dev/audio
+broken
+kill Scope|sh
+kill FFT|sh
+audio rate 22050
+audio out vol 50
+for i in `{seq 0 10 630} {
+	echo '0 + 2 * sin ( 5 * '^ $i ^'* (2*Pi/360))' | mc
+} > test
+wc test
+ffttest <test >test.res
+wc test.res
+
+# locate & debug alignment exceptions in Xscale (ARM)
+/proc/cpu/alignment by default set to 3
+http://www.simplemachines.it/arm-linux/book/afaq.html
+http://www.nslu2-linux.org/wiki/Info/Alignment
+http://lecs.cs.ucla.edu/wiki/index.php/XScale_alignment
+
+#toolchain
+http://hri.sourceforge.net/tools/jtag_faq_org.html
+http://gdb-jtag-arm.sourceforge.net/

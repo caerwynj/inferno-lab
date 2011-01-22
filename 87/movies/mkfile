@@ -1,0 +1,14 @@
+<../mkfile
+
+TARG=build
+BIN=.
+
+OFILES=	build.$O\
+
+LIB=	../lib9/lib9.a$O\
+
+HFILES=	u.h libc.h
+
+<../mkone
+
+CFLAGS=-N -I. -I../include  -A -A -DBIGEND -DSYSV -DNEEDPROTO

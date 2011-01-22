@@ -1,0 +1,14 @@
+statfs
+snoopfs
+createfs
+crossfs
+gzipfs
+regexfs
+lnfs		(long name fs)
+cachefs
+
+
+styxmon interposes between filesystems.
+Can be used for the above as a starting point.
+/appl/cmd/styxmon.b
+http://www.filesystems.org/

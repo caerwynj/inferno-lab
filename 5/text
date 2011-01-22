@@ -1,0 +1,160 @@
+.SH NAME
+lab 5 - signalfs version 2; generalize and enhance the signalfs still further. 
+Create a server that can load all the signal models,
+and each module has a connection directory
+per converstation.
+.SH SETUP
+Inferno 4th Edition 20040830.
+.SH DESCRIPTION
+The directory hierarchy presented by signalfs is
+now similar to 
+.IR ip (3).
+.nf
+.IP
+.B /ctl
+.BI / module /clone
+.BI / module / n
+.BI / module / n /ctl
+.BI / module / n /data
+.PP
+.fi
+One more requirement is that the server must be
+recursive, a signal module must be able to open
+other files served by the same signalfs.
+(The
+.IR ds (3)
+device does this.)
+.PP
+To illustrate, say we implement a module to return
+a Fibonacci number.
+I use the 
+.I clone
+mechanism so each client has it's own connection to
+the module. To read the fifth Fibonacci number
+.IP
+.EX
+{
+	d=/mnt/modfs/`{read 10}
+	echo 5 >[1=0]
+	read 10 < $d/data 
+}<> /mnt/modfs/clone
+.EE
+.PP
+The module itself uses the ctl message to determine whether
+it should open a connection to 
+.I clone 
+and read the
+Fibonacci number for the number - 1. If the ctl number is 0
+it returns 1, ending the recursion.
+.PP
+The module is a single function. The parameters are controlled
+by the 
+.I ctl
+file, and the result is read from
+.IR data .
+.PP
+The fileserver framework manages the clone and
+naming and loading of modules.
+I used
+.B wmexport.b
+as the starting point for building a framework.
+.SS "2004/0918 21:28
+.PP
+The ip(3) device comes close to what I want.
+A directory for each proto (module); a clone
+below that, and a numbered directory for each
+instance. The numbered directory has ctl and
+data. The numbered directories aren't removed
+but keep state variable tracking whether in use.
+.PP
+What if we get a read on the data file from a process
+other than the opening process? We want to deny this.
+.SS "2004/0919 16:51
+Writing and debugging.
+.SS "2004/0919 20:08
+Is this something like spree, where the loaded module is
+an
+.IR engine ?
+.SS "2004/0919 22:41
+Given the layout of signalfs
+a filter is given the directory for the source module.
+The filter opens the clone file to get a connection.
+It then has exclusive access to that module.
+The filter exposes the same interface, so I could
+create multiple connections to that filter.
+But what if I want to alter the sinewave that
+the filter is reading from? Do I want shared write
+access to the sine ctl file? I'd need to know the
+connection the filter was reading from. No. 
+The filter is in complete control of it's source.
+.SS "2004/0921 22:01
+Writeup and debugging.
+.PP
+.I Signalfs
+now knows nothing of the format of the signal.
+The signal is responsible for converting arrays of
+real to bytes.
+The signal interface has changed
+.IP
+.EX
+Signal: module {
+	configstr: string;
+
+	init:	fn(args: list of string);
+	config: fn(s: string): string;
+	read: fn(n: int): array of byte;
+};
+.EE
+.PP
+.I Config
+returns an error string or nil if successful.
+Here's an example setup
+.IP
+.EX
+% mkdir mnt
+% signalfs mnt
+% echo add /usr/caerwyn/lab/5/wave.dis wave > mnt/ctl
+% lc mnt
+ctl   wave/
+% <> mnt/wave/clone {
+	d=mnt/wave/`{read 10}
+	echo file /usr/caerwyn/lab/3/sinewave.raw >[1=0]
+	read 8 < $d/data | pcm
+}
+19788
+16364
+12685
+8807
+.EE
+.PP
+.SH CONCLUSION
+Here is the current version. 
+.A http://caerwyn.com/lab/5/signalfs.b signalfs.b,
+.A http://caerwyn.com/lab/5/signal.m signal.m
+and the sinewave module again
+.A http://caerwyn.com/lab/5/wave.b wave.b
+.PP
+Once this is debugged, I've reached the point where I can write all the
+signal modules. I still have no real plan for a sequencer. It may end
+up being shell script. I haven't tested the recursiveness yet.
+.PP
+I could have implemented signals using
+.IR file2chan (2)
+except I am supporting the more complicated interface
+of clone, ctl and data. I hope it will be
+worth it having all the modules organized together under
+one server.
+.PP
+.I Tickfs
+might be better adapted to this interface. The ctl message
+for lookup are written to the ctl file, and I
+can control permission on the data file.
+.PP
+At some point I should provide a brief taxonomy of fileservers.
+E.g., as represented by ip(3), ds(3), file2chan, kfs (traditional), env(3), etc.
+Traditional file access from underlying storage (kfs, tarfs);
+Conversational object access (draw); Shared object access to virtual storage (env);
+Device interface (eia, audio); Single file but connection specific output: (using fid).
+
+.SH REFERENCES
+http://cbbrowne.com/info/fs.html

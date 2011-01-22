@@ -1,0 +1,47 @@
+</mkconfig
+
+TARG=\
+	connect4.dis\
+	gamed.dis\
+	games.dis\
+	mux.dis\
+	othello.dis\
+	mux0.dis\
+	board0.dis\
+	board1.dis\
+	board2.dis\
+	board3.dis\
+	board4.dis\
+	board5.dis\
+	board6.dis\
+	board7.dis\
+	board8.dis\
+
+MODULES=\
+	mux.m\
+
+SYSMODULES=\
+	bufio.m\
+	devpointer.m\
+	draw.m\
+	html.m\
+	ir.m\
+	keyring.m\
+	prefab.m\
+	math.m\
+	security.m\
+	srv.m\
+	string.m\
+	sys.m\
+	url.m\
+
+DISBIN=../../dis/mux
+
+</mkfiles/mkdis
+
+install:V:	$BINTARG
+%.install:V:	$DISBIN/%
+%.installall:V:	$DISBIN/%
+
+$DISBIN/%:	%.sh
+	cp $stem.sh $target && chmod a+rx $target

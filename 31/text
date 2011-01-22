@@ -1,0 +1,50 @@
+.SH NAME
+lab 31 - accumulator generator in limbo--and beyond
+.SH DESCRIPTION
+In lab 25 I tried to tackle the problem of writing an accumulator
+generator in the languages available on inferno. I blithely 
+assumed it wasn't possible in Inferno. I'm happy
+to say I was wrong. Rog emailed me the answers, so
+I'm just reporting what he gave me. But it was very
+enlightening, a big Aha!, and made me view limbo in a different
+way.
+.PP
+funny thing is, it *is* possible in limbo, if you take a somewhat
+more liberal definition of the term "function".
+recall that a limbo channel can act like a function:
+e.g.
+       c: chan of (int, chan of string);
+can represent a function that takes an int and returns a string
+(through the reply channel).
+
+       c <-= (99, reply := chan of string);
+       sys->print("result is %s\n", <-reply);
+
+i've attached a Limbo version of the accumulator-generator that uses
+this kind of thing.  i'll leave it to you to decide if this fulfils
+Greenspun's rule or not!
+
+> It doesn't strictly pass the test because you are passing an integer
+> not a number.
+
+ahhh but it can if i want it to!
+(i really like inferno's parametric types...  note the accgen and acc
+functions could be in an external module).
+
+.PP
+I had to go back and read Doug Mcilroy's
+Squinting the Power Series. I ported the code writing in newsqueak
+to inferno, to absorb the lessons from this. Studying the paper and the code
+is well worth it.
+.PP
+Where from here?
+I tried to apply what I'd learned. I created a tool
+for querying a little database. The query is made 
+by chaining processes in a similar manner as the power series
+code. I'll be posting this code at a later time, as I hope to incorporate
+it into the folkonomy fs.
+
+.SH SEE ALSO
+Communicating Sequential Proccesses
+Squinting the Power Series
+.SH FILES.

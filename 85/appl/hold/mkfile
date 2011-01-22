@@ -1,0 +1,39 @@
+</mkconfig
+
+TARG=\
+	applylog.dis\
+	holdfs.dis\
+
+SHTARG=\
+#	checkout.sh\
+	branch.sh\
+	commit.sh\
+	scan.sh\
+	stow.sh\
+	putclump.sh\
+	getclump.sh\
+	reset.sh\
+	changes.sh\
+	tarball.sh\
+	difflog.sh\
+	
+MODULES=\
+	/appl/cmd/install/logs.m\
+
+SYSMODULES=\
+	arg.m\
+	bufio.m\
+	sys.m\
+	draw.m\
+	bufio.m\
+	string.m\
+
+DISBIN=../../dis/hold
+
+</mkfiles/mkdis
+
+SHFILES=${SHTARG:%.sh=$DISBIN/%}
+install:V:	$SHFILES
+	
+$DISBIN/%:	%.sh
+	cp $stem.sh $target && chmod a+rx $target

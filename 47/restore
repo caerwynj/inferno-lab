@@ -1,0 +1,3 @@
+#!/dis/sh -n
+
+for (i in $1/*) { @ {run $i} }

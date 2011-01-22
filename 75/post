@@ -1,0 +1,147 @@
+.SH NAME
+scope and experiments
+
+.SH DESCRIPTION
+Since i did lab 
+.A http://caerwyn.com/ipn/2006/12/inferno-emu-on-palm-tungsten-t3.html 67
+i've been trying to improve/fix the t3 port and experiment with it.
+So this post has small report of the T3 port status, and some experiments
+under Inferno; note that they're not dependent of the handheld.
+
+.RS
+.SH T3 PORT
+Some of the thing i've fixed are:
+.PP
+.IR "t3 touchscreen":
+	Perform corrections to make it work as it should,
+	this was important since it has direct impact on using Acme, and the rest of the system.
+
+.PP
+.IR "blank the lcd":
+	Added code to turn off the lcd while playing music, so battery lasts longer.
+	To do so i added an 
+.B blank
+	command to the devapm.c written by Alexander Syschev, and wrote a blight script
+	that manages the lcd backlight, to control this from acme.
+
+.PP
+Since this changes apply to the t3 port, they can be found under lab 
+.A http://inferno-lab.googlecode.com/svn/trunk/67 67
+of the
+.A http://code.google.com/p/inferno-lab/ inferno-lab
+
+.PP
+While i haven't been able to fix the following segfaults, 
+i've been able to obtain dumps and open them with gdb.
+So i've been able to find where the crashes happen,
+but still don't understand why they happen, so i'll have to read more.
+
+.PP
+.IR "* sys->print('%g', ...)":
+	with  floating formats strings: "%g", "%f",
+	when emu crashes it says 
+.EX
+	"malloc failed at <addr>"
+.EE
+	and if i disassemble emu, i can find that the <addr> corresponds to dopoolalloc(),
+	and the core dump says that the crash happends at 
+.L	"/libmath/dtoa.c:/rv_alloc\\(i\\)/".
+	
+.PP
+.IR "* emu -c1 /dis/sh.dis":
+	emu starts loading Emuinit /appl/cmd/emuinit.b,
+	it's able to load a few modules on which /dis/sh.dis depends (disdep /dis/sh.dis)
+	but it crashes while loading Filepat, this seems harder
+	since i'm still learning about arm architecture, and i know even less about jit.
+
+.SH EXPERIMENTS
+Some of them were begun on lab
+.A http://caerwyn.com/ipn/2006/12/inferno-emu-on-palm-tungsten-t3.html 67
+but i've improved them a bit
+and it's worth to dedicate them a new post.
+
+.PP
+.IR scope.b:
+	Parallel to the work of caerwyn with the DSP toolkit, i thought that it would
+	be interesting to have a flexible oscilloscope, to view signals.
+	So i started with the scope.b of lab 
+.A http://caerwyn.com/ipn/2004/10/lab-12-oscilloscope.html 12
+, and started to add:
+.TP
+.B look
+make it look nicer (add grid, and signal info)
+.PD 0
+.TP
+.B feel
+make it more flexible, adding some options and widgets to control the oscilloscope.
+Also in this direction: allow resizal of the oscilloscope window.
+.PD 0
+.TP
+.B and more
+frequency spectrum of the signal (using fft).
+.PD 0
+
+And the result has been:
+.A http://www.screenshotofscope scope
+
+If you want to play with it there's a guide file that i wrote while coding
+and can give some ideas about it's usage.
+
+
+.PP
+.IR voip:
+	this basically using stream to stream the recording of a microphone
+	to the headphones of another computer, in short:
+.EX
+	styxlisten tcp!firulillo!styx export '#A';
+	mount tcp!firulillo!styx /n/remote;
+	stream /dev/audio /n/remote/audio;
+.EE
+	after some attemps i decided to pack it under a script that could be used
+	both for publish '#A' (server) and to mount '#A' (client),
+	the problem is that if you try, the sound appears delayed and some echo.
+	Reading stream(1) i noticed that stream ussies writes of bufsize (by default
+	Sys->ATOMICIO: 8192), and to do it has to wait until it has bytes bufsize,
+	so here was the reason for the delay and echo.
+.PP
+	Playing with bufsize, i set it by default to 1024 bytes, this works on a local net,
+	probably it'll need adjustment for other situations.
+	
+.PP
+.IR player:
+i started this as a music player for the handheld, but i've ended using it
+	under the PC, it's simply a script that lists the music files at cwd and plays them
+	with a music player available in the host os: mplayer.
+	
+	A nice thing is that one can export a dir containing a collection of music files with:
+.EX
+	styxlisten -A 'tcp!*!styx' export /n/local/music
+.EE
+	mount them from another machine under /n/remote
+	and play them running:
+.EX
+	mount -A 'tcp!$server!styx' /n/remote
+	cd /n/remote && player
+.EE
+.PP
+.IR kbd2skini.b:
+	This is just an idea in the direction of the DSP toolkit, currently the DSP toolkit
+	is able to generate music, from standard music formats mainly contained in files (midi,skini).
+
+	I would like to play with the input devices available under inferno to use them as instruments. So i started to gather for similar things and found
+.A http://www.borg.com/~jglatt/hardware/pc_keys/adapter.htm pc2midi
+	.
+	I've choosen the kdb as starting point,
+	but it has it's limitations as it's discussed on the previous reference,
+	since you don't have a pressure indication,
+	instead the state of each key is either pressed / or not pressed,
+	moreover there's no way to notice that there're multiple keys pressed at a time.
+.PP
+	We'll see what can be done with this.
+	
+
+.SH FILES
+.A .A http://inferno-lab.googlecode.com/svn/trunk/74 inferno-lab
+
+
+.RE

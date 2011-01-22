@@ -1,0 +1,21 @@
+</mkconfig
+
+TARG=\
+	post.txt\
+	post.html\
+	emu-fba-t3.tar\
+
+DISBIN=$home/dis/dis
+
+<$ROOT/mkfiles/mkdis
+
+all:V:	$TARG
+
+%.html: %
+	man2html $prereq > $target
+%.txt: %
+	man2txt $prereq > $target
+emu-fba-t3.tar: /emu/Linux/audio-oss.c /emu/Linux-fb/tsinput.h /emu/Linux-fb/tsinput_t3.c /emu/Linux-fb/devapm.c /emu/Linux-fb/emu-fba-arm
+	puttar $prereq > $target
+clean:
+	rm -f *.sbl *.dis *.html *.txt

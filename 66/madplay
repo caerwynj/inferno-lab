@@ -1,0 +1,4 @@
+#!/dis/sh.dis
+# usage: madplay - < file.mp3
+
+os madplay -Q -S -b 16 -R 44100 -o pcm:- $* | raw2iaf | auplay -

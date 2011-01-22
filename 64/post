@@ -1,0 +1,20 @@
+lab 64 - Chat
+<p>
+<i>Chat</i> is an acme client that connects to the chatsrv filesystem. This is a very basic text chat service. It is considerably simpler than the <i>Irc</i> client. Part of the reason I did this was to have a simpler client I could use to help debug some of the acme interaction, and help me improve <i>Irc</i>. Another reason was a recent urge I had to setup some private communication channels, merely for privacy's sake. 
+<p>
+The chatsrv is part of the demo code under <b>/appl/demo</b>. I borrowed code from <b>/appl/demo/chat.b</a> and the Irc client I ported from Russ.
+<p>
+A chatsrv service is running on tcp!canto.hopto.org!6683. But I've only allowed rc4_256 encryption to use the service, and of course you need a certificate from the canto.hopto.org signer (<a href="http://canto.hopto.org/wiki/Getting_Started/index.html">Getting Started</a>).
+<p>
+To mount the service within acme and start Chat
+<pre>
+Local mount -C rc4_256 tcp!canto.hopto.org!6683 /n/chat
+Chat /n/chat
+</pre>
+<p>
+Note that the simplest client can be run inside wm/sh, or win:
+<pre>
+% {cat & cat  >[1=0] < /dev/cons} <> /n/chat/msgs 
+</pre>
+<p>
+Isn't that a beautiful one liner?

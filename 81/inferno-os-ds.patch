@@ -1,0 +1,2695 @@
+Index: mkfiles/mkfile-Linux-arm
+===================================================================
+--- mkfiles/mkfile-Linux-arm	(revision 225)
++++ mkfiles/mkfile-Linux-arm	(working copy)
+@@ -18,7 +18,7 @@
+ 		-DLINUX_ARM
+ 
+ ANSICPP=
+-LD=		arm-gcc 
++LD=		arm-ld
+ LDFLAGS=	
+ 
+ SYSLIBS=
+Index: Linux/arm/include/fpuctl.h
+===================================================================
+--- Linux/arm/include/fpuctl.h	(revision 225)
++++ Linux/arm/include/fpuctl.h	(working copy)
+@@ -3,7 +3,7 @@
+  * Mimic Plan9 floating point support
+  */
+ 
+-#include <fenv.h>
++//#include <fenv.h>
+ 
+ static void
+ setfcr(ulong fcr)
+Index: Linux/386/bin/arm-gcc
+===================================================================
+--- Linux/386/bin/arm-gcc	(revision 0)
++++ Linux/386/bin/arm-gcc	(revision 0)
+@@ -0,0 +1,22 @@
++#!/bin/sh
++# call gcc/ld to output bflt suitable for dslinux
++DSLINUX=/mnt/m/r/dslinux/
++TCPATH=$DSLINUX/dslinux-toolchain-2007-11-03-i686/bin/
++
++#TCOPTS="$TCOPTS -mlittle-endian -mfpu=fpe3 -mcpu=arm946e-s"
++#TCOPTS="$TCOPTS -Wl,-elf2flt"
++#$TCPATH/arm-linux-elf-gcc $TCOPTS $*
++
++# from $DSLINUX/Makefile.xsh
++CC="$DSLINUX/tools/ucfront-gcc $TCPATH/arm-linux-elf-gcc"
++
++CFLAGS="-O2 -g"
++CFLAGS="$CFLAGS -mcpu=arm946e-s -mfpu=fpe3"
++CFLAGS="$CFLAGS -fomit-frame-pointer -fno-common -fno-builtin"
++CFLAGS="$CFLAGS -mswp-byte-writes -DCONFIG_NDS_ROM8BIT"
++CFLAGS="$CFLAGS -DEMBED -D__PIC__ -fpic -msingle-pic-base -Dlinux -D__linux__ -Dunix -D__uClinux__"
++
++#LD=	$TCPATH/arm-linux-elf-ld
++LDFLAGS="-Wl,-elf2flt -D__PIC__ -fpic -msingle-pic-base -mswp-byte-writes"
++
++$CC $CFLAGS $*
+
+Property changes on: Linux/386/bin/arm-gcc
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Index: Linux/386/bin/arm-ld
+===================================================================
+--- Linux/386/bin/arm-ld	(revision 0)
++++ Linux/386/bin/arm-ld	(revision 0)
+@@ -0,0 +1,16 @@
++#!/bin/sh
++# call gcc/ld to output bflt suitable for dslinux
++DSLINUX=/mnt/m/r/dslinux/
++TCPATH=$DSLINUX/dslinux-toolchain-2007-11-03-i686/bin/
++
++# from $DSLINUX/Makefile.xsh
++CFLAGS="-O2 -g"
++CFLAGS="$CFLAGS -mcpu=arm946e-s -mfpu=fpe3"
++CFLAGS="$CFLAGS -fomit-frame-pointer -fno-common -fno-builtin"
++CFLAGS="$CFLAGS -mswp-byte-writes -DCONFIG_NDS_ROM8BIT"
++CFLAGS="$CFLAGS -DEMBED -D__PIC__ -fpic -msingle-pic-base -Dlinux -D__linux__ -Dunix -D__uClinux__"
++
++LDFLAGS="-Wl,-elf2flt -D__PIC__ -fpic -msingle-pic-base -mswp-byte-writes"
++SYSLIBS=$DSLINUX/uClibc/lib/libc.a	# required to link with sbrk
++
++$TCPATH/arm-linux-elf-gcc $CFLAGS $LDFLAGS $* $SYSLIBS
+
+Property changes on: Linux/386/bin/arm-ld
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Index: emu/Linux/os.c
+===================================================================
+--- emu/Linux/os.c	(revision 225)
++++ emu/Linux/os.c	(working copy)
+@@ -7,6 +7,7 @@
+ #include	<sys/resource.h>
+ #include	<sys/wait.h>
+ #include	<sys/time.h>
++#include	<unistd.h>
+ 
+ #include	"dat.h"
+ #include	"fns.h"
+@@ -523,13 +524,18 @@
+ }
+ 
+ #ifdef LINUX_ARM
++#include <asm/unistd.h>
+ #define	SYS_cacheflush	__ARM_NR_cacheflush
+ 
+ int
+ segflush(void *a, ulong n)
+ {
++	int ret;
+ 	if(n)
+-		syscall(SYS_cacheflush, a, (char*)a+n-1, 1);
++		ret = syscall(SYS_cacheflush, a, (char*)a+n-1, 1);
++
++	if (ret != 0)
++		print("error: segflush: %s\n", strerror(errno));
+ 	return 0;
+ }
+ #endif
+Index: emu/Linux/cmd.c
+===================================================================
+--- emu/Linux/cmd.c	(revision 225)
++++ emu/Linux/cmd.c	(working copy)
+@@ -116,7 +116,7 @@
+ 		t->uid = uidnobody;
+ 
+ 	signal(SIGCHLD, SIG_DFL);
+-	switch(pid = fork()) {
++	switch(pid = vfork()) {
+ 	case -1:
+ 		goto Error;
+ 	case 0:
+Index: emu/Linux/audio-oss.c
+===================================================================
+--- emu/Linux/audio-oss.c	(revision 0)
++++ emu/Linux/audio-oss.c	(revision 0)
+@@ -0,0 +1,451 @@
++#include "dat.h"
++#include "fns.h"
++#include "error.h"
++#include "audio.h"
++#include <sys/ioctl.h>
++#include <sys/soundcard.h>
++
++#define 	Audio_Mic_Val		SOUND_MIXER_MIC
++#define 	Audio_Linein_Val	SOUND_MIXER_LINE
++
++#define		Audio_Speaker_Val	SOUND_MIXER_PCM // SOUND_MIXER_VOLUME
++#define		Audio_Headphone_Val	SOUND_MIXER_ALTPCM
++#define		Audio_Lineout_Val	SOUND_MIXER_CD
++
++#define 	Audio_Pcm_Val		AFMT_S16_LE
++#define 	Audio_Ulaw_Val		AFMT_MU_LAW
++#define 	Audio_Alaw_Val		AFMT_A_LAW
++
++#define 	Audio_Max_Queue		8
++
++#include "audio-tbls.c"
++#define	min(a,b)	((a) < (b) ? (a) : (b))
++
++#define AUDIO_DEV	"/dev/dsp"
++#define MIXER_DEV	"/dev/mixer"
++#define DPRINT if(0)print
++
++static struct Audio_fd {
++	int in;		/* dsp fd in */
++	int out;	/* dsp fd out */
++	int ctl;	/* mixer fd */
++} afd = {-1, -1, -1};
++
++enum {
++	A_Pause,
++	A_UnPause,
++	A_In,
++	A_Out
++};
++
++static Audio_t av;
++static QLock inlock;
++static QLock outlock;
++
++// contains fns required by audio.h + platform specific like:
++static int audio_open(int omode);
++static int audio_pause(int fd, int f);
++static int audio_set_info(int fd, Audio_d *i, int d);
++static void setvolume(int what, int left, int right);
++
++Audio_t*
++getaudiodev(void)
++{
++	return &av;
++}
++
++void 
++audio_file_init ()
++{
++	DPRINT("audio_file_init %d %d\n", afd.in, afd.out);
++	afd.ctl = -1;
++	afd.ctl = open(MIXER_DEV, ORDWR);
++	if(afd.ctl < 0){
++		// oserror() produces a sigsegv in arm
++		fprint(2, "can't open mixer device: %s\n", strerror(errno));
++		close(afd.ctl);
++		afd.ctl = -1;
++	}
++	
++	audio_info_init(&av);
++}
++
++void
++audio_file_open(Chan *c, int omode)
++{
++	DPRINT("audio_file_open %d %d\n", afd.in, afd.out);
++	switch(omode){
++	case OREAD:
++		qlock(&inlock);
++		if(waserror()){
++			qunlock(&inlock);
++			nexterror();
++		}
++
++		if(afd.in >= 0)
++			error(Einuse);
++		if((afd.in = audio_open(omode)) < 0)
++			oserror();
++
++		poperror();
++		qunlock(&inlock);
++		break;
++	case OWRITE:
++		qlock(&outlock);
++		if(waserror()){
++			qunlock(&outlock);
++			nexterror();
++		}
++		if(afd.out >= 0)
++			error(Einuse);
++		if((afd.out = audio_open(omode)) < 0)
++			oserror();
++		
++		poperror();
++		qunlock(&outlock);
++		break;
++	case ORDWR:
++		qlock(&inlock);
++		qlock(&outlock);
++		if(waserror()){
++			qunlock(&inlock);
++			qunlock(&outlock);
++			nexterror();
++		}
++		if(afd.in >= 0 || afd.out >= 0)
++			error(Einuse);
++
++		if((afd.in = audio_open(omode)) < 0)
++			oserror();
++		if(waserror()){
++			close(afd.in);
++			afd.in = -1;
++			nexterror();
++		}
++		afd.out = afd.in;
++
++		poperror();
++		qunlock(&inlock);
++		qunlock(&outlock);
++		break;
++	}
++}
++
++void    
++audio_file_close(Chan *c)
++{
++	DPRINT("audio_file_close %d %d\n", afd.in, afd.out);
++	switch(c->mode){
++	case OREAD:
++		qlock(&inlock);
++		close (afd.in);
++		afd.in = -1;
++		qunlock(&inlock);
++		break;
++	case OWRITE:
++		qlock(&outlock);
++		close(afd.out);
++		afd.out = -1;
++		qunlock(&outlock);
++		break;
++	case ORDWR:
++		qlock(&inlock);
++		qlock(&outlock);
++		close(afd.in);
++		//close(afd.out);
++		afd.in = -1;
++		afd.out = -1;
++		qunlock(&inlock);
++		qunlock(&outlock);
++		break;
++	}
++
++}
++
++long
++audio_file_read(Chan *c, void *va, long count, vlong offset)
++{
++	long ba, status, chunk, total;
++
++	DPRINT("audio_file_read %d %d\n", afd.in, afd.out);
++	qlock(&inlock);
++	if(waserror()){
++		qunlock(&inlock);
++		nexterror();
++	}
++
++	if(afd.in < 0)
++		error(Eperm);
++
++	/* check block alignment */
++	ba = av.in.bits * av.in.chan / Bits_Per_Byte;
++
++	if(count % ba)
++		error(Ebadarg);
++		
++	if(!audio_pause(afd.in, A_UnPause))
++		error(Eio);
++	
++	total = 0;
++	while (total < count) {
++		chunk = count - total;
++		status = read (afd.in, va + total, chunk);
++		if (status < 0)
++			error(Eio);
++		total += status;
++	}
++	
++	if (total != count)
++		error(Eio);
++
++	poperror();
++	qunlock(&inlock);
++	
++	return count;
++}
++
++long                                            
++audio_file_write(Chan *c, void *va, long count, vlong offset)
++{
++	long status = -1;
++	long ba, total, chunk, bufsz;
++	
++	DPRINT("audio_file_write %d %d\n", afd.in, afd.out);
++	qlock(&outlock);
++	if(waserror()){
++		qunlock(&outlock);
++		nexterror();
++	}
++	
++	if(afd.out < 0)
++		error(Eperm);
++	
++	/* check block alignment */
++	ba = av.out.bits * av.out.chan / Bits_Per_Byte;
++
++	if(count % ba)
++		error(Ebadarg);
++
++	total = 0;
++	bufsz = av.out.buf * Audio_Max_Buf / Audio_Max_Val;
++
++	if(bufsz == 0)
++		error(Ebadarg);
++
++	while(total < count) {
++		chunk = min(bufsz, count - total);
++		status = write(afd.out, va, chunk);
++		if(status <= 0)
++			error(Eio);
++		total += status;
++	}
++
++	poperror();
++	qunlock(&outlock);
++
++	return count;	
++}
++
++long
++audio_ctl_write(Chan *c, void *va, long count, vlong offset)
++{
++	Audio_t tmpav = av;
++	int force_open = 0;
++
++	tmpav.in.flags = 0;
++	tmpav.out.flags = 0;
++	
++	DPRINT ("audio_ctl_write %X %X %X\n", afd.in, afd.out);
++	if (!audioparse(va, count, &tmpav))
++		error(Ebadarg);
++
++	qlock(&inlock);
++	if (waserror()){
++		qunlock(&inlock);
++		nexterror();
++	}
++
++	/* afd needs to be opened to issue a write to /dev/audioctl */
++	if (afd.in == -1 && afd.out == -1){
++		force_open=1;
++		afd.in = afd.out = open(AUDIO_DEV, O_RDONLY|O_NONBLOCK);
++	}
++
++	if (afd.in >= 0 && (tmpav.in.flags & AUDIO_MOD_FLAG)) {
++		if (!audio_pause(afd.in, A_Pause))
++			error(Ebadarg);
++		if (!audio_set_info(afd.in, &tmpav.in, A_In))
++			error(Ebadarg);
++	}
++	poperror();
++	qunlock(&inlock);
++	
++	qlock(&outlock);
++	if (waserror()) {
++		qunlock(&outlock);
++		nexterror();
++	}
++	
++	if (afd.out >= 0 && (tmpav.out.flags & AUDIO_MOD_FLAG)){
++		if (!audio_pause(afd.out, A_Out))
++			error(Ebadarg);
++		if (!audio_set_info(afd.out, &tmpav.out, A_Out))
++			error(Ebadarg);
++	}
++	poperror();
++	qunlock(&outlock);
++
++	tmpav.in.flags = 0;
++	tmpav.out.flags = 0;
++
++	av = tmpav;
++	if (force_open) {
++		close(afd.in);
++		afd.in = -1;
++		afd.out = -1;
++	}
++	return count;
++}
++
++/* Linux/OSS specific stuff */
++
++static int
++audio_set_info(int fd, Audio_d *i, int d)
++{
++	int status;
++	int	dev, arg, fmtmask;
++	
++	DPRINT("audio_set_info (%d) %d %d\n", fd, afd.in, afd.out);
++	if (fd < 0)
++		return 0;
++
++	// sample rate
++	if (i->flags & AUDIO_RATE_FLAG){
++		arg = i->rate;
++		status = ioctl(fd, SNDCTL_DSP_SPEED, &arg);
++	}
++	
++	// channels
++	if(i->flags & AUDIO_CHAN_FLAG){
++		arg = i->chan;
++		status = ioctl(fd, SNDCTL_DSP_CHANNELS, &arg);
++	}
++
++	// precision
++	if(i->flags & AUDIO_BITS_FLAG){
++		arg = i->bits;
++		status = ioctl(fd, SNDCTL_DSP_SAMPLESIZE, &arg);
++	}
++	
++	// encoding
++	if(i->flags & AUDIO_ENC_FLAG){
++		status = ioctl(fd, SNDCTL_DSP_GETFMTS, &fmtmask);
++
++		arg = i->enc;
++		if (fmtmask && arg)
++			status = ioctl(fd, SNDCTL_DSP_SETFMT, &arg);
++		else{ // encoding not supported
++			DPRINT ("dev %X: enc 0x%X not supported (not in 0x%X)\n",i->dev, i->enc, fmtmask);
++		}
++	}
++	
++	/* dev volume */ 
++	if(i->flags & (AUDIO_LEFT_FLAG|AUDIO_VOL_FLAG))
++		setvolume (i->dev, i->left, i->right);
++
++	return 1;
++}
++
++static void
++setvolume(int what, int left, int right)
++{
++	int can, v;
++	
++	DPRINT("audiodevsetvol afd.ctl%d what%X left%d right%d\n", afd.ctl, what, left, right);
++	if(afd.ctl < 0)
++		error("audio device not open");
++
++	if(ioctl(afd.ctl, SOUND_MIXER_READ_DEVMASK, &can) < 0)
++		can = ~0;
++
++	DPRINT("audiodevsetvol %X can mix 0x%X (mask %X)\n",what, (can & (1<<what)), can);
++	if(!(can & (1<<what)))
++		return;
++	v = left | (right<<8);
++	if(ioctl(afd.ctl, MIXER_WRITE(what), &v) < 0)
++		oserror();
++}
++
++static int
++audio_open (int omode)
++{
++	int fd, val;
++	
++	/* open non-blocking in case someone already has it open */
++	/* otherwise we would block until they close! */
++	switch (omode){
++	case OREAD:
++		fd = open(AUDIO_DEV, O_RDONLY|O_NONBLOCK);
++		break;
++	case OWRITE:
++		fd = open(AUDIO_DEV, O_WRONLY|O_NONBLOCK);
++		break;
++	case ORDWR:
++		fd = open(AUDIO_DEV, O_RDWR|O_NONBLOCK);
++		break;
++	}
++
++	if(fd < 0)
++		oserror();
++
++	/* change device to be blocking */
++	if((val = fcntl(fd, F_GETFL, 0)) == -1)
++		return 0;
++	
++	val &= ~O_NONBLOCK;
++	if(fcntl(fd, F_SETFL, val) < 0) {
++		close(fd);
++		error(Eio);
++	}
++
++	if(!audio_pause(fd, A_Pause)) {
++		close(fd);
++		error(Eio);
++	}
++
++	/* set audio info */
++	av.in.flags = ~0;
++	av.out.flags = 0;
++
++	if(!audio_set_info(fd, &av.in, A_In)) {
++		close(fd);
++		error(Ebadarg);
++	}
++
++	av.in.flags = 0;
++
++	/* tada, we're open, blocking, paused and flushed */
++	return fd;
++}
++
++static int
++audio_pause(int fd, int f)
++{
++	int status;
++	static int	audio_in_pause = A_UnPause;
++
++	DPRINT ("audio_pause (%d) %d %d\n", fd, afd.in, afd.out);
++	if (fd < 0)
++		return 0;
++	
++	if (fd == afd.in && audio_in_pause == f)
++		return 1;
++
++	status = ioctl(fd, SNDCTL_DSP_RESET, NULL);
++	if (status < 0)
++		return 0;
++	status = ioctl(fd, SNDCTL_DSP_SYNC, NULL);
++	audio_in_pause = f;
++	
++	return 1;
++}
+Index: emu/Linux/asm-arm.S
+===================================================================
+--- emu/Linux/asm-arm.S	(revision 225)
++++ emu/Linux/asm-arm.S	(working copy)
+@@ -126,6 +126,7 @@
+ 	@ link register save eliminated.
+ 	@ lr needed for prologue
+ 	mov	r3, #1
+-	swp	r0, r3, [r0]
++	swp r3, r3, [r0]
++	mov r0, r3
+ 	mov	pc, lr
+ 	.size	_tas, .-_tas
+Index: emu/port/devcons.c
+===================================================================
+--- emu/port/devcons.c	(revision 225)
++++ emu/port/devcons.c	(working copy)
+@@ -7,7 +7,7 @@
+ #include	"keyboard.h"
+ 
+ extern int cflag;
+-int	exdebug;
++extern int	exdebug;
+ extern int keepbroken;
+ 
+ enum
+Index: emu/port/devpointer.c
+===================================================================
+--- emu/port/devpointer.c	(revision 225)
++++ emu/port/devpointer.c	(working copy)
+@@ -73,6 +73,14 @@
+ 		x += mouse.v.x;
+ 		y += mouse.v.y;
+ 	}
++	if(x < 0)
++		x = 0;
++	else if (x > Xsize)
++		x = Xsize;
++	if(y < 0)
++		y = 0;
++	else if (y > Ysize)
++		y = Ysize;
+ 	msec = osmillisec();
+ 	if(0 && b && (mouse.v.b ^ b)&0x1f){
+ 		if(msec - mouse.v.msec < 300 && mouse.lastb == b
+@@ -100,7 +108,7 @@
+ 	ptrq.put++;
+ 	Wakeup(&ptrq.r);
+ /*	drawactive(1);	*/
+-/*	setpointer(x, y); */
++	setpointer(x, y); 
+ }
+ 
+ static int
+@@ -251,6 +259,8 @@
+ 		else
+ 			b = mouse.v.b;
+ 		/*mousetrack(b, x, y, msec);*/
++		mouse.v.x = x;
++		mouse.v.y = y;
+ 		setpointer(x, y);
+ 		USED(b);
+ 		break;
+Index: emu/port/dis.c
+===================================================================
+--- emu/port/dis.c	(revision 225)
++++ emu/port/dis.c	(working copy)
+@@ -23,7 +23,7 @@
+ 	Atidle*	idletasks;
+ } isched;
+ 
+-int	bflag;
++extern	int	bflag;
+ int	cflag;
+ uvlong	gcbusy;
+ uvlong	gcidle;
+Index: emu/port/main.c
+===================================================================
+--- emu/port/main.c	(revision 225)
++++ emu/port/main.c	(working copy)
+@@ -10,8 +10,8 @@
+ char**		rebootargv;
+ static	char	*imod = "/dis/emuinit.dis";
+ extern	char*	hosttype;
+-char*	tkfont;	/* for libtk/utils.c */
+-int	tkstylus;	/* libinterp/tk.c */
++extern	char*	tkfont;	/* for libtk/utils.c */
++extern	int	tkstylus;	/* libinterp/tk.c */
+ extern	int	mflag;
+ 	int	dflag;
+ 	int vflag;
+Index: emu/port/alloc.c
+===================================================================
+--- emu/port/alloc.c	(revision 225)
++++ emu/port/alloc.c	(working copy)
+@@ -50,7 +50,7 @@
+ 	{
+ 		{ "main",  0, 	32*1024*1024, 31,  512*1024, 0, 31*1024*1024 },
+ 		{ "heap",  1, 	32*1024*1024, 31,  512*1024, 0, 31*1024*1024 },
+-		{ "image", 2,   32*1024*1024+256, 31, 4*1024*1024, 1, 31*1024*1024 },
++		{ "image", 2,   32*1024*1024+256, 31, 2*1024*1024, 1, 31*1024*1024 },
+ 	}
+ };
+ 
+Index: emu/Linux-fb/screen.c
+===================================================================
+--- emu/Linux-fb/screen.c	(revision 0)
++++ emu/Linux-fb/screen.c	(revision 0)
+@@ -0,0 +1,371 @@
++#include "dat.h"
++#include "fns.h"
++#include "../port/error.h"
++#include "framebuffer.h"
++
++#include <draw.h>
++#include <memdraw.h>
++#include <cursor.h>
++
++Point mousexy(void);
++
++static ulong displaychannel = 0;
++static int displaydepth = 0;
++static int isscreeninited = 0;
++static uchar* screendata = 0;
++static uchar* framebuffer = 0;
++int ispointervisible = 0;
++
++static void initcursor(uchar*, uchar*, int, int, int, int);
++static void cleanpointer();
++static void drawpointer(int, int);
++
++static struct {
++	char* clip;
++	int   size;
++} clipboard;
++
++typedef struct ICursor ICursor;
++struct ICursor {
++	ulong	inuse;
++	int     x;
++	int     y;
++	int	hotx;
++	int	hoty;
++	int	w;
++	int	h;
++	uchar*	set;
++	uchar*	clr;
++};
++static ICursor icursor;
++
++static int
++revbyte(int b)
++{
++	int r;
++
++	r = 0;
++	r |= (b&0x01) << 7;
++	r |= (b&0x02) << 5;
++	r |= (b&0x04) << 3;
++	r |= (b&0x08) << 1;
++	r |= (b&0x10) >> 1;
++	r |= (b&0x20) >> 3;
++	r |= (b&0x40) >> 5;
++	r |= (b&0x80) >> 7;
++	return r;
++}
++
++static void
++curslock(void)
++{
++	while(_tas(&icursor.inuse) != 0)
++		osyield();
++}
++
++static void
++cursunlock(void)
++{
++	icursor.inuse = 0;
++}
++
++void
++drawcursor(Drawcursor* c)
++{
++	int h, bpl;
++	Point mousepos = mousexy();
++	drawqlock();	
++	cleanpointer();
++	if(c->data == nil)
++		initcursor(0, 0, 0, 0, 0, 0);
++	else {
++		h = (c->maxy-c->miny)/2;	/* image, then mask */
++		bpl = bytesperline(Rect(c->minx, c->miny, c->maxx, c->maxy), 1);
++		initcursor(c->data, c->data + h*bpl, h, bpl*8, c->hotx, c->hoty);
++	}
++	setpointer(mousepos.x, mousepos.y);
++	drawqunlock();
++}
++
++uchar* 
++attachscreen(Rectangle *rectangle, ulong *channel, int *depth, int *width, int *softscreen)
++{
++	if(!isscreeninited) {
++		if (!fb_init(&Xsize, &Ysize, &displaydepth, &displaychannel)) {
++			fprint(2, "cannot init framebuffer\n");
++			return 0;
++		}
++		framebuffer = fb_get();
++		if(!framebuffer) {
++			fprint(2, "cannot get framebuffer\n");
++			return 0;
++		}
++		screendata = malloc(Xsize * Ysize *(displaydepth / 8));
++		if(!screendata) {
++			fprint(2, "cannot allocate screen buffer\n");
++			return 0;
++		}
++		initcursor(0, 0, 0, 0, 0, 0);
++	}
++	Xsize &= ~0x3;	/* ensure multiple of 4 */
++	rectangle->min.x = 0;
++	rectangle->min.y = 0;
++	rectangle->max.x = Xsize;
++	rectangle->max.y = Ysize;
++
++	*channel = displaychannel;
++	*depth = displaydepth;
++
++	*width = (Xsize / 4) * (*depth / 8);
++	*softscreen = 1;
++	if(!isscreeninited)
++		isscreeninited = 1;
++	return screendata;
++}
++
++void 
++detachscreen()
++{
++	free(icursor.set);
++	icursor.set = 0;
++	free(icursor.clr);
++	icursor.clr = 0;
++	free(screendata);
++	screendata = 0;
++	fb_release(framebuffer);
++	framebuffer = 0;
++	fb_deinit();
++        if(clipboard.clip) {
++                free(clipboard.clip);
++                clipboard.clip = 0;
++                clipboard.size = 0;
++        }
++}
++
++#define max(a,b)(((a)>(b))?(a):(b))
++#define min(a,b)(((a)<(b))?(a):(b))
++
++void 
++flushmemscreen(Rectangle rectangle)
++{
++	if(!framebuffer || !screendata)
++		return;
++	int depth = displaydepth / 8;
++	int bpl = Xsize * depth;
++	int i;
++	uchar* framebufpos = framebuffer;
++	uchar* screendatapos = screendata;
++	int width;
++
++	if(rectangle.min.x < 0)
++		rectangle.min.x = 0;
++	if(rectangle.min.y < 0)
++		rectangle.min.y = 0;
++	if(rectangle.max.x > Xsize)
++		rectangle.max.x = Xsize;
++	if(rectangle.max.y > Ysize)
++		rectangle.max.y = Ysize;
++  
++	if((rectangle.max.x < rectangle.min.x) || (rectangle.max.y < rectangle.min.y))
++		return;
++
++	framebufpos += rectangle.min.y * bpl + rectangle.min.x * depth;
++	screendatapos += rectangle.min.y * bpl + rectangle.min.x * depth;
++	width = (rectangle.max.x - rectangle.min.x) * depth;
++	for(i = rectangle.min.y; i < rectangle.max.y; i++) {
++		memcpy(framebufpos, screendatapos, width);
++		framebufpos += bpl;
++		screendatapos += bpl;
++	}
++
++	if(!ispointervisible)
++		return;
++	Point mousepos = mousexy();
++	curslock();
++	if((max(rectangle.min.x, mousepos.x + icursor.hotx) > min(rectangle.max.x, mousepos.x + icursor.hotx + icursor.w)) ||
++	   (max(rectangle.min.y, mousepos.y + icursor.hoty) > min(rectangle.max.y, mousepos.y + icursor.hoty + icursor.h))) {
++		cursunlock();
++		return;
++	}
++	cursunlock();
++	drawpointer(mousepos.x, mousepos.y);
++}
++uchar DefaultPointer [] = {
++	0x00, 0x00, /* 0000000000000000 */
++	0x7F, 0xFE, /* 0111111111111110 */
++	0x7F, 0xFC, /* 0111111111111100 */
++	0x7F, 0xF8, /* 0111111111111000 */
++	0x7F, 0xF0, /* 0111111111110000 */
++	0x7F, 0xE0, /* 0111111111100000 */
++	0x7F, 0xC0, /* 0111111111000000 */
++	0x7F, 0xE0, /* 0111111111100000 */
++	0x7F, 0xF0, /* 0111111111110000 */
++	0x7F, 0xF8, /* 0111111111111000 */
++	0x7C, 0xFC, /* 0111110011111100 */
++	0x78, 0x7E, /* 0111100001111110 */
++	0x70, 0x3C, /* 0111000000111100 */
++	0x60, 0x18, /* 0110000000011000 */
++	0x40, 0x00, /* 0100000000000000 */
++	0x00, 0x00, /* 0000000000000000 */
++};
++
++uchar DefaultPointerMask [] = {
++	0xFF, 0xFF, /* 1111111111111111 */
++	0xFF, 0xFF, /* 1111111111111111 */
++	0xFF, 0xFE, /* 1111111111111110 */
++	0xFF, 0xFC, /* 1111111111111100 */
++	0xFF, 0xF8, /* 1111111111111000 */
++	0xFF, 0xF0, /* 1111111111110000 */
++	0xFF, 0xE0, /* 1111111111100000 */
++	0xFF, 0xF0, /* 1111111111110000 */
++	0xFF, 0xF8, /* 1111111111111000 */
++	0xFF, 0xFC, /* 1111111111111100 */
++	0xFF, 0xFE, /* 1111111111111110 */
++	0xFC, 0xFF, /* 1111110011111111 */
++	0xF8, 0x7E, /* 1111100001111110 */
++	0xF0, 0x3C, /* 1111000000111100 */
++	0xE0, 0x18, /* 1110000000011000 */
++	0xC0, 0x00, /* 1100000000000000 */
++};
++
++static const int DefaultPointerHeight = 16; 
++static const int DefaultPointerWidth = 16; 
++
++static void 
++initcursor(uchar* clr, uchar* set, int height, int width, int hotx, int hoty)
++{
++	uchar i, j, k;
++	uchar *ps, *pc, *bc, *bs, cb, sb;
++	int depth = displaydepth / 8;
++	int bpl;
++
++	if(!clr) {
++		set = DefaultPointer;
++		clr = DefaultPointerMask; 
++		height = DefaultPointerWidth;
++		width = DefaultPointerHeight;
++		hotx = 0;
++		hoty = 0;
++	}
++	bpl = width / 8;
++	curslock();
++	if(icursor.set)
++		free(icursor.set);
++	icursor.set = malloc(height * width * depth);
++	if(!icursor.set) {
++		fprint(2, "cannot allocate cursor");
++		return;
++	}
++	memset(icursor.set, 0xFF, height * width * depth);
++
++	if(icursor.clr)
++		free(icursor.clr);
++	icursor.clr = malloc(height * width * depth);
++	if(!icursor.clr) {
++		fprint(2, "cannot allocate cursor mask");
++		return;
++	}
++	memset(icursor.clr, 0x0, height * width * depth);
++
++	ps = icursor.set;
++	pc = icursor.clr;
++	bs = set;
++	bc = clr;
++	for(i = 0; i < height; i++) {
++		for(j = 0; j < bpl; j++) {
++			sb = revbyte(bs[j]);
++			cb = revbyte(bs[j] | bc[j]);
++			for(k = 0; k < 8; k++) {
++				if(sb & (1<<k))
++					memset(ps, 0x0, depth);
++				if(cb & (1<<k))
++					memset(pc, 0xFF, depth);
++				ps += depth;
++				pc += depth;
++			}
++		}
++		bs += bpl;
++		bc += bpl;
++	}
++ 	icursor.h = height;
++	icursor.w = width;
++	icursor.hotx = hotx;
++	icursor.hoty = hoty;
++	cursunlock();
++}
++
++void 
++setpointer(int x, int y)
++{
++	if(!ispointervisible)
++		return;
++	cleanpointer();
++	x += icursor.hotx; 
++	y += icursor.hoty; 
++	if(x < 0)
++		x = 0;
++	else if(x > Xsize)
++		x = Xsize;
++	if(y < 0)
++		y = 0;
++	else if(y > Ysize)
++		y = Ysize;
++	curslock();
++	icursor.x = x;
++	icursor.y = y;
++	cursunlock();
++	drawpointer(icursor.x , icursor.y);
++}
++
++static void 
++cleanpointer()
++{
++	if(!framebuffer || !screendata)
++		return;
++	int depth = displaydepth / 8;
++	int bpl = Xsize * depth;
++	int i;
++	uchar* framebufpos = framebuffer + icursor.y * bpl + icursor.x * depth;
++	uchar* screendatapos = screendata + icursor.y * bpl + icursor.x * depth;
++	int width = icursor.w * depth;
++	int height = ((icursor.y + icursor.h) < Ysize) ? icursor.h : Ysize - icursor.y;
++	for(i = 0; i < height; i++) {
++		memcpy(framebufpos, screendatapos, width);
++		framebufpos += bpl;
++		screendatapos += bpl;
++	}
++}
++
++static void 
++drawpointer(int x, int y)
++{
++	uchar i,j;
++	uchar depth = displaydepth / 8;
++	uchar* curpos = framebuffer + y * Xsize * depth + x * depth;
++	curslock();
++	int width = ((x + icursor.w) < Xsize) ? icursor.w : Xsize - x;
++	int height = ((y + icursor.h) < Ysize) ? icursor.h : Ysize - y;
++	for(i = 0; i < height; i++, curpos += Xsize * depth)
++		for(j = 0; j < width * depth; j++) 
++			if(icursor.clr[i * depth * icursor.w + j])
++				curpos[j] = icursor.set[i * depth * icursor.w + j];
++	cursunlock();
++}
++
++char*
++clipread(void)
++{
++	return clipboard.clip;
++}
++
++int
++clipwrite(char *buf)
++{
++	int size = strlen(buf);
++	if((size > clipboard.size) && realloc(clipboard.clip, size)) {
++		clipboard.size = size;
++		strncpy(clipboard.clip, buf, clipboard.size);
++	}
++	return 0;
++}
++
+Index: emu/Linux-fb/sbrk.c
+===================================================================
+--- emu/Linux-fb/sbrk.c	(revision 0)
++++ emu/Linux-fb/sbrk.c	(revision 0)
+@@ -0,0 +1,30 @@
++#include        <unistd.h>
++#include        <errno.h>
++#include        <string.h>
++#include        <sys/mman.h>
++
++#define DPRINT if(0)print
++
++enum
++{
++       PROTO = PROT_READ | PROT_WRITE | PROT_EXEC,
++       MFLAG = MAP_SHARED | MAP_ANONYMOUS,
++};
++
++// uses kmalloc, which allocs as: size <= mem
++// with mem = 2^n <= 2 * 1024 * 1024 bytes
++// sbrk will be called until emu/port/alloc.c:/^poolmaxsize is reached
++
++void *
++sbrk (intptr_t incsz)
++{
++       void *res;
++
++       res = mmap((void *) 0, incsz, PROTO, MFLAG, 0, 0);
++       if (res == MAP_FAILED){
++               print("sbrk: error failed %d %s\n", errno, strerror(errno));
++               res = (void*) -1;
++       }
++       DPRINT("sbrk.c: sbrk(%d) = %#X\n", incsz, res);
++       return res;
++}
+Index: emu/Linux-fb/guide.ds
+===================================================================
+--- emu/Linux-fb/guide.ds	(revision 0)
++++ emu/Linux-fb/guide.ds	(revision 0)
+@@ -0,0 +1,38 @@
++toolchain & links:
++http://dslinux.org/cgi-bin/moin.cgi/CompilingDSLinux
++http://dslinux.gits.kiev.ua/trunk/
++http://osdl.sourceforge.net/main/documentation/misc/nintendo-DS/HomebrewForDS.html
++
++win 9 rc
++# change INFERNO/mkconfig accordingly
++INFERNO=/mnt/m/r/dslinux/inferno-os
++PATH=$INFERNO/Linux/386/bin:$PATH
++cd $INFERNO/emu/Linux-fb; mk CONF'='emu-ds-arm install
++rm  -f $(find $INFERNO -name '*.o' -o -name '*.a')
++
++# build
++cd $INFERNO/emu/Linux-fb; mk CONF'='emu-ds-arm clean
++cd $INFERNO/emu/Linux-fb; mk CONF'='emu-ds-arm
++mount /mnt/usb
++cp -f emu /mnt/usb/linux/usr/bin
++cp -f o.emu-ds-arm /mnt/usb/inferno-os/Linux/arm/bin/emu-ds-arm
++umount /mnt/usb
++
++# debug
++arm-linux-elf-flthdr -k o.emu-ds-arm # debug
++function tobt(){
++	file=$1
++	etext=$(printf '%d' $2);
++	addr=$(printf '%d' $3);
++	offset=$(echo $addr - $etext | hoc)
++	offpat=$(printf '%8.x' $offset)
++	echo offset: "$offset ($offpat)"
++	arm-objdump -d $file |  awk '/^[0-9a-f]+ <.*>:/ {fn=$0;} /^'"$offpat"'/ {print fn; print}'
++
++}
++tobt o.emu-ds-arm.gdb 0x2300040 0x23ebd28
++tobt o.emu-ds-arm.gdb 0x2300040 0x2300c14
++
++# changes
++sed -n 's/Index: //p' /mnt/m/r/inferno-lab/81/inferno-os-ds.patch > /mnt/m/r/inferno-lab/81/files.changed
++svn diff $(cat /mnt/m/r/inferno-lab/81/files.changed) > /mnt/m/r/inferno-lab/81/inferno-os-ds.patch
+Index: emu/Linux-fb/framebuffer.c
+===================================================================
+--- emu/Linux-fb/framebuffer.c	(revision 0)
++++ emu/Linux-fb/framebuffer.c	(revision 0)
+@@ -0,0 +1,763 @@
++#include <errno.h>
++#include <sys/mman.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <sys/vt.h>
++#include <sys/ioctl.h>
++#include <fcntl.h>
++#include <string.h>
++#include <linux/fb.h>
++#include <sys/vt.h>
++#include <sys/kd.h>
++#include <stdlib.h>
++#include <signal.h>
++#include "framebuffer.h"
++
++static int fbfd = -1;
++static int fbsize = 0;
++static void (*oldSIGINT)(int);
++static void (*oldSIGTERM)(int);
++static struct fb_var_screeninfo origvsi;
++static struct fb_var_screeninfo curvsi;
++static struct fb_cmap origcmap;
++static struct fb_cmap curcmap;
++static int tty0 = -1;
++int tty = -1;
++static int old_stdin = -1;
++static unsigned short prevtty = -1;
++static unsigned short activetty = -1;
++static unsigned short oldfb = -1;
++static int oldtermmode = KD_TEXT;
++static struct vt_mode oldvtmode;
++
++static int vt_init();
++static void vt_deinit();
++
++static int enum_modes(int xres, int yres);
++static int get_params(int* x, int* y, int* bpp, unsigned long* channel);
++static int set_cmap();
++
++void
++sighandler(int x)
++{
++	fb_deinit();
++	if(x==SIGINT)
++		oldSIGINT(x);
++	else if(x==SIGTERM)
++		oldSIGTERM(x);
++}
++
++int fb_init(int* xres, int* yres, int* bpp, unsigned long* channel)
++{
++	unsigned char* res = 0;
++	int size = 0;
++        struct fb_fix_screeninfo fsi;
++
++	char* fbdev = getenv("FRAMEBUFFER");
++
++
++	if ( !fbdev || !*fbdev )
++		fbdev = "/dev/fb0";
++	
++        fbfd = open(fbdev, O_RDWR);
++
++        if(fbfd < 0){
++                fprint(2, "framebuffer: cannot open a file %s: %s\n", fbdev, strerror(errno));
++                return 0;
++        }
++
++
++        if(ioctl(fbfd, FBIOGET_FSCREENINFO, &fsi)){
++                fprint(2, "framebuffer: cannot get fixed screen info: %s\n", strerror(errno));
++                return -1;
++        }
++
++        fbsize = fsi.smem_len;
++
++        if(ioctl(fbfd, FBIOBLANK, 0)){
++                close(fbfd);
++                fprint(2, "framebuffer: cannot blank the framebuffer:  %s\n", strerror(errno));
++                return 0;
++        }
++
++        if(ioctl(fbfd, FBIOGET_VSCREENINFO, &origvsi)){
++                close(fbfd);
++                fprint(2, "framebuffer: cannot get the variable screen info: %s\n", strerror(errno));
++                return 0;
++        }
++
++        curvsi = origvsi;
++	curvsi.activate = FB_ACTIVATE_NOW;
++	if(ioctl(fbfd, FBIOPUT_VSCREENINFO, &curvsi)){
++		fprint(2, "framebuffer: cannot put the new variable screen info: %s\n", strerror(errno));
++		return 0;
++	}
++
++        if(vt_init()){
++                close(fbfd);
++                return 0;
++        }
++#if defined(LINUX_386) 	
++	kbdinit(); 
++#endif
++
++	if (!get_params(xres, yres, bpp, channel))  {
++		fb_deinit();
++		return 0;
++	}
++	memset(&origcmap, 0, sizeof(origcmap));
++	memset(&curcmap, 0, sizeof(curcmap));
++	if (!set_cmap()){
++		fb_deinit();
++		return 0;
++	}
++
++    	oldSIGTERM = signal(SIGTERM,SIG_IGN);
++	if(oldSIGTERM != SIG_IGN)
++	    signal(SIGTERM,sighandler);
++	
++    	oldSIGINT = signal(SIGINT,SIG_IGN);
++	if(oldSIGINT != SIG_IGN)
++	    signal(SIGTERM,sighandler);
++	return 1;
++}
++
++unsigned char* fb_get()
++{
++        unsigned char* res = mmap(0, fbsize, PROT_READ|PROT_WRITE, MAP_SHARED, fbfd, 0);
++        if(res == MAP_FAILED){
++                fprint(2, "framebuffer: cannot map the framebuffer:  %s\n", strerror(errno));
++                return 0;
++        }
++
++        return res;
++}
++
++void 
++fb_release(unsigned char* buf)
++{
++        if(munmap(buf,fbsize))
++                fprint(2, "framebuffer: cannot release the framebuffer:  %s\n", strerror(errno));
++}
++
++void 
++fb_deinit()
++{
++        if(fbfd < 0)
++                return;
++        vt_deinit();
++
++	if (origcmap.red)
++		free(origcmap.red);
++	if (origcmap.green)
++		free(origcmap.green);
++	if (origcmap.blue)
++		free(origcmap.blue);
++	if (curcmap.red)
++		free(curcmap.red);
++	if (curcmap.green)
++		free(curcmap.green);
++	if (curcmap.blue)
++		free(curcmap.blue);
++        ioctl(fbfd, FBIOPUT_VSCREENINFO, &origvsi);
++        close(fbfd);
++}
++
++static char* 
++get_line(char** curpos, char* bufend)
++{
++        char* res = *curpos;
++        while(*curpos < bufend){
++                if (**curpos == '\n'){
++                        **curpos = 0;
++                        *curpos += 1;
++                        return res;
++                }
++                if (**curpos == 0){
++                        *curpos += 1;
++                        return res;
++                }
++                *curpos += 1;
++        }
++        return 0;
++}
++
++static char* 
++parse_mode(char* beginofmode, char* bufend)
++{
++        char* beginofline = 0;
++        int tmp = 0;
++        char value[10] = {0};
++        int geometryfound = 0;
++        int timingsfound = 0;
++	int rgbafound = 0;
++        do {
++                beginofline = get_line(&beginofmode, bufend);
++                if(!beginofline)
++                        return beginofmode;
++
++                if(sscanf(beginofline, 
++                          " geometry %d %d %d %d %d", 
++                          &curvsi.xres, 
++                          &curvsi.yres, 
++                          &tmp, 
++                          &tmp, 
++                          &curvsi.bits_per_pixel) == 5){
++                        geometryfound = 1;
++                        curvsi.sync = 0;
++                        curvsi.xoffset = 0;
++                        curvsi.yoffset = 0;
++                        curvsi.xres_virtual = curvsi.xres;
++                        curvsi.yres_virtual = curvsi.yres;
++                        continue;
++                }
++                if(sscanf(beginofline,
++                          " timings %d %d %d %d %d %d %d",
++                          &curvsi.pixclock,
++                          &curvsi.left_margin,
++                          &curvsi.right_margin,
++                          &curvsi.upper_margin,
++                          &curvsi.lower_margin,
++                          &curvsi.hsync_len,
++                          &curvsi.vsync_len) == 7){
++                        timingsfound = 1;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " hsync %6s",
++                           value) == 1) &&
++                   !strcmp(value, "high")){
++                        curvsi.sync |= FB_SYNC_HOR_HIGH_ACT;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " vsync %6s",
++                           value) == 1) &&
++                   !strcmp(value, "high")){
++                        curvsi.sync |= FB_SYNC_VERT_HIGH_ACT;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " csync %6s",
++                           value) == 1) &&
++                   !strcmp(value, "high")){
++                        curvsi.sync |= FB_SYNC_COMP_HIGH_ACT ;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " extsync %6s",
++                           value) == 1) &&
++                   !strcmp(value, "true")){
++                        curvsi.sync |= FB_SYNC_EXT;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " laced %6s",
++                           value) == 1) &&
++                   !strcmp(value, "true")){
++                        curvsi.sync |= FB_VMODE_INTERLACED;
++                        continue;
++                }
++                if((sscanf(beginofline,
++                           " double %6s",
++                           value) == 1) &&
++                   !strcmp(value, "true")){
++                        curvsi.sync |= FB_VMODE_DOUBLE;
++                        continue;
++                }
++                if(sscanf(beginofline,
++			  " rgba %d/%d,%d/%d,%d/%d,%d/%d",
++			  &curvsi.red.length,
++			  &curvsi.red.offset,
++			  &curvsi.green.length,
++			  &curvsi.green.offset,
++			  &curvsi.blue.length,
++			  &curvsi.blue.offset,
++			  &curvsi.transp.length,
++			  &curvsi.transp.offset) == 8){
++			rgbafound = 1;
++                        continue;
++                }
++
++        }
++        while(!strstr(beginofline, "endmode"));
++	if(!rgbafound) {
++		curvsi.transp.length = curvsi.transp.offset = 0;
++		curvsi.red.msb_right = curvsi.green.msb_right = 0;
++		curvsi.blue.msb_right = curvsi.transp.msb_right = 0;
++		switch(curvsi.bits_per_pixel){
++		case 8:
++			curvsi.red.offset = 0;
++			curvsi.red.length = 8;
++			curvsi.green.offset = 0;
++			curvsi.green.length = 8;
++			curvsi.blue.offset = 0;
++			curvsi.blue.length = 8;
++		case 16:
++			curvsi.red.offset = 11;
++			curvsi.red.length = 5;
++			curvsi.green.offset = 5;
++			curvsi.green.length = 6;
++			curvsi.blue.offset = 0;
++			curvsi.blue.length = 5;
++			break;
++			
++		case 24:
++			curvsi.red.offset = 16;
++			curvsi.red.length = 8;
++			curvsi.green.offset = 8;
++			curvsi.green.length = 8;
++			curvsi.blue.offset = 0;
++			curvsi.blue.length = 8;
++			break;
++			
++		case 32:
++			curvsi.red.offset = 16;
++			curvsi.red.length = 8;
++			curvsi.green.offset = 8;
++			curvsi.green.length = 8;
++			curvsi.blue.offset = 0;
++			curvsi.blue.length = 8;
++			break;
++		}
++		
++	}
++        if(geometryfound && timingsfound)
++                return 0;
++        return beginofmode;
++}
++
++static int 
++enum_modes(int xres, int yres)
++{
++        int fd = -1;
++        struct stat status;
++        char* modesfile = MAP_FAILED;
++        char* beginofline = 0;
++        char* curpos = 0;
++        char* bufend = 0;
++	int bestx = 0;
++	int besty = 0;
++	int bestbpp = 0;;
++	char* bestmode;
++	char* beginofmode = 0;
++        fd = open("/etc/fb.modes", O_RDONLY);
++        if(fd < 0){
++                fprint(2, "framebuffer: cannot open the file /etc/fb.modes: %s\n", strerror(errno));
++                return 0;
++        }
++
++        if(fstat(fd, &status) < 0){
++                fprint(2, "framebuffer: cannot stat the file /etc/fb.modes: %s\n", strerror(errno));
++                close(fd);
++                return 0;
++        }
++
++        modesfile = mmap(0, status.st_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
++        if(modesfile == MAP_FAILED){
++                fprint(2, "framebuffer: cannot map /etc/fb.modes: %s\n", strerror(errno));
++                close(fd);
++                return 0;
++        }
++        modesfile[status.st_size] = 0;
++        curpos = modesfile;
++        bufend = modesfile + status.st_size;
++	bestmode = bufend;
++        do {
++                char mode[50] = {0};
++                beginofline = get_line(&curpos, bufend);
++                if(!beginofline)
++                        break;
++                if(sscanf(beginofline, "mode \"%50[^\"]\"", mode) == 1){
++			beginofmode = beginofline;
++                        do {
++                                int res = -1;
++                                int x = 0;
++                                int y = 0;
++                                int bpp = 0;
++                                int tmp = 0;
++                                beginofline = get_line(&curpos, bufend);
++                                if(!beginofline)
++					break;
++                                res = sscanf(beginofline, 
++                                             " geometry %d %d %d %d %d", 
++                                             &x, 
++                                             &y, 
++                                             &tmp, 
++                                             &tmp, 
++                                             &bpp);
++                                if(res == 5){
++					if((((x >= bestx) && (x <= xres)) || 
++					    ((y >= besty) && (y <= yres))) &&
++					   (bpp>=bestbpp)) {
++						bestmode = beginofmode;
++						bestx = x;
++						besty = y;
++						bestbpp = bpp;
++					}
++				}
++	                                
++			}
++			while(!strstr(beginofline, "endmode"));
++		}
++	}
++	while(beginofline);
++	curpos = parse_mode(bestmode, bufend);
++	munmap(modesfile, status.st_size);
++	close(fd);
++	
++	if(curpos) {
++		fprint(2, "framebuffer: mode %dx%d hasn't found in /etc/fb.modes\n", xres, yres);
++		return 0;
++	}
++	return 1;
++}
++
++/*
++ * image channel descriptors from draw.h
++ */
++enum {
++	CRed = 0,
++	CGreen,
++	CBlue,
++	CGrey,
++	CAlpha,
++	CMap,
++	CIgnore,
++	NChan,
++};
++
++#define __DC(type, nbits)	((((type)&15)<<4)|((nbits)&15))
++#define CHAN1(a,b)	__DC(a,b)
++#define CHAN2(a,b,c,d)	(CHAN1((a),(b))<<8|__DC((c),(d)))
++#define CHAN3(a,b,c,d,e,f)	(CHAN2((a),(b),(c),(d))<<8|__DC((e),(f)))
++#define CHAN4(a,b,c,d,e,f,g,h)	(CHAN3((a),(b),(c),(d),(e),(f))<<8|__DC((g),(h)))
++
++enum {
++	GREY1	= CHAN1(CGrey, 1),
++	GREY2	= CHAN1(CGrey, 2),
++	GREY4	= CHAN1(CGrey, 4),
++	GREY8	= CHAN1(CGrey, 8),
++	CMAP8	= CHAN1(CMap, 8),
++	RGB15	= CHAN4(CIgnore, 1, CRed, 5, CGreen, 5, CBlue, 5),
++	RGB16	= CHAN3(CRed, 5, CGreen, 6, CBlue, 5),
++	RGB24	= CHAN3(CRed, 8, CGreen, 8, CBlue, 8),
++	RGBA32	= CHAN4(CRed, 8, CGreen, 8, CBlue, 8, CAlpha, 8),
++	ARGB32	= CHAN4(CAlpha, 8, CRed, 8, CGreen, 8, CBlue, 8),	/* stupid VGAs */
++	XRGB32  = CHAN4(CIgnore, 8, CRed, 8, CGreen, 8, CBlue, 8),
++};
++
++
++static int 
++get_params(int* x, int* y, int* bpp, unsigned long* channel)
++{
++	if (enum_modes(*x, *y)) {
++		if(ioctl(fbfd, FBIOPUT_VSCREENINFO, &curvsi)){
++			fprint(2, "framebuffer: cannot put the new variable screen info: %s\n", strerror(errno));
++			return 0;
++		}
++		if(ioctl(fbfd, FBIOGET_VSCREENINFO, &curvsi)){
++			close(fbfd);
++			fprint(2, "framebuffer: cannot get the variable screen info: %s\n", strerror(errno));
++			return 0;
++		}
++	}
++	else
++		fprint(2,"framebuffer: cannot enumerate video modes - current framebuffer settings will be used\n");
++
++	*x=curvsi.xres; 
++	*y=curvsi.yres;
++	*bpp=curvsi.bits_per_pixel;
++	
++	switch (curvsi.bits_per_pixel) {
++	case 8:
++		*channel=CMAP8;
++		break;
++	case 16:
++	case 24:
++		if (curvsi.transp.length)
++			*channel=CHAN4(CAlpha,curvsi.transp.length,
++				       CRed,curvsi.red.length,
++				       CGreen,curvsi.green.length,
++				       CBlue,curvsi.blue.length);
++		
++		else
++			*channel=CHAN3(CRed,curvsi.red.length,
++				       CGreen,curvsi.green.length,
++				       CBlue,curvsi.blue.length);
++		break;
++	case 32:
++		if (curvsi.transp.length)
++			*channel=CHAN4(CAlpha,curvsi.transp.length,
++				       CRed,curvsi.red.length,
++				       CGreen,curvsi.green.length,
++				       CBlue,curvsi.blue.length);
++		else
++			*channel=CHAN4(CIgnore,curvsi.bits_per_pixel - curvsi.red.length - curvsi.green.length - curvsi.blue.length,
++				       CRed,curvsi.red.length,
++				       CGreen,curvsi.green.length,
++				       CBlue,curvsi.blue.length);
++		break;
++			
++	}
++	return 1;
++}
++
++static int 
++set_cmap()
++{
++        struct fb_fix_screeninfo fsi;
++	int i, red_size, green_size, blue_size;
++	int r, g, b, cr, cg, cb, v, num, den, idx;
++
++        if(ioctl(fbfd, FBIOGET_FSCREENINFO, &fsi)){
++                fprint(2, "framebuffer: cannot get fixed screen info: %s\n", strerror(errno));
++                return 0;
++	
++	}
++	origcmap.start = 0;
++	origcmap.len = 256;
++	origcmap.red = malloc(256 * sizeof(unsigned short));
++	origcmap.green = malloc(256 * sizeof(unsigned short));
++	origcmap.blue = malloc(256 * sizeof(unsigned short));
++	origcmap.transp = 0;
++	if(ioctl(fbfd, FBIOGETCMAP, &origcmap)){
++		fprint(2, "framebuffer: cannot get color map: %s\n", strerror(errno));
++		return 0;
++	}
++
++	switch(fsi.visual) {
++	case FB_VISUAL_PSEUDOCOLOR:
++		curcmap.start = 0;
++		curcmap.len = 256;
++		curcmap.red = malloc(256 * sizeof(unsigned short));
++		curcmap.green = malloc(256 * sizeof(unsigned short));
++		curcmap.blue = malloc(256 * sizeof(unsigned short));
++		curcmap.transp = 0;
++		memset(curcmap.red, 0, 256 * sizeof(unsigned short));
++		memset(curcmap.green, 0, 256 * sizeof(unsigned short));
++		memset(curcmap.blue, 0, 256 * sizeof(unsigned short));
++		for(r=0; r!=4; r++) {
++			for(g = 0; g != 4; g++) {
++				for(b = 0; b!=4; b++) {
++					for(v = 0; v!=4; v++) {
++						den=r;
++						if(g > den)
++							den=g;
++						if(b > den)
++							den=b;
++						/* divide check -- pick grey shades */
++						if(den==0)
++							cr=cg=cb=v*17;
++						else {
++							num=17*(4*den+v);
++							cr=r*num/den;
++							cg=g*num/den;
++							cb=b*num/den;
++						}
++						idx = r*64 + v*16 + ((g*4 + b + v - r) & 15);
++						/* was idx = 255 - idx; */
++						curcmap.red[idx] = cr*0x0101;
++						curcmap.green[idx] = cg*0x0101;
++						curcmap.blue[idx] = cb*0x0101;
++					}
++				}
++			}
++		}
++		break;
++	case FB_VISUAL_TRUECOLOR:
++		return 1;
++	case FB_VISUAL_DIRECTCOLOR:
++		red_size = 1 << curvsi.red.length;
++		green_size = 1 << curvsi.green.length;
++		blue_size = 1 << curvsi.blue.length;	
++		curcmap.start = 0;
++		curcmap.len = red_size;
++		if (curcmap.len < green_size)
++			curcmap.len = green_size;		
++		if (curcmap.len < blue_size)
++			curcmap.len = blue_size;		
++		curcmap.red = malloc(red_size * sizeof(unsigned short));
++		curcmap.green = malloc(green_size * sizeof(unsigned short));
++		curcmap.blue = malloc(blue_size * sizeof(unsigned short));
++		curcmap.transp = 0;
++		memset(curcmap.red, 0, red_size * sizeof(unsigned short));
++		memset(curcmap.green, 0, green_size * sizeof(unsigned short));
++		memset(curcmap.blue, 0, blue_size * sizeof(unsigned short));
++		for(i=0; i < red_size; i++)
++			curcmap.red[i] = i*256/red_size*0x0101;
++		for(i=0; i < green_size; i++)
++			curcmap.green[i] = i*256/green_size*0x0101;
++		for(i=0; i < blue_size; i++)
++			curcmap.blue[i] = i*256/blue_size*0x0101;
++		break;
++	default:
++		fprint(2, "framebuffer: not supported visual type of the framebuffer\n" );
++		return 0;
++	}
++        if(ioctl(fbfd, FBIOPUTCMAP, &curcmap)){
++                fprint(2, "framebuffer: cannot put color map: %s\n", strerror(errno));
++                return 0;
++        }
++	return 1;
++}
++
++static int 
++get_fb4vt(int vt)
++{
++        struct fb_con2fbmap map;
++
++        map.console = vt;
++
++        if(ioctl(fbfd, FBIOGET_CON2FBMAP, &map )){
++                fprint(2, "framebuffer: cannot get framebuffer console: %s\n", strerror(errno));
++                return -1;
++        }
++  
++        return map.framebuffer;
++}
++
++static int 
++set_fb4vt(int virtualterm, int fb)
++{
++        struct fb_con2fbmap map;
++
++        if(fb >= 0)
++                map.framebuffer = fb;
++        else {
++                struct stat         aStat;
++                if(fstat(fbfd, &aStat)){
++                        fprint(2, "framebuffer: cannot get status of the framebuffer:  %s\n", strerror(errno));    
++                        return -1;
++                }
++                map.framebuffer =(aStat.st_rdev & 0xFF) >> 5;
++        }
++
++        map.console = virtualterm;
++  
++        if(ioctl(fbfd, FBIOPUT_CON2FBMAP, &map)){
++                fprint(2, "framebuffer: cannot set a virtual terminal for the framebufer: %s\n", strerror(errno)); 
++                return -1;
++        }
++        return 0;
++}
++
++static int 
++vt_init()
++{
++        struct vt_stat vtstat;
++        char ttyname[20] = {0};
++        if((((tty0 = open("/dev/tty0", O_WRONLY)) < 0)) &&
++           (((tty0 = open("/dev/vc/0", O_RDWR)) < 0))){
++                fprint(2, "framebuffer: cannot open a terminal: %s\n", strerror(errno));    
++                return -1;
++        }
++        if(ioctl(tty0, VT_GETSTATE, &vtstat) < 0){
++                fprint(2, "framebuffer: cannot get state of the terminal: %s\n", strerror(errno));    
++                close(tty0);
++                return -1;
++        }
++  
++        prevtty = vtstat.v_active;
++
++        if((ioctl(tty0, VT_OPENQRY, &activetty) == -1) || 
++           (activetty ==(unsigned short)-1)){
++                fprint(2, "framebuffer: cannot open new terminal: %s\n", strerror(errno));    
++                close(tty0);
++                return -1;
++        }
++  	
++        oldfb = get_fb4vt(activetty);
++        set_fb4vt(activetty, -1);
++  	/*
++        if (ioctl(tty0, VT_ACTIVATE, activetty)){
++                fprint(2, "framebuffer: cannot activate terminal: %s\n", strerror(errno));    
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++
++        if(ioctl(tty0, VT_WAITACTIVE, activetty)){
++                fprint(2, "framebuffer: cannot activate terminal: %s\n", strerror(errno));    
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++  
++        if((snprintf(ttyname, sizeof(ttyname), "/dev/tty%d", activetty) < 0) ||
++           (((tty = open(ttyname, O_RDWR)) < 0) && 
++            (errno != ENOENT)) &&
++           (snprintf(ttyname, sizeof(ttyname),  "/dev/vc/%d", activetty) < 0) ||
++           ((tty = open(ttyname, O_RDWR)) < 0)){
++                fprint(2, "framebuffer: cannot activate terminal: %s\n", strerror(errno));    
++                ioctl(tty0, VT_ACTIVATE, prevtty);
++                ioctl(tty0, VT_WAITACTIVE, prevtty);
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++
++        if(ioctl(tty, KDGETMODE, &oldtermmode)){
++                fprint(2, "framebuffer: cannot get a terminal mode: %s\n", strerror(errno));    
++                ioctl(tty0, VT_ACTIVATE, prevtty);
++                ioctl(tty0, VT_WAITACTIVE, prevtty);
++                close(tty);
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++        if(ioctl(tty, KDSETMODE, KD_GRAPHICS)){
++                fprint(2, "framebuffer: cannot set the terminal to the graphics mode: %s\n", strerror(errno));    
++                ioctl(tty0, VT_ACTIVATE, prevtty);
++                ioctl(tty0, VT_WAITACTIVE, prevtty);
++                close(tty);
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++  
++        ioctl(tty0, TIOCNOTTY, 0);
++        ioctl(tty, TIOCSCTTY, 0);
++  
++        const char setcursoroff [] = "\033[?1;0;0c";
++        const char setblankoff [] = "\033[9;0]";
++
++        write(tty, setcursoroff, sizeof(setcursoroff));
++        write(tty, setblankoff, sizeof(setblankoff));
++
++
++        if(ioctl(tty, VT_GETMODE, &oldvtmode)){
++                fprint(2, "framebuffer: cannot get mode for the terminal: %s\n", strerror(errno));    
++                ioctl(tty0, VT_ACTIVATE, prevtty);
++                ioctl(tty0, VT_WAITACTIVE, prevtty);
++                close(tty);
++                ioctl(tty0, VT_DISALLOCATE, activetty);
++                close(tty0);
++                return -1;
++        }
++  	*/
++
++        return 0;
++}  
++
++static void 
++vt_deinit()
++{
++        const char setcursoron [] = "\033[?0;0;0c";
++        const char setblankon [] = "\033[9;10]";
++     
++        write(tty, setcursoron, sizeof(setcursoron));
++        write(tty, setblankon, sizeof(setblankon));
++
++        ioctl(tty, VT_SETMODE, &oldvtmode);
++     
++        ioctl(tty, KDSETMODE, oldtermmode);
++        ioctl(tty0, VT_ACTIVATE, prevtty);
++        ioctl(tty0, VT_WAITACTIVE, prevtty);
++        set_fb4vt(activetty, oldfb);
++        close(tty);
++        ioctl(tty0, VT_ACTIVATE, prevtty);
++        ioctl(tty0, VT_WAITACTIVE, prevtty);
++        ioctl(tty0, VT_DISALLOCATE, activetty);
++        close(tty0);
++}
+Index: emu/Linux-fb/emu
+===================================================================
+--- emu/Linux-fb/emu	(revision 0)
++++ emu/Linux-fb/emu	(revision 0)
+@@ -0,0 +1,22 @@
++#!/bin/sh
++# sudo mount /mnt/usb/ -oexec,utf8,shortname=win95,uid=$USER,gid=users
++
++HOST=Linux
++ARCH=`uname -m | sed -n 's/i.86/386/p; s/arm.*/arm/p; s/x86_64/386/p'`
++INFERNO=/media/inferno-os
++INFERNO_BIN=$INFERNO/$HOST/$ARCH/bin
++FRAMEBUFFER=/dev/fb0
++fbset -depth 8 -n -fb $FRAMEBUFFER > /etc/fb.modes
++
++case $PATH in
++$INFERNO_BIN:*)
++     	;;
++*)
++	PATH=$INFERNO_BIN:$PATH
++	;;
++esac
++
++EMUOPTS="-v -r$INFERNO -s -g256x198 -pmain=4M -pheap=1500K -pimage=2M -f/fonts/misc/unicode.6x13.font"
++exec emu-ds-$ARCH $EMUOPTS $*
++
++exit 0
+
+Property changes on: emu/Linux-fb/emu
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Index: emu/Linux-fb/tsinput.c
+===================================================================
+--- emu/Linux-fb/tsinput.c	(revision 0)
++++ emu/Linux-fb/tsinput.c	(revision 0)
+@@ -0,0 +1,63 @@
++#include "dat.h"
++#include "fns.h"
++#include "tsinput.h"
++
++enum
++{
++	NEVENTS = 5,
++	EVENTSZ = sizeof(struct input_event),
++};
++
++static void 
++tsProc(void* dummy)
++{
++	int count;
++	struct input_event ev[NEVENTS];
++	for(;;) {
++		count = read(ts.scrfd, ev, sizeof(ev));
++		if(count >= EVENTSZ)
++			ts.stylus(ev, count / EVENTSZ);
++	}
++}
++
++static void 
++keysProc(void* dummy)
++{
++	int count;
++	struct input_event ev[NEVENTS];
++	for(;;) {
++		count = read(ts.keyfd, ev, sizeof(ev));
++		if(count >= EVENTSZ)
++			ts.keys(ev, count / EVENTSZ);
++	}
++}
++
++static void 
++tsinput_init(void)
++{
++	if (ts.config() < 0)
++		return;
++
++	if(kproc("tsProc", tsProc, nil, 0) < 0) {
++		fprint(2, "emu: can't start touchscreen procedure");
++		close(ts.scrfd);
++		close(ts.keyfd);
++		return;
++	}
++
++	if(kproc("keysProc", keysProc, nil, 0) < 0) {
++		fprint(2, "emu: can't start keys procedure");
++		close(ts.scrfd);
++		close(ts.keyfd);
++		return;
++	}
++
++}
++
++void 
++tsinputlink()
++{
++	ispointervisible = 1; // have pointer only under acme?
++	tsinput_init();
++}
++
+Index: emu/Linux-fb/mkfile
+===================================================================
+--- emu/Linux-fb/mkfile	(revision 0)
++++ emu/Linux-fb/mkfile	(revision 0)
+@@ -0,0 +1,52 @@
++<../../mkconfig
++#Configurable parameters
++
++CONF=emu-fb-$OBJTYPE			#default configuration
++CONFLIST=emu-fb-$OBJTYPE
++CLEANCONFLIST=
++
++INSTALLDIR=$ROOT/$SYSTARG/$OBJTYPE/bin	#path of directory where kernel is installed
++
++#end configurable parameters
++
++<$ROOT/mkfiles/mkfile-$SYSTARG-$OBJTYPE	#set vars based on target system
++
++<| $SHELLNAME ../port/mkdevlist $CONF	#sets $IP, $DEVS, $PORT, $LIBS
++
++OBJ=\
++	asm-$OBJTYPE.$O\
++	os.$O\
++        framebuffer.$O\
++        screen.$O\
++	$CONF.root.$O\
++	lock.$O\
++	$DEVS\
++	$PORT\
++
++LIBNAMES=${LIBS:%=lib%.a}
++#libs=${LIBS:%=$ROOT/$OBJDIR/lib/lib%.a}
++
++HFILES=\
++
++CFLAGS='-DROOT="'$ROOT'"' -DEMU -I. -I../port -I$ROOT/$SYSTARG/$OBJTYPE/include -I$ROOT/include -I$ROOT/libinterp $CTHREADFLAGS $CFLAGS $EMUOPTIONS 
++SYSLIBS= -lm 
++KERNDATE=`{$NDATE}
++
++default:V:	$O.$CONF
++
++$O.$CONF:	$OBJ $CONF.c $CONF.root.h $LIBNAMES
++	$CC $CFLAGS '-DKERNDATE='$KERNDATE $CONF.c
++	$LD $LDFLAGS -o $target $OBJ $CONF.$O $LIBFILES $SYSLIBS
++
++install:V: $O.$CONF
++	cp $O.$CONF $INSTALLDIR/$CONF
++
++%.$O:	../Linux/%.c
++	$CC $CFLAGS -I. ../Linux/$stem.c
++	
++%.$O:	../Linux/%.S
++	$AS $ASFLAGS ../Linux/$stem.S
++
++<../port/portmkfile
++
++devfs.$O:		../port/devfs-posix.c
+Index: emu/Linux-fb/emu-ds-arm
+===================================================================
+--- emu/Linux-fb/emu-ds-arm	(revision 0)
++++ emu/Linux-fb/emu-ds-arm	(revision 0)
+@@ -0,0 +1,110 @@
++dev
++	root
++	cons
++	env
++	mnt
++	pipe
++	prog
++	prof
++	srv
++	dup
++	ssl
++	cap
++	fs
++	cmd	cmd
++	indir
++
++	draw
++	pointer
++	snarf
++
++	ip	ipif-posix ipaux
++	eia
++	audio	audio-oss
++	mem
++	apm
++
++lib
++	interp
++	tk
++	freetype
++	math
++	draw	screen
++
++	memlayer
++	memdraw
++	keyring
++	sec
++	mp
++
++	9
++
++link
++	tsinput tsinput_ds
++mod
++	sys
++	draw
++
++	tk
++	math
++	srv	srv
++	keyring
++	loader
++	freetype
++
++port
++	alloc
++	cache
++	chan
++	dev
++	dial
++	dis
++	discall
++	env
++	error
++	errstr
++	exception
++	exportfs
++	inferno
++	latin1
++	main
++	parse
++	pgrp
++	print
++	proc
++	qio
++	random
++	sysfile
++	uqid
++
++misc
++	sbrk
++
++code
++
++init
++	emuinit
++
++root
++	/dev	/
++	/fd	/
++	/prog	/
++	/net	/
++	/net.alt	/
++	/chan	/
++	/nvfs	/
++	/env	/
++#	/chan
++#	/dev
++#	/dis
++#	/env
++#	/n
++#	/net
++#	/nvfs /
++#	/prog
++#	/icons
++#	/osinit.dis
++#	/dis/emuinit.dis
++#	/dis/lib/auth.dis
++#	/dis/lib/ssl.dis
++#	/n/local /
+Index: emu/Linux-fb/framebuffer.h
+===================================================================
+--- emu/Linux-fb/framebuffer.h	(revision 0)
++++ emu/Linux-fb/framebuffer.h	(revision 0)
+@@ -0,0 +1,9 @@
++#if !defined (_FRAMEBUFFER_H_)
++#define _FRAMEBUFFER_H_
++
++int fb_init(int* xres, int* yres, int* bpp, unsigned long* channel);
++unsigned char* fb_get();
++void fb_release(unsigned char* buffer);
++void fb_deinit();
++
++#endif // _FRAMEBUFFER_H_
+Index: emu/Linux-fb/tsinput.h
+===================================================================
+--- emu/Linux-fb/tsinput.h	(revision 0)
++++ emu/Linux-fb/tsinput.h	(revision 0)
+@@ -0,0 +1,19 @@
++#include <linux/fb.h>
++#include <linux/input.h>
++
++/* touchscreen/keys specific handheld functions */
++typedef struct Tscreen Tscreen;
++struct Tscreen {
++	char *scrdev;
++	char *keydev;
++	int scrfd;
++	int keyfd;
++	int b;
++
++	int (*config)(void);
++	void (*stylus)(struct input_event *, int);
++	void (*keys)(struct input_event *, int);
++};
++
++extern struct Tscreen ts;
++extern int ispointervisible;
+Index: emu/Linux-fb/devapm.c
+===================================================================
+--- emu/Linux-fb/devapm.c	(revision 0)
++++ emu/Linux-fb/devapm.c	(revision 0)
+@@ -0,0 +1,223 @@
++#include	"dat.h"
++#include	"fns.h"
++#include	"../port/error.h"
++
++#include	<unistd.h>
++#include	<linux/apm_bios.h>
++#include	<linux/fb.h>
++
++
++enum{
++	Qdir,
++	Qapm,
++};
++
++static
++Dirtab apmtab[]={
++	".",		{Qdir, 0, QTDIR},	0,	0555,	/* entry for "." must be first if devgen used */
++	"apm",		{Qapm, 0},	0,	0666,
++};
++
++
++static Lock apmlock;
++static int  apmfd = -1;
++static Lock proclock;
++static int  procfd = -1;
++
++int apm_dev_init()
++{
++	int result;
++	lock(&apmlock);
++	result = ((apmfd == -1) && ((apmfd = open("/dev/apm_bios", O_WRONLY)) < 0)) ? 1 : 0;
++	unlock(&apmlock);
++	return result;
++}
++
++int apm_proc_init()
++{
++	int result;
++	lock(&proclock);
++	result = ((procfd == -1) && ((procfd = open("/proc/apm", O_RDONLY))< 0)) ? 1 : 0;
++	unlock(&proclock);
++	return result;
++}
++
++int apm_dev_close()
++{
++	int result;
++	lock(&apmlock);
++	result = ((apmfd == -1) || close(apmfd)) ? 1 : 0;
++	apmfd = -1;
++	unlock(&apmlock);
++	return result;
++}
++
++int apm_proc_close()
++{
++	int result;
++	lock(&proclock);
++	result = ((procfd == -1) || close(procfd)) ? 1 : 0;
++	procfd = -1;
++	unlock(&proclock);
++	return result;
++}
++
++
++void apm_suspend()
++{
++	int result;
++	if(apm_dev_init())
++		return;
++	sync();
++	lock(&apmlock);
++	result = ioctl(apmfd, APM_IOC_SUSPEND, 0);
++	unlock(&apmlock);
++	if(result)
++		error(Eio);
++}
++
++int apm_blank(int vesastt)
++{
++	int fbfd, result;
++	static int currvesastt = -1;
++
++	if (currvesastt == vesastt)
++		return 0;	
++	if ((fbfd = open("/dev/fb0", O_RDWR)) < 0)
++		return -1;
++
++	lock(&apmlock);
++	result = ioctl(fbfd, FBIOBLANK, vesastt);
++	unlock(&apmlock);
++	close(fbfd);
++	if(result)
++		error(Eio);
++	else
++		currvesastt = vesastt;
++	return result;
++}
++
++static Chan*
++apmattach(char* spec)
++{
++	if(apm_dev_init() || apm_proc_init())
++		error(Enoattach);
++	return devattach('S', spec);
++}
++
++static Walkqid*
++apmwalk(Chan *c, Chan *nc, char **name, int nname)
++{
++	return devwalk(c, nc, name, nname, apmtab, nelem(apmtab), devgen);
++}
++
++static int
++apmstat(Chan* c, uchar *db, int n)
++{
++	return devstat(c, db, n, apmtab, nelem(apmtab), devgen);
++}
++
++static Chan*
++apmopen(Chan* c, int omode)
++{
++	apm_proc_init();
++	return devopen(c, omode, apmtab, nelem(apmtab), devgen);  
++}
++
++static void
++apmclose(Chan* c)
++{
++	USED(c);
++	apm_proc_close();
++}
++
++static long
++apmread(Chan* c, void* a, long n, vlong offset)
++{
++	USED(offset);
++	switch((ulong)c->qid.path) {
++	case Qdir:
++		return devdirread(c, a, n, apmtab, nelem(apmtab), devgen);
++	case Qapm: {
++		char buffer[100] = {0};
++		char driver_version[10] = {0};
++		int version_major = 0;
++		int version_minor = 0;
++		int flags = 0;
++		int line_status = 0;
++		int battery_status = 0;
++		int battery_flags = 0;
++		int battery_percentage = 0;
++		int battery_time = 0;
++		char units[10] = {0};
++		if(read(procfd, buffer, sizeof(buffer)) < 0)
++			error(Eio);
++		sscanf(buffer, "%s %d.%d %x %x %x %x %d%% %d %s\n",
++		       driver_version,
++		       &version_major,
++		       &version_minor,
++		       &flags,
++		       &line_status,
++		       &battery_status,
++		       &battery_flags,
++		       &battery_percentage,
++		       &battery_time,
++		       units);
++		int result = sprint(buffer, "%s %d%% %d min ", 
++				    ((battery_status) ? "online" : "offline"),
++				    (((battery_percentage >= 0) && (battery_percentage <= 100)) ? battery_percentage : 0),
++				    (strncmp(units, "min", sizeof("min")) ? (battery_time / 60) : battery_time));
++		return readstr(offset, a, n, buffer);
++	}
++	default:
++		n=0;
++		break;
++	}
++	return n;
++}
++
++
++static long
++apmwrite(Chan* c, void* a, long n, vlong offset)
++{
++	char buffer[128] = {0};
++	USED(a);
++	USED(offset);
++	switch((ulong)c->qid.path) {
++	case Qapm:
++		if(n > sizeof(buffer))
++			n = sizeof(buffer)- 1;
++		strncpy(buffer, a, n);
++		if(strncmp(buffer, "suspend", sizeof("suspend")) == 0) {
++			apm_suspend();
++			return n;
++		}else if(strncmp(buffer, "blank", sizeof("blank")) == 0) {
++			apm_blank(VESA_POWERDOWN);
++			return n;
++		}
++		error(Ebadctl);
++		break;
++	default:
++		error(Ebadusefd);
++	}
++	return n;
++}
++
++Dev apmdevtab = {					/* defaults in dev.c */
++	'S',
++	"apm",
++
++	devinit,					/* devinit */
++	apmattach,
++	apmwalk,
++	apmstat,
++	apmopen,
++	devcreate,					/* devcreate */
++	apmclose,
++	apmread,
++	devbread,					/* devbread */
++	apmwrite,
++	devbwrite,					/* devbwrite */
++	devremove,					/* devremove */
++	devwstat,					/* devwstat */
++};
+Index: emu/Linux-fb/tsinput_ds.c
+===================================================================
+--- emu/Linux-fb/tsinput_ds.c	(revision 0)
++++ emu/Linux-fb/tsinput_ds.c	(revision 0)
+@@ -0,0 +1,136 @@
++#include "dat.h"
++#include "fns.h"
++#include "../port/error.h"
++#include "keyboard.h"
++#include <unistd.h>
++#include "tsinput.h"
++
++static int xabs[5], yabs[5];
++
++enum
++{
++	DblTime	= 300000		/* double click time in micro seconds */
++};
++
++static void 
++dsstylus(struct input_event* ev, int count)
++{
++	int i, tv, t = 0;
++	int x, y, b, dbl = 0;
++	static int lastb;
++	static struct timeval lastt;
++
++	b = ts.b;
++	for (i=0; i < count; i++){
++		switch(ev[i].type){
++			case EV_ABS:
++				switch(ev[i].code){
++				case ABS_X:
++					x = ev[i].value;
++					break;
++				case ABS_Y:
++					y = ev[i].value; 
++					break;
++				}
++				break;
++			case EV_KEY:
++				switch(ev[i].code){
++				case BTN_TOUCH:
++					t=1;
++					tv = ev[i].value;
++					if (ev[i].value){
++						if(b==lastb && ev[i].time.tv_sec == lastt.tv_sec &&
++							(ev[i].time.tv_usec-lastt.tv_usec) < DblTime)
++							dbl = 1;
++						lastb = b;
++						lastt = ev[i].time;
++						if(dbl)
++							b = b | 1<<8;
++					}
++				}
++				break;
++			case EV_SYN:
++				if(0) fprint(2, "dsstylus: (%d, %d, %d)\n", i, b, x, y); 
++				if (i>1)				// motion
++					mousetrack (b, x, y, 0);
++				else if (i==1 && t && tv)	// press
++					mousetrack(b, 0, 0, 1);
++				else if (i==1 && t && !tv)	// release
++					mousetrack(0, 0, 0, 1);
++				return;
++		}
++	}
++}
++
++static void 
++dskeys(struct input_event* ev, int count)
++{
++	int i, key;
++	static int ds_buttons[] = {
++		No,
++		[BTN_SELECT] = No, [BTN_START] = No, // screen swap as in ds games?
++		[KEY_ENTER] = '\n', [KEY_SPACE] = Esc,
++		[KEY_LEFTSHIFT] = LShift, [KEY_RIGHTSHIFT] = RShift,
++		[KEY_PAGEUP] = LCtrl, [KEY_PAGEDOWN] = RCtrl,
++		[KEY_UP] = Up, [KEY_LEFT] = Left, [KEY_RIGHT] = Right, [KEY_DOWN] = Down,
++	};
++
++	for (i=0; i < count; i++){
++		if (ev[i].type != EV_KEY)
++			continue;
++
++		if (ev[i].value)
++			ts.b = 1;
++		else { 
++			key = ds_buttons [ev[i].code];
++			if(0)fprint(2, "dskeys: %d (%c)\n", key, key);
++			if (key != No)
++				apm_blank(VESA_NO_BLANKING);
++			switch(key) {
++			case No:
++				break;
++			case RShift:
++				ts.b = 2;
++				break;
++			case LShift:
++				ts.b = 4;
++				break;
++			default:
++				gkbdputc(gkbdq, key);
++				break;
++			}
++		}
++	}
++	return;
++}
++
++static int
++dsconfig(void)
++{
++	if(((ts.scrfd = open(ts.scrdev, O_RDONLY)) < 0)) {
++		fprint(2, "error open %s: %s\n", ts.scrdev, strerror(errno));
++		return -1;
++	}
++	if((ts.keyfd = open(ts.keydev, O_RDONLY)) < 0) {
++		fprint(2, "error open %s: %s\n", ts.keydev, strerror(errno));
++		close(ts.scrfd);
++		return -1;
++	}
++
++	// corrections to touchscreen dimension
++	ioctl(ts.scrfd, EVIOCGABS(ABS_X), xabs);
++	ioctl(ts.scrfd, EVIOCGABS(ABS_Y), yabs);
++	if(0) fprint(2, "tsinput_config reached\n");
++
++	return 0;
++}
++
++struct Tscreen ts = {
++	scrdev: "/dev/touch",
++	keydev: "/dev/event0",
++	b: 1,
++	config: dsconfig,
++	stylus:	dsstylus,
++	keys:	dskeys,
++};
++
+Index: mkconfig
+===================================================================
+--- mkconfig	(revision 225)
++++ mkconfig	(working copy)
+@@ -4,7 +4,7 @@
+ #	They are almost always the same.
+ 
+ #	On Nt systems, the ROOT path MUST be of the form `drive:/path'
+-ROOT=/usr/inferno
++ROOT=/mnt/m/r/dslinux/inferno-os/
+ 
+ #
+ #	Specify the flavour of Tk (std for standard builds)
+@@ -14,15 +14,15 @@
+ #
+ #	Except for building kernels, SYSTARG must always be the same as SYSHOST
+ #
+-SYSHOST=Plan9		# build system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
++SYSHOST=Linux		# build system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
+ SYSTARG=$SYSHOST		# target system OS type (Hp, Inferno, Irix, Linux, Nt, Plan9, Solaris)
+ 
+ #
+ #	specify the architecture of the target system - Plan 9 imports it from the
+ #	environment; for other systems it is usually just hard-coded
+ #
+-#OBJTYPE=386			# target system object type (s800, mips, 386, arm, sparc)
+-OBJTYPE=$objtype
++OBJTYPE=arm			# target system object type (s800, mips, 386, arm, sparc)
++#OBJTYPE=$objtype
+ 
+ #
+ #	no changes required beyond this point
+Index: libinterp/sysmod.h
+===================================================================
+--- libinterp/sysmod.h	(revision 225)
++++ libinterp/sysmod.h	(working copy)
+@@ -30,6 +30,7 @@
+ 	"print",0xac849033,Sys_print,0,0,{0},
+ 	"pwrite",0x9d8aac6,Sys_pwrite,56,2,{0x0,0xc0,},
+ 	"read",0x7cfef557,Sys_read,48,2,{0x0,0xc0,},
++	"readn",0x7cfef557,Sys_readn,48,2,{0x0,0xc0,},
+ 	"remove",0xc6935858,Sys_remove,40,2,{0x0,0x80,},
+ 	"seek",0xaeccaddb,Sys_seek,56,2,{0x0,0x80,},
+ 	"sleep",0xe67bf126,Sys_sleep,40,0,{0},
+@@ -44,4 +45,4 @@
+ 	"wstat",0x56b02096,Sys_wstat,104,2,{0x0,0xbc,},
+ 	0
+ };
+-#define Sysmodlen	42
++#define Sysmodlen	43
+Index: lib/sh/profile
+===================================================================
+--- lib/sh/profile	(revision 225)
++++ lib/sh/profile	(working copy)
+@@ -1 +1,14 @@
+ # emu sh initialisation here
++load std
++
++user="{cat /dev/user}
++home=/usr/$user
++
++if {! ftest -d $home}{
++	mount -a {mntgen} /usr
++	bind -c /usr/salva $home
++}
++
++# load $user profile
++cd $home
++run lib/profile
+Index: emu/Linux-fb/emu
+===================================================================
+--- emu/Linux-fb/emu	(revision 0)
++++ emu/Linux-fb/emu	(revision 0)
+@@ -0,0 +1,22 @@
++#!/bin/sh
++# sudo mount /mnt/usb/ -oexec,utf8,shortname=win95,uid=$USER,gid=users
++
++HOST=Linux
++ARCH=`uname -m | sed -n 's/i.86/386/p; s/arm.*/arm/p; s/x86_64/386/p'`
++INFERNO=/media/inferno-os
++INFERNO_BIN=$INFERNO/$HOST/$ARCH/bin
++FRAMEBUFFER=/dev/fb0
++fbset -depth 8 -n -fb $FRAMEBUFFER > /etc/fb.modes
++
++case $PATH in
++$INFERNO_BIN:*)
++     	;;
++*)
++	PATH=$INFERNO_BIN:$PATH
++	;;
++esac
++
++EMUOPTS="-v -r$INFERNO -s -g256x198 -pmain=4M -pheap=1500K -pimage=2M -f/fonts/misc/unicode.6x13.font"
++exec emu-ds-$ARCH $EMUOPTS $*
++
++exit 0
+
+Property changes on: emu/Linux-fb/emu
+___________________________________________________________________
+Name: svn:executable
+   + *
+

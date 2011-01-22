@@ -1,0 +1,72 @@
+.SH NAME
+lab 10 - delay line
+.SH DESCRIPTION
+I am continuing to add signal modules to signalfs copying
+the implementations from stk.
+Today I'm working on the delay line,
+and whatever else I can implement in two hours.
+.SS "2004/1006 22:25
+.PP
+The delay line does not fit the model of signals
+I have created so far. From the STK it looks
+like it is used more as a utilitly class than
+a standalone filter. Its used by the echo class
+which actually does the mix of the current input
+with the delayed input. I could of course do
+the same thing and have delay as functions
+with the dsp module.
+Trying to use the delay, or echo,
+brings up a number of issues.
+.PP
+How am I going to stack multiple filters ontop
+one another and still be able to ctrl each one
+independently?
+To access to each ctl file I'd need
+to know the conversation number.
+This might be tricky to find out if I have
+multiple instruments each being built from
+many modules.
+.PP
+I want to alter the effect during playback
+independently of the instrument being played.
+But I'm not sure how to fit it in with a simple
+instrument. Where in the stack should it go?
+And how will I control it if it's placed under
+the instrument?
+.PP
+This goes back to the problem of needing 
+some kind of patch bay.
+Given a particular instrument we need
+to now all the effects tied in to it. Then
+we want to write to the ctl file of any of
+them, not via the instrument but directly,
+and alter the effect.
+We need to remove the exclusive access
+condition on the ctl, although we
+could place it on data instead.
+.PP
+If I didn't do this I'd need a naming convention
+within the ctl file that was at the end of the 
+filter pipeline. But that is ridiculous because
+what else am I using a fs for.
+.PP
+Therefore, If I put the, say, echo filter in front
+of the instrument, I still send note events
+to the instrument, but read sound back
+from the echo data file.
+.PP
+Is the sequencer going to be able to
+manage all this?
+The skini language may have to include
+naming of instruments using filenames.
+That is, events are sent directed to specified
+ctl files (filters, instruments) but audio
+data is read from only one, the one at the end of the pipeline
+(is pipeline the right term here? filter chain, patch? sink?).
+.PP
+We are need to specify the language and a means
+for retrieving all the conversation directories for
+a pipeline before going further.
+.SH FILES
+.A http://caerwyn.com/lab/10/delay.b delay.b
+.A http://caerwyn.com/lab/10/delayl.b delayl.b

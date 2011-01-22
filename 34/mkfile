@@ -1,0 +1,38 @@
+</mkconfig
+
+TARG=\
+	btree.dis\
+	cache.dis\
+	putpost.dis\
+	lexis.dis\
+	util.dis\
+	dump.dis\
+	query.dis\
+	hash.dis\
+	tok.dis\
+	get.dis\
+
+SYSMODULES=\
+	bufio.m\
+	draw.m\
+	daytime.m\
+
+MODULES=\
+	btree.m\
+	cache.m\
+	lexis.m\
+	util.m\
+	query.m\
+	hash.m\
+
+DISBIN=/dis/folkfs
+
+
+<$ROOT/mkfiles/mkdis
+
+install:V:	$BINTARG
+%.install:V:	$DISBIN/%
+%.installall:V:	$DISBIN/%
+
+$DISBIN/%:	%.sh
+	cp $stem.sh $target && chmod a+rx $target

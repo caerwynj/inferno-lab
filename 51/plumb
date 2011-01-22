@@ -1,0 +1,19 @@
+#!/dis/sh
+
+load std echo
+echo '<html>
+<head><title>plumbing</title></head>
+<body>
+<form name="plumb" method="GET" action="http://localhost/magic/plumb">
+<input type="text" name="msg" size="41" maxlength="2048">
+<input type="submit" name="btn" value="Plumb">
+</form>
+
+plumbing:
+'
+
+echo $msg ' </body>
+</html>'
+
+plumb -d edit -a action showdata -a filename /httpd/plumb $"msg >[2=1]
+

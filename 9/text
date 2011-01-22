@@ -1,0 +1,64 @@
+.SH NAME
+lab 9 - create tmap image directly instead of using Tk
+.SH DESCRIPTION
+I modified
+.I tmap
+to use
+.IR draw-image (2)
+because  using 
+.IR tk (2)
+commands to create so many rectangles was slow and used
+a lot of main memory.
+.PP
+The changes were straight forward. The Tk cmd
+.IP
+.EX
+TkCmd(t, sprint(".fc.c create rectangle %.1f %.1f %.1f %.1f "
+	+ " -fill #%s -outline black -width %.2f", 
+	r.x, r.y, r.x+r.w, r.y+r.h, dc[depth],  0.5));
+.EE
+.PP
+becomes
+.IP
+.EX
+rect := Rect((int r.x, int r.y), (int(r.x+r.w), int(r.y+r.h)));
+img.draw(rect, t.display.color(dc[depth]), nil, (0,0));
+img.border(rect, 1, t.display.black, (0,0));
+.EE
+.PP
+where 
+.I img
+is the global 
+.B Image
+destination.
+I then update the image on the canvas
+.IP
+.EX
+tk->putimage(t, "tmap", img, nil);
+tk->cmd(t, ".fc.c coords tmap 0 0; update");
+.EE
+.PP
+.B tmap
+is the name of the image previously created
+with
+.IR image (9)
+and asocciated with 
+.IR canvas (9).
+.SH CONCLUSION
+It works much faster and uses much less main memory.
+It still uses a lot of heap memory. Tk is nice but has it's
+limits. It works well for creating and removing the highlight
+rectangles. But it isn't appropriate for creating the main
+image, because we don't want to keep track of every rectangle
+image, and there can be so many entries. The largest I tried
+was about 300,000 entries. I'd like to try creating a large
+image with 1 million entries.
+.PP
+I'm still improving this because I intend to use it as
+some kind of radar for monitoring file system activity.
+.SH FILES
+.A http://caerwyn.com/lab/9/tmap.b tmap.b
+.A http://caerwyn.com/lab/9/tmap.gif screenshot
+.A http://caerwyn.com/lab/9/treemap.b treemap.b
+.A http://caerwyn.com/lab/9/treemap.m treemap.m
+The screenshot is of strip view of the Inferno distribution.

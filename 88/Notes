@@ -1,0 +1,35 @@
+
+Add a devmods device to emu that exports
+
+lib/sys.dis
+lib/draw.dis
+
+etc. for every module built into the kernel.
+
+The files have no permissions to read or write.
+Each file has a unique qid, which the kernel can
+check when it loads each module so that
+an actual load never occurs, the builtin
+modules are always already resident.
+
+However, if a user binds a real .dis file ontop of
+of builtin, then it will get loaded. This is
+so we can emulate older versions of emu.
+
+We can also add limbo implementations of
+what were builtin modules, such as prefab,
+tk, draw, math, or keyring, or we can
+supplement the builtins.
+
+
+The ability to do this proves whether we can provide
+a sustainable environment.
+
+The load command will map $Mod names to 
+the path /dev/lib/mod.dis
+
+
+We have the limbo source for a limbo compiler back
+to 1e.
+
+We have complete source file trees from 1e, 2e, 3e, 4e, and current.

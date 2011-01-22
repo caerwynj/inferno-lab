@@ -1,0 +1,120 @@
+.SH NAME
+lab 24 - call google api from inferno
+.SH DESCRIPTION
+I wanted to call the google api from within inferno.
+
+I looked around to see what was available. Inferno has
+no WSDL or SOAP support, and limited xml. However,
+most of the SOAP messages are boiler plate, so we
+just need a program to handle the http. The program
+svc/webget/webget is something I hadn't noticed
+before. It serves a file /chan/webget which
+we can write GET and POST messages to 
+and read back the result.
+
+With this in mind I tried writing shell scripts
+to read and write the SOAP messages to the google
+api url.
+
+I needed to debug webget a little because the
+POST didn't work. The changed
+files are attached below.
+
+The google api download came with sample SOAP
+messages. I inserted my key (removed from the
+attached files), and placed the string
+.B PHRASE
+where the search phrase was to appear.
+The shell script runs
+.I sed
+on the file replacing PHRASE with the actual search
+phrase then writes the POST message and SOAP message
+to 
+.B /chan/webget
+.EX
+<> /chan/webget {
+	phrase=$"*
+	x := "{sed 's/PHRASE/' ^ 
+		$phrase ^'/' doGoogleSearch.xml}
+	size=${len $x}
+	echo POST∎ ^ 
+		$size ^ 
+		∎0∎http://api.google.com/search/beta2 ^
+		∎text/xml∎no-cache >[1=0]
+	echo -n $x >[1=0]
+	getlines {f = ${unquote $line}
+		if { ~ ${hd $f} OK} {
+			f = ${tl $f}
+			read ${hd $f}
+			exit
+		} {exit}
+	}
+}
+.EE
+The first line read from 
+.B /chan/webget
+is the result status. Either 
+.EX
+OK length reqid type url
+.EE
+or
+.EX
+ERROR reqid message
+.EE
+I use the length returned from the OK
+message to read the whole rest of the message
+to standard output.
+.PP
+To build copy the limbo *.[bm] files to /svc/webget/webget
+and mk install. The google.sh and spell.sh files
+should be changed to point to your .xml soap messages.
+Change the key in the .xml files to your key.
+Then for example,
+.EX
+% svc/webget/webget&
+% spell britany spars
+britney spears
+% 
+% fn g {google $* |grep URL:}
+% g plan9
+URL: http://www.cs.bell-labs.com/plan9dist/
+URL: http://www.cs.bell-labs.com/wiki/plan9/plan_9_wiki/
+URL: http://www.plan9.org/
+URL: http://www.ecf.toronto.edu/plan9/
+URL: http://www.ecf.toronto.edu/plan9/plan9faq.html
+URL: http://plan9.aichi-u.ac.jp/
+URL: http://cm.bell-labs.com/
+URL: http://www.fywss.com/plan9/plan9faq.html
+URL: http://plan9.att.com/
+URL: http://www.plan9.com/
+.PP
+This also works through an http proxy if you configure
+the proxy in 
+.BR /services/webget/config .
+.PP
+I piped the SOAP output from through a command
+called
+.I rss
+which I originally wrote to parse RSS XML.
+This just removes the markup and makes it 
+a little easier to read.
+.EX
+.SH CONCLUSION
+How easy was that! Well it could be easier.
+Is all that SOAP boilerplate really needed?
+<Insert your rant against SOAP here>
+
+I wonder if SOAP becomes more common
+this fast and loose technique will continue to fly.
+
+.SH FILES
+.A http://caerwyn.com/lab/24/doGetCachedPage.xml doGetCachedPage.xml
+.A http://caerwyn.com/lab/24/doGoogleSearch.xml doGoogleSearch.xml
+.A http://caerwyn.com/lab/24/doSpellingSuggestion.xml doSpellingSuggestion.xml
+.A http://caerwyn.com/lab/24/google.sh google.sh
+.A http://caerwyn.com/lab/24/spell.sh spell.sh
+.A http://caerwyn.com/lab/24/http.b http.b
+.A http://caerwyn.com/lab/24/webget.b webget.b
+.A http://caerwyn.com/lab/24/wgutils.b wgutils.b
+.A http://caerwyn.com/lab/24/wgutils.m wgutils.m
+.A http://caerwyn.com/lab/24/rss.b rss.b

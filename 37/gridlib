@@ -1,0 +1,159 @@
+load std
+autoload=std
+
+fn idx {
+tr A-Z a-z | sed  '
+s/[^a-zA-Z0-9_]+/ /g
+s/[ 	][ 	]*/\n/g
+' |sed -e 's/\.\.*$//' -e '/^$/d' | sed -e 's/$/ 1/'
+}
+
+fn refresh {
+	names=`{ndb/query -a  kfs '' name}
+
+	for (i in $names) {
+		(host chunk) = ${split ! `{ndb/query name $i master}}
+		addr = `{ndb/regquery -n name $host id $chunk}
+		if {ftest -e /mnt/registry/ ^$i} {
+			echo host $host automount 1 persist 1 addr $addr replica `{ndb/query name $i replica}> /mnt/registry/^$i
+		} {
+			echo $i host $host automount 1 persist 1 addr $addr replica `{ndb/query name $i replica}> /mnt/registry/new
+		}
+	}
+}
+
+fn rmnt {
+	for (file in $*) {
+		(disk rest ) := `{cat /mnt/registry/$file}
+		while {! ~ $#rest 0} {
+			(name val tail) := $rest
+			if { ~ $name 'addr'} {mount -c $val /n/ ^ $disk}
+			rest = $tail
+		}
+	}
+}
+
+fn diskinit {
+	rmnt d0.dist $1
+	cp -r /n/d0.dist/adm /n/$1
+}
+
+fn update {
+	rmnt d0.dist
+	install/applylog -s -T /n/local/dist/time /n/local/dist/client.log /n/local /n/d0.dist  < /n/d0.dist/dist/dist.log
+}
+
+fn sync {
+	if {~ $#* 1} {
+		disk:=$1
+		builtin cd /n/ ^ $disk
+		install/updatelog -x dist/server.log dist/server.log  >> dist/server.log
+	} {echo usage: sync disk >[1=2] }
+}
+
+rpid=()
+fn rcpu {
+	cmd:=$1
+	disk:=${tl $*}
+	cpu:=${nextcpu}
+	(net host port) := ${split '!' $cpu}
+#	echo nextcpu $net $host $port >[1=2] 
+	disk = ${finddisk $host} $disk
+	s=${parse '{cpudisk=/n/' ^ ${hd $disk} ^'
+	run /n/client/usr/caerwyn/lib/gridrc
+	rmnt ' ^ $"disk ^ ' 
+	' ^ $cmd ^ '}'}
+	cpu $cpu sh -c $s &
+	rpid=$apid $rpid
+	echo ${hd $disk}
+}
+
+fn newcpu {
+	sys=`{cat /dev/sysname}
+	listen -i {
+		(host port ) :=${split '!' `{cat $net/local}}
+		echo tcp!$sys!$port  persist 1 svc rstyx > /mnt/registry/new
+		} tcp!$sys!0  {runas $user auxi/rstyxd&}
+}
+
+fn gridinit {
+	mount -ac {mntgen} /n
+	ndb/cs
+	chmod 666 /net/cs
+	mount 'net!$registry!registry' /mnt/registry
+}
+
+fn newdisk {
+	disk  := $1
+	if {! ftest -e $disk} {
+		zeros 1024 65536 > $disk
+	}
+	cmd := ${parse ' {disk/kfs  -rPW ' ^ $disk ^ '}' }
+	grid/register -a id  `{basename $disk}  $cmd
+}
+
+fn registerdisk {
+	for (i in $*) {
+		cmd := ${parse '{disk/kfs -PW ' ^ $disk ^ '}' }
+		grid/register -a id  `{basename $i}   $cmd
+	}
+}
+
+cpulist=()
+subfn nextcpu {
+	if {~ $#cpulist 0} {cpulist=`{ndb/regquery -n svc rstyx} }
+
+	result = ${hd $cpulist}
+	cpulist = ${tl $cpulist}
+}
+
+subfn finddisk {
+	host := $1
+	if {~ $#$host 0} {$host=`{ndb/regquery -n host $host | grep cpu}}
+	result = ${hd $$host}
+	$host=${tl $$host}
+}
+
+
+fn rwaiting {
+	if {! ~ $#rpid 0} {
+		ps |grep ${join '|' $rpid}
+	}
+}
+
+subfn rwaiting {
+	result=()
+	if {! ~ $#rpid 0} {
+		result=`{ps |grep ${join '|' $rpid} |getlines {(p rest) :=${split ' ' $line}; echo $p}}
+	}
+}
+
+fn mapreduce {
+	rpid=()
+	map:=$1
+	reduce:=$2
+	disks:=${tl ${tl $*}}
+	jobid:=${pid}
+	seq:=0
+	cpudisklist:=()
+	for (i in $disks) {
+		cmd := ${parse  '{ ' ^ $map ^ ' |intermediate 5 $cpudisk/' ^ $jobid ^ '.' ^ $seq ^ '.inter }'}
+		cpudisklist=`{rcpu $cmd $i} $cpudisklist
+		seq=`{fc 1 $seq +}
+	}
+#	echo cpudisklist $cpudisklist
+	while {! ~ $#{rwaiting} 0} {
+		sleep 1
+	}
+	rpid=()
+	dlist:=()
+	for (i in 0 1 2 3 4) {
+		cmd := ${parse '{ cat /n/d?.cpu/' ^ $jobid ^'.*.inter' ^ $i ^ '  | sort  | ' ^ $reduce ^ ' > $cpudisk/' ^ $jobid ^ '.part' ^ $i ^ '}' }
+		dlist = `{rcpu $cmd $cpudisklist} $dlist
+	}
+	while {! ~ $#{rwaiting} 0} {
+		sleep 1
+	}
+	rpid=()
+	echo $dlist
+}

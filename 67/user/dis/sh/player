@@ -1,0 +1,89 @@
+#!/dis/sh.dis
+# play files on current directory
+# usage: cd /n/local/home/salva/.mpd/music/mc-speran && player;
+x:=$*
+
+i:=''; # song index
+rf:=0; # repeat flag (disabled)
+
+if {! ~ $#x 0}{
+	server=$x
+}{
+	server=192.168.1.1
+}
+
+fn update_prompt (){
+	n=`{ls | wc -l}
+	pwd=`{basename "{pwd}}
+	vol=`{sed -n '/^out [^b]/ s/out ([0-9]+) .*/\1/p' /dev/audioctl}
+	prompt=(''^$"i^'/'^$"n^':'^$"vol^' % ' '')
+	echo cwd ${hd $pwd} > /chan/shctl
+}
+fn next_song (){
+	stop_play
+	i=`{mc $i + 1}
+	update_prompt
+	play_song $i &
+}
+fn prev_song (){
+	stop_play
+	i=`{mc $i - 1}
+	update_prompt
+	play_song $i &
+}
+fn stop_play (){
+	cmd=`{grep 'mplayer$' /cmd/*/status | sed 's|^.*: ||; s|cmd/([0-9]+) .*|\1|'}
+	if {~ $1 'killapid'}{
+		kill $apid | sh
+	}
+	for c in $"cmd {
+		if {~ $"c [0-9]}{
+			echo	kill > /cmd/^$c^/ctl
+		}
+	}
+}
+fn play_song (){
+	{ifs='
+	'
+	slist=`{ls | sed -n $i'p' }}
+	# cat |, workaround to change volume while playing
+	for s in $slist {
+		cat $"s | mplay - >/dev/null
+	}
+}
+fn set_audio (){
+	audio $*
+	update_prompt
+}
+
+wm/sh -w 370 -h 55 -ic {
+	update_prompt
+
+	echo ${quote button 'p' 'play_song $i &
+'} > /chan/shctl
+	echo ${quote button '!p' 'stop_play killapid
+'} > /chan/shctl
+
+	# prev/next/all
+	echo ${quote button 'i-' 'prev_song
+'} > /chan/shctl
+	echo ${quote button 'i+' 'next_song
+'} > /chan/shctl
+	echo ${quote button 'i*' 'i='''' # or i=1
+'} > /chan/shctl
+
+	# vol control
+	echo ${quote button '-' 'set_audio -
+'} > /chan/shctl
+	echo ${quote button '+' 'set_audio +
+'} > /chan/shctl
+	echo ${quote button l 'ls
+'} > /chan/shctl
+	echo ${quote button u 'update_prompt
+'} > /chan/shctl
+	echo ${quote button k 'stop_play
+'} > /chan/shctl
+	echo ${quote button r 'mount -A 'tcp!$server!styx' /n/remote
+'} > /chan/shctl
+	
+}

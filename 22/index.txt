@@ -1,0 +1,45 @@
+NAME
+     lab 22 - new aggregator
+
+DESCRIPTION
+     This lab is just text copied from my homepage. I'm cutting
+     and pasting it to clean up my homepage and keep all my lab
+     type experiments in one place.
+
+     Rssget downloads an RSS xml file indexes it into tickfs.
+     Then using tickquery, which should be copied into 
+     /dis/svc/httpd you can query the RSS aggregator using
+     address http://localhost/magic/tickquery.
+
+     % mkdir rss
+     % cd rss
+     % mount -c {tickfs} /n/rss
+     % touch /n/rss/index /n/rss/desc /n/rss/chan /n/rss/title
+     % svc/httpd/httpd&
+
+     use localcron  to call rssget periodically on your favourite
+     news feeds.
+
+     tickquery looks if the first keyword begins with 'date:' the
+     rest of the word is treated as a rng(1) and restricts the
+     results to within the date range.
+
+     For example, to search for RSS entries since 1st of the
+     current month mentioning google
+     date:1, google
+     or show me all entries collected on the 21st of the current
+     month
+     	date:21
+
+     Here is a of this service.
+
+     more interesting examples I have yet to work out. it gets
+     more interesting given temporal indexes of mail, mailing
+     lists, rss feeds, stock ticker, visited web pages, images
+     and annotations of local files and links. then a context
+     around a particular event can be constructed...
+
+FILES
+     The source for this lab is in the archive on my
+
+                         Inferno Manual

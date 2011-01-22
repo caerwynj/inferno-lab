@@ -1,0 +1,125 @@
+<div id="post">
+<h2>NAME</h2><p>
+lab 49 - wrappers
+<h2>NOTES</h2><p>
+Acme is the hub of my activity where all my tools are at hand. It is inconvenient to have to step outside it while working on a task. But it is impractical to port all the tools I need into inferno. However, Inferno is an integrating environment. 
+It is easy to put a wrapper around an external tool so that it is usable within inferno.
+<p>
+In this lab I show a few examples of putting wrappers around tools to make Inferno the hub, the integrating development environment, that I found it so useful for.
+<p>
+The first very simple example is <i>awk</i>. The shell wrapper is below
+<pre>
+fn awk {os awk $*}
+</pre><p>
+With this definition of awk it is only possible to use it as a filter, but this is often good enough. Awk comes with the Inferno distribution, so you can put it in the PATH of the host, and you'll always have it available.
+<p>
+Very often I work on my laptop which has NT as the host os. But I need to <i>dict</i> and <i>spell</i> all the time. I integrate these tools into my environment by running emu on a Plan9 or Linux machine and exporting a styx service that will include /cmd files. Then I just need to bind remote service before running the command.
+<pre>
+fn spell {
+	bind /n/linux/cmd /cmd
+	cat $* |os spell
+	unmount /n/linux/cmd /cmd > /dev/null >[2=1]
+}
+</pre><p>
+With this definition I can use <b>>spell</b> within acme and become oblivious to the fact the spell is in fact running elsewhere on my network.
+<p>
+Let's say I want to be able to run <b>javac hello.java</b> from within the acme, and button-3-clicking on any error messages would jump to the relevant line within the file. The problem here is that the inferno namespace needs to be mapped to the host namespace. This can only be done if the file actually resides on the host. But if that is the case we can easily establish a convention whereby names within inferno map to hostnames.
+<pre>
+fn file2host {
+	for (i in $*) {
+		f := `{cleanname -d `pwd $i}
+		echo $f  |sed 's@/n/d@D:@
+				s@/n/c@C:@'
+	}
+}
+
+fn host2file {
+		sed 's@D:@/n/d@
+		s@C:@/n/c@
+		s///' |sed 's@'^`{pwd}^'/@@'
+}
+
+fn javac {
+	classpath='D:/jakarta-tomcat-5.5.7/common/lib/ojdbc14.jar;D:/jakarta-tomcat-5.5.7/common/lib/servlet-api.jar'
+	args=$*
+	os javac -classpath $"classpath `{file2host $args} | host2file
+}
+</pre><p>
+This assumes we have bound, say the C: and D: drives to /n/c and /n/d. The mapping is simple. The benefit is that we can use mk to manage builds, and use acme to plumb the compiler errors.
+<p>Here's a more complicated example, used for building the /emu source code. The assumption now is the source code is on the host and the mapping from inferno to host namespace is just prepending the $emuroot.
+<pre>
+fn file2root {
+	args = $*
+	for (i in $args) {
+		i = `{cleanname -d `pwd $i}
+		echo $emuroot ^ $i |sed 's/\//\\/g'
+	}
+}
+
+fn 9c {
+	load arg
+	args := $*
+	flags=''
+	(arg
+		I+ {flags = $flags  -I ^ `{file2root $arg}}
+		D+ {flags = $flags -$opt ^ $arg}
+		'*' {echo unknown option $opt}
+		- $args
+	)
+	cc=cl
+	cwd=`{echo $emuroot ^ `pwd | sed 's/\//\\/g'}
+	cflags=(-c 
+		-nologo
+		-W3 
+		-Zi
+		-Yd
+		-MT
+		'-D_WIN32_WINNT=0x0400'
+		-I$cwd
+		-I$emuroot\Nt\386\include
+		-I$emuroot\include
+		-I$emuroot\libinterp
+		-I$emuroot\emu\port
+		-I'C:\Program Files\Microsoft Platform SDK\Include'
+		-I'C:\Program Files\Microsoft Visual C++ Toolkit 2003\include'
+		-Fo$cwd\
+		)
+	os $cc $cflags $flags `{file2root $args}
+}
+</pre><p>
+This is interesting because emu could be built using mk from inside inferno. Given a definition of 9l for each platform the mkfiles could be simplified, shifting the complexity to the shell. 
+<p>
+The final example is for XML tools. Often these tools take URLs instead of filenames. The trick is to serve the files we're working on using httpd. This is more general than the above approach for javac which depends on the files being on the host. With URLs we can first bind the files in from anywhere and then work on them with XML tools, using tools that might also be bound in from anywhere. For example, I want to use xalan to transform XML using XSLT. I bind my working directory onto <b>/services/httpd/root</b> and run <i>svc/httpd/httpd</i>. Then files below the root get mapped to URLs.
+<pre>
+domain:=.my.domain.name
+fn file2url {
+	sysname:=`{cat /dev/sysname}
+	url:='http://'$sysname ^$domain
+	for (i in $*) {
+		f := `{cleanname -d `pwd $i}
+		echo $f  |sed 's@/services/httpd/root@'^$url^'@'
+	}
+}
+
+fn xslt {
+	classpath='/java/lib/xalan.jar'
+	args := $*
+	flags=''
+	(arg
+		t+ {flags =-XSL `{file2url $arg}}
+		- $args
+	)
+	args=$*
+	if {~ $#* 1} {
+		args= -IN `{file2url $args}
+	} {
+		echo 'usage: xslt -t transform file ' >/fd/2
+		raise usage
+	}
+	bind /n/some_java_host/cmd /cmd
+	os java -cp $classpath org.apache.xalan.xslt.Process $flags $args
+	unmount /n/some_java_host/cmd /cmd >/dev/null >[2=1]
+}
+<pre><p>
+
+</div>

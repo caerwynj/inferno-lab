@@ -1,0 +1,73 @@
+.SH NAME
+lab 19 - understanding wmclient
+.SH DESCRIPTION
+In trying to understand 
+.IR wm (1)
+and its supporting libraries
+.IR wmclient (2), 
+.IR tkclient (2), 
+and titlebar, I modified them to resemble
+(if you squint) rio. I haven't adopted rio's menus or button
+controls.
+
+I began with a copy of wmclient. I wanted to peel away the layers
+between the application and wm. I removed the dependency on
+titlebar and created a border that would manage the window.
+I removed whatever else I thought was unneccessary. I ended 
+up with 
+.I myclient
+which talks directly to wm. 
+
+Window management is based on button clicks on the border.
+Button 1 moves , button 2 reshapes, and button 3 deletes the window.
+
+I liked the window management so I wanted to use that
+for all windows. To copy the border changes back to
+wmclient.b was easy.
+
+But most windows programs in inferno use the tkclient.
+For that I needed to modify the titlebar. I created four
+buttons which fill the four edges of the rectangle.
+Each button is bound to the three buttons which control
+the window management.
+
+I made the color of the borders different for tkclients and wmclients.
+There aren't many wmclients: acme and wm.
+
+The borders  change color when the window gains
+or loses keyboard focus, but it must accept kbd input
+for this to happen.
+
+.I wmclient 
+creates a new window with a transparent
+image, so it's filled with whatever
+is beneath it. This leads to an obvious tool
+.I grab
+to capture and image of a part of the desktop.
+Reshape the window to grab the part of the picture
+then click button 1 in the image and it writes it to 
+the file named on the command line to grab.
+
+.SH CONCLUSION
+I like the results. I'll probably use this going forward
+and see what other mouse bindings I like. But this 
+leads me to modify the tk for commands like sh etc., 
+tweaking everything.
+
+For some reason wm/sh calls a Tk command which
+refers back to the titlebar assuming the .Wm_title
+exists. So I included a modified wm/sh.
+
+I'm tempted to make more mods to wm/sh to remove
+the menus and make it more like and acme window, that is,
+middle click sends, which is really the only menu option I ever use.
+
+.SH FILES
+.A http://caerwyn.com/lab/19/grab.b grab.b
+.A http://caerwyn.com/lab/19/myclient.b myclient.b
+.A http://caerwyn.com/lab/19/sh.b sh.b
+.A http://caerwyn.com/lab/19/titlebar.b titlebar.b
+.A http://caerwyn.com/lab/19/titlebar.m titlebar.m
+.A http://caerwyn.com/lab/19/tkclient.b tkclient.b
+.A http://caerwyn.com/lab/19/wmclient.b wmclient.b
+.A http://caerwyn.com/lab/19/mkfile mkfile

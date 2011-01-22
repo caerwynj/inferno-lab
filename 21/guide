@@ -1,0 +1,72 @@
+Refer the Beyond Photography - The Digital Darkroom, Chapter 3.
+
+figure3.1
+	popi -e 'x+y'
+
+figure3.2
+	popi -e '(x*y)%(Z+1)'
+Not the same as book!
+
+figure3.3
+	popi -e '(Z*x*y)/((X-1)*(Y-1))'
+
+figure3.4
+	popi -e 'x%y'
+
+figure3.5
+	popi -e 'y + (sin(x)/2)'
+	
+note the output of sin(x) is already scaled to Z, different from the book.
+
+figure3.6
+	popi -e '(atan(y-Y/2, x-X/2)*Z)/360'
+
+not oriented the same as the book.
+...
+
+figure3.9
+	popi -e '((x%(5+y/25))>5 )?0:Z'
+	
+figure3.10
+	popi -e '(Z*abs(x%sin(y))>10)?0:Z'
+
+figure3.11
+	popi -e 'new[r,a]=(Z*r)/R'
+
+Something wrong here, possible rounding errors. There are gaps
+in the matrix where the pixels are unassigned. Although, it is
+an interesting picture of where the rounding occurs.
+
+popi -e 'new=(Z*r)/R' works.
+
+figure3.12
+	popi -e '(((a+r)%16)-8)*Z/16 +Z/2'
+
+figure3.13
+	popi -e 'r face1; new=$1; Z-old'
+
+figure3.14
+	popi -e 'r face1; new=$1; Z*log(old)/log(Z)'
+This is probably not right.
+
+figure3.15
+	popi -e 'r face1; new=$1; (old <Z/2)?Z-old:old'
+
+figure3.16
+	popi -e 'r face1; new=$1; (old>(Z*x)/(2*X))?old:Z-old'
+
+figure3.17
+	popi -e 'r face1; new=$1; (old +old[x-1,y] + old[x+1,y] + old[x,y-1] + old[x,y+1])/5'
+
+figure3.18
+	popi -e 'r face1; new=$1; 5*old - old[x-1,y] - old[x+1,y] - old[x,y-1] - old[x,y+1]'
+
+figure3.19
+	popi -e 'r face1; new=$1; old + (Z/2  - old[x+2, y+2])'
+
+figure3.21
+	popi -e 'r face1
+		new=face1[x, Y-y]
+'
+Doesn't work WTF!
+

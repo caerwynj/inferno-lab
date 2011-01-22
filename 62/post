@@ -1,0 +1,35 @@
+lab 62 - software synth CSP style
+
+I'm posting this as a milestone reached, before I move onto the next phase, which may add a lot more complexity but won't illustrate any better the style of CSP programming that this code does. Much of it actually works and the basic framework seems to be in place. I think it makes a nice show case of CSP style programming (I think my lexis database, lab .., does too). This example might be more amenable to being played with, and enjoyed.
+
+You are encouraged to edit this code to create your own synthesizer. 
+
+I intend to add a lot more complexity to this code to do the more specific things that I want that might not be of general interest. I think this code makes a good starting point for someone who might want to design their own synthesizer. I haven't put any effort into the GUI other than to get it working with simple controls for some of the parameters.
+
+One of the thing that worries me is that I'll get bogged down designing a pretty GUI. 
+
+The interface for the processes has changed a little since lab 60.  It is a little more general so all the processes see the same interface and can a be plugged together in many different ways. 
+
+The interface is as follows,
+<pre>
+
+</pre><p>
+
+It seems there s an example of higher order functions. For example, I can define a voice and make it a polyphonic voice by passing the voice function to the polyphony function. 
+
+If even if you are not interested in computer music, you might want to still play with this code to explore the use made of CSP. 
+
+E.g. create a new filter, maybe add a knob to control one of the filter parameters then add the filter to the main loop.
+
+<pre>
+
+	filter := Inst.mk(nil, onepole);
+	spawn knob(filter.ctl, "onepole", 0.0, 1.0, 0.01);
+	
+	...
+
+		filter.c <-= (<-wrc, wrc);
+		rc <-= <-wrc;
+
+</pre>
+

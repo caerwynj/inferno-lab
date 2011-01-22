@@ -1,0 +1,25 @@
+NAME
+     lab 20 - libmux in limbo
+
+DESCRIPTION
+     To learn about mux in detail I tried to implement libmux in
+     limbo. It actually resembles the mux from libventi more than
+     libmux. They are pretty similar.
+
+     I was going to do a detailed description of the mux in
+     devmnt but it turns out this has already been done by nemo.
+
+     When I get this working it can be applied to the venti lib
+     for session rpc, to build a libfs for direct client 9p
+     interaction, bypassing devmnt, and for application protocol
+     muxing, say for sam.
+
+     This is a partial implementation. I didn't complete send,
+     recv, gettag and settag functions, so this has not been
+     tested. I'm just posting it here now  so I don't lose track
+     of it. I'll come back to it later, maybe writing more for
+     the Venti library or libfs. This is more an excercise to
+     understand the workings of libmux and venti's session rpc.
+
+FILES
+                         Inferno Manual

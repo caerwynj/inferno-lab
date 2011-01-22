@@ -1,0 +1,11 @@
+<../mkconfig
+
+LIB=libvx32.a
+
+OFILES=\
+
+HFILES=\
+	$ROOT/include/libvx32.h\
+
+<$ROOT/mkfiles/mksyslib-$SHELLTYPE
+

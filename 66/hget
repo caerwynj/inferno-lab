@@ -1,0 +1,20 @@
+#!/dis/sh.dis
+load std
+
+x=()
+mode=()
+for o in $* {
+	if {~ $o '-m'}{
+		mode=m;
+	}{
+		 x=($x $o)
+	}
+}
+
+if {~ $mode m}{
+	for u in $x {
+		webgrab -r -o - $u > `{basename $u}
+	}
+}{
+	webgrab -r -o - $x
+}

@@ -1,0 +1,10 @@
+#!/dis/sh
+# if $1 is not provided just cat stdin
+cat $1 |
+	awk '/NoteOn|NoteOff/ {nl=NR; print line; line="";}
+	{
+	if ((NR-nl)<4){
+		if (line == "") {line=$0}
+		else {line=line "	" $0} 
+	}
+}'

@@ -1,0 +1,3 @@
+#!/dis/sh
+args := $*
+dial -A tcp!localhost!17890 {echo $args}

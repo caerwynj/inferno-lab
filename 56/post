@@ -1,0 +1,22 @@
+lab 56 - acme web client
+
+I started using charon again because I wanted a web browser that started faster and used less memory than firefox. I wanted the browser to check my gmail account and scan reddit etc.
+
+But after  implementing  cut & paste (lab 55) I found it frustrating all over again to not be able to cut & paste from charon. So I started looking for a solution to that. I began by just dumping the text to stdout. Since I was always starting charon from inside acme the stdout would go to an acme window. Then I thought I might as well write directly to a new acme window, so I built an acme client to charon. Then I added the links handling, which was pretty easy, and tada! a charon hack turns into an acme web browser. And a suprisingly good one too, since charon is doing all the work.
+
+The links appear in acme as superscript numbers to the anchor text. Right-click on the number or word to follow the link. Only one link can be handled at a time. You can minimize charon once it's started and browse within acme, falling back to charon when needing to enter form input. But with plumbing turned on in acme, and the right plumbing rules, it's also easy to just type in the URL in acme and right-click on it, which then opens a new acme window on the URL.
+
+There is no forms handling yet. But it should not be too difficult. I'll do an update to this lab, hopefully soon, with some support for forms.
+
+Follow these instructions assuming you are in the /usr/caerwyn/lab/56 directory.
+<pre>
+% cp acmewin.m /module
+% cp acmewin.b /appl/lib
+% {cd /appl/lib; mk acmewin.install}
+% cp charon.b chutils.* /appl/charon
+% {cd /appl/charon; mk install}
+</pre><p>
+Then inside Acme run the following.
+<pre>
+charon -doacme 1
+</pre><p>

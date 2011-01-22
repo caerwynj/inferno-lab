@@ -1,0 +1,20 @@
+#!/dis/sh.dis
+# control audio
+load std
+actl=/dev/audioctl
+
+if{no $* || ~ ${hd $*} '-q'}{ # query
+	if {no ${tl $*}}{
+		cat $actl
+	}{
+		grep $"{tl $*} $actl
+	}
+}{~ $1 '+'}{
+	vol=`{sed -n 's/out ([0-9]+) .*/\1/p' $actl}
+	echo out vol `{mc $vol + 10} > $actl
+}{~ $1 '-'}{
+	vol=`{sed -n 's/out ([0-9]+) .*/\1/p' $actl}
+	echo out vol `{mc $vol - 10} > $actl
+}{
+	echo $* > $actl
+}

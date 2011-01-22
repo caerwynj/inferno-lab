@@ -1,0 +1,62 @@
+</mkconfig
+
+TARG=\
+	audioctl.dis\
+	board.dis\
+	comics.dis\
+	connect4.dis\
+#	email.dis\
+	fnn.dis\
+	gamed.dis\
+	games.dis\
+	movie.dis\
+	mux.dis\
+	news.dis\
+	othello.dis\
+	pizza.dis\
+	readlnw.dis\
+	readnews.dis\
+	rec-pb.dis\
+#	register.dis\
+#	rmux.dis\
+#	rmuxslave.dis\
+	tv.dis\
+	tvlist.dis\
+#	web.dis\
+	mux0.dis\
+	board0.dis\
+	board1.dis\
+	board2.dis\
+	board3.dis\
+	board4.dis\
+
+MODULES=\
+	mux.m\
+
+SYSMODULES=\
+	bufio.m\
+	devpointer.m\
+	draw.m\
+	html.m\
+	ir.m\
+	keyring.m\
+	mpeg.m\
+	prefab.m\
+	math.m\
+	security.m\
+	srv.m\
+	string.m\
+	sys.m\
+	url.m\
+	webget.m\
+
+DISBIN=../../dis/mux
+
+</mkfiles/mkdis
+
+install:V:	$BINTARG
+%.install:V:	$DISBIN/%
+%.installall:V:	$DISBIN/%
+
+$DISBIN/%:	%.sh
+	cp $stem.sh $target && chmod a+rx $target

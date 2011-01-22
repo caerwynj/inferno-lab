@@ -1,0 +1,13 @@
+#!/dis/sh -n
+run /usr/caerwyn/limbo/squeak/tklib
+
+header := {
+pctl newpgrp
+run /usr/caerwyn/limbo/squeak/tklib
+newwidget scale
+}
+
+$header &
+echo /chan/tk.$apid
+sleep 1
+echo -n .s configure -from 0.1 -to 1.0 -resolution 0.1 -command {send scale} -orient horizontal > /chan/tk.$apid

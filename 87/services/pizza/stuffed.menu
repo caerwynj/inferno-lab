@@ -1,0 +1,6 @@
+stuffed.menu:0:0:640:480:stuffed.bit
+stuf-small:210:302:290:330:tick.bit
+stuf-medium:210:342:290:370:tick.bit
+stuf-large:210:382:290:410:tick.bit
+main.menu:48:418:148:443:main-sel.bit
+show.menu:156:418:293:443:show-sel.bit

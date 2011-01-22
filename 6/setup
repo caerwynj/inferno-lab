@@ -1,0 +1,6 @@
+echo add wave.dis wave > mnt/ctl
+echo add filter.dis filter > mnt/ctl
+cat mnt/wave/clone
+cat mnt/filter/clone
+echo file /usr/caerwyn/lab/3/sinewave.raw > mnt/wave/1/ctl
+echo source /usr/caerwyn/lab/6/mnt/wave > mnt/filter/2/ctl

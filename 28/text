@@ -1,0 +1,175 @@
+.SH NAME
+lab 28 - side effects
+.SH DESCRIPTION
+I was planning on just implementing side effects, but
+it turned out to be a little more complicated than I thought,
+and then I got sidetracked into changing the evaluator
+to handle more of the shell semantics.
+.PP
+The file
+.A http://caerwyn.com/lab/28/lisp7.b lisp7.b
+implements 
+.I setq
+but it is limited in that in cannot change the type
+of the value referenced by the symbol.
+.IP
+.EX
+% eval {setq a `{b c d}}
+(b c d)
+% eval {setq a `b}
+error at type mismatch
+(b c d)
+.EE
+.PP
+Fixing this requires me re-implementing the sepxrs library
+to remove
+.I pick
+from the ADT. I'll follow up on this later.
+.PP
+.SS Mixing shell and lisp syntax
+The final parser in the Sussman and Steele paper
+.I The Art of the Interpreter
+puts dynamic scoped variables back into the evaluator.
+It maintains two environments, one for lexical and one for dynamic
+binding.
+.PP
+Instead of having a different dynamic environment
+using sexprs, I used the shell Context for the dynamic state.
+I also kept the shell syntax for dereferencing a dynamic variable.
+These and the rest of the features in this post are in
+.A http://caerwyn.com/lab/28/lisp8.b lisp8.b.
+.IP
+.EX
+% FullForm {x := 1; echo $x; echo x}
+(Block Seq (LocalAssign x "1") (echo (Var x)) (echo x))
+% eval {x := 1; echo $x; echo x}
+("1")
+x
+""
+.EE
+.PP
+The lisp evaluator in 
+.B lisp8.b
+has some significant changes over the previous ones. 
+I've gone back to treating shell
+syntax more like normal shell. Semi-colon is transformed to
+.I Seq
+and dollar to
+.IR Var .
+.I Seq 
+is equivalent to 
+.I progn 
+in scheme.
+.I Var 
+dereferences a variable in the dynamic environment.
+.I  Block
+tags a braced block which essentially quotes the whole
+block until explicitly eval'd.
+.PP
+The evaluation for values is changed. If the variable is unbound,
+then it evaluates to itself, like the third reference to 
+.I x
+above. 
+.PP
+It also looks up shell commands for procedure calls.
+So the echo command works.
+We also no treat normal parentheses as nested
+list delimiters, and use applicative order for
+their evaluation. This essentially does away with
+the 
+.B ${}
+syntax and substitution builtins.
+.IP
+.EX
+% eval {x := 1 2 3 4; echo (car $x)}
+1
+""
+.EE
+.PP
+The language is beginning to get interesting.
+It looks like we have a lisp interpreter built into
+the handling of lists. But in fact the whole expression
+is converted to lisp form and evalutated. This means
+we can symbollically manipulate the shell commands.
+.IP
+.EX
+% eval {car {echo this}}
+Block
+.EE
+.PP
+The tricky thing now is to handle more of the shell semantics
+including globbing, file redirection and pipes.
+.PP
+One assumes we will get a rather strange language
+at the end of it. Though I hope it will look a lot
+like shell with the full power of a symbolic programming language 
+behind it.
+.PP
+When calling external commands, such as echo,
+we need to catch the case where the command
+doesn't exist. I want to return a form that
+doesn't evaluate to anything as itself.
+.IP
+.EX
+% eval {asdf a b}
+sh: asdf: './asdf' file does not exist
+(asdf a b)
+.EE
+.PP
+Currently, shell prints the diagnostic that the command
+does not exist. I will later remove that when I move
+the language from a builtin to the main shell evaluator.
+The principle is one borrowed from computer algebra
+systems: Symbols evaluate to themselves if there is no other transformation.
+.PP
+I added support for globbing.
+Globbing is somewhat like macros, we are
+rewriting the tree before the evaluator sees it.
+.IP
+.EX
+% eval {echo l*}
+(lisp8.sbl lisp8.dis lisp8.b lisp7.sbl lisp7.dis lisp7.b)
+""
+.EE
+.PP
+I altered the FullForm for redirections and pipes but stopped
+short of actually implementing it. Because of lot of the
+code to do that is in 
+.B /appl/cmd/sh/sh.y 
+and I thought it'd be easier to move the evaluator code
+back into sh.y and build a new shell. I will replace the
+.I walk
+function in that file with 
+.IR eval .
+.PP
+Redirs are like property lists that carry with a command.
+The 
+.I apply 
+function needs to know about Redir.
+They evaluate to themselves, but when shell actually
+executes a command it pulls out the redirs from the expression.
+.IP
+.EX
+% FullForm {echo > t < x}
+(Block echo (Redir W t) (Redir R x))
+.EE
+.PP
+.SH CONCLUSION
+.PP
+I like inferno shell. It is powerful. It can be made more powerful
+by making it a symbolic language. I don't lose any of its current
+power, in particular its expressiveness for building pipelines and
+working with files. But I add something more. The ability for it to see itself
+and manipulate it's own tree of code and data.
+.PP
+It is useful to compare this with 
+.A http://www.webcom.com/~haahr/es/es-usenix-winter93.html es
+shell. They took a similar idea, putting a lisp evaluator into the shell,
+but didn't take it to the extreme of what lisp can do. It doesn't appear the language
+could symbolically manipulate itself. 
+.SH FUTURE
+I will replace the shell evaluator
+with the one I have risen so far 
+and so create a prototype for new language.
+I can then implement the backquote, redirection
+and pipes.

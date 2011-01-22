@@ -1,0 +1,46 @@
+#!/dis/sh.dis
+# script to export/stream an audio device
+# bug: there's a lot of echo & delay in the sound received
+# playing/adjusting bufsize can be useful,
+# the reason is that stream issues writes of bufsize (defaults to (ATOMICIO: 8k),
+# so data is not transmited to the other end: remote /dev/audio, 
+# until bufsize bytes have been read from: local /dev/audio
+load std
+
+x:=$*
+# the bytes that should be read/written per second (≃ 1024 seems to work well)
+bufsize=`{
+	{
+	echo 'nchans='^`{sed -n 's/^chans (.+) .+/\1/p' /dev/audioctl}
+	echo 'srate='^`{sed -n 's/^rate ([0-9]+) .*/\1/p' /dev/audioctl}
+	echo 2 '*' nchans '*' srate '/' 32
+	} | mc 
+}
+
+if {! ~ $#x 0}{
+	server=$x
+}{
+	server=192.168.1.1
+}
+
+wm/sh -w 370 -h 55 -ic {
+	echo ${quote button 'xprt' 'styxlisten -A ''tcp!*!styx'' export ''#A''
+'} > /chan/shctl
+	echo ${quote button '!xprt' 'kill Styxlisten Export | sh
+'} > /chan/shctl
+
+	echo ${quote button 'mnt' 'mount -A tcp!$server!styx /n/remote
+'} > /chan/shctl
+
+	echo ${quote button 'ctl' 'cp  /n/remote/audioctl /dev/audioctl
+'} > /chan/shctl
+
+	echo ${quote button 'strm' 'stream -a -b $bufsize /dev/audio /n/remote/audio
+'} > /chan/shctl
+	echo ${quote button '!strm' 'kill Stream | sh
+'} > /chan/shctl
+
+	echo ${quote button 'stat' 'netstat
+'} > /chan/shctl
+
+}

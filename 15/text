@@ -1,0 +1,73 @@
+.SH NAME
+lab 15 - cluster 
+.SH DESCRIPTION
+I'm still curious about layering of filesystems. 
+.IR ds (3)
+was an example I looked at before writing signalfs.
+Another example was cryptfs (lab 2).
+.I Ds
+currently resides in /os/port/devds.b.
+A while ago I moved it into /emu/Nt/devds.b but hadn't
+made any use of it. I have wanted to use it for
+a rudimentary cluster file system. 
+I've ported 
+.I ds
+to limbo to play with distributed
+files and furher explore files that a  built from layering
+of other file systems.
+.PP
+I translated the C code and used styxservers to manage 
+the simple, one level namespace.
+Here's some testing. This is really as much as
+I've tested it so far.
+.IP
+.EX
+% for (i in `{seq 0 9}) {zeros -v $i 1024 8 > /tmp/chunk ^$i}
+% echo cat c1 /tmp/chunk2 /tmp/chunk3 >ds/ctl
+% echo cat c0 /tmp/chunk0 /tmp/chunk1 >ds/ctl
+% echo mirror m0 ds/c0 ds/c1 > ds/ctl
+% cat ds/ctl
+cat c1 /tmp/chunk2 /tmp/chunk3
+cat c0 /tmp/chunk0 /tmp/chunk1
+mirror m0 ds/c0 ds/c1
+% ls -l ds
+--rw-rw-rw- M 36 caerwyn caerwyn 16384 Dec 31  1969 ds/c0
+--rw-rw-rw- M 36 caerwyn caerwyn 16384 Dec 31  1969 ds/c1
+--rw-rw-rw- M 36 caerwyn caerwyn     0 Dec 31  1969 ds/ctl
+--rw-rw-rw- M 36 caerwyn caerwyn 16384 Dec 31  1969 ds/m0
+% cat ds/c0 > /tmp/t1
+% cat /tmp/t1 > ds/m0
+% cmp ds/c0 ds/c1
+.EE
+.PP
+I read the 
+.A http://www.cs.rochester.edu/sosp2003/papers/p125-ghemawat.pdf googlefs
+paper again today.
+With that in mind a cluster file system could be pieced together using
+some inferno components.
+.PP
+A 
+.IR kfs (4),
+ or any standard fs, represents the master namespace.
+All files contain only a
+.I ds
+configuration--the chunk IDs and partioning info.
+All the inferno nodes write to the master 
+.IR registry (4)
+the chunks they will serve.
+.I Ds
+grows files by reading chunk id's from a master process that uses
+the registry to allocate new chunks.
+A client must navigate the master namespace to the file containing
+the 
+.I ds
+configuration and mount 
+.I ds
+in it's namespace. Then it has a distributed file which communicates
+directly with the nodes storing the disks in the network.
+.SH CONCLUSION
+Not much thought given to the deeper problems.
+How would multiple writers on different clients append
+to the same file?
+Here is the source for 
+.A http://caerwyn.com/lab/15/dsfs.b dsfs.b

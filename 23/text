@@ -1,0 +1,69 @@
+.SH NAME
+lab 23 - annotating a file system
+.SH DESCRIPTION
+.I
+This lab was cut and pasted from my homepage. It is not new.
+.R
+
+i have tried out some experiments with annotating the filesystem;
+really, several iterations of the same idea. 
+
+my latest attempt is 
+.IR tickfs , 
+which i think comes close to doug mcilroy's
+.A http://groups.google.com/groups?hl=en&lr=&ie=UTF-8&selm=200112081958.OAA264525225%40nslocum.cs.bell-labs.com idea
+of a metadata file system.
+
+each file served by <b>tickfs</b> is a binary relation, the key is
+usually an absolute pathname, and the attribute is defined
+by the name of the relation.  each relation is also
+bi-temporal.  it's a historical record of changes to each
+key, value pair and it determines whether a key, value pair
+is true at a given time.
+
+adding metadata is simple
+.EX
+	% echo ${quote i . /doc/sh.ms 'the inferno shell' } > /n/tickfs/desc
+	% echo ${quote i . /doc/sh.ms 'rogger peppe' } > /n/tickfs/author
+.EE
+the dot indicates the current time, but any time represented
+as seconds since the epoch can be given.
+
+queries are pipelines
+.EX
+	% 9ls sh.ms |taq /n/tickfs/author |taq -j /n/tickfs/desc
+.EE
+the query uses the timestamp of the files to return the currently
+effective values for the attributes 'author' and 'desc'.
+
+it relies on a disciplined user to maintain a single logical
+namespace and to keep it consistent with the namespace of
+keys within tickfs.  plan9 and inferno make it easy to alter
+the namespace; but the discipline of arranging a clear, consistent
+namespace is harder.
+
+an example that includes fossil is to bind a directory from dump
+over the logical namespace.  the currently effective values
+will likely vary over time, and so obtain different results from tickfs.
+.EX
+        % 9ls /doc |taq /n/tickfs/desc
+        % bind /n/dump/2004/0101/doc /doc
+        % 9ls /doc |taq /n/tickfs/desc
+.EE
+
+also, i have tried indexing file contents within <b>tickfs</b>, so
+combinations of keyword search and named descriptors can be
+used
+.EX
+	% search bug |taq /n/tickfs/author |grep caerwyn |taq /n/tickfs/desc
+.EE
+
+.I tickfs
+runs on inferno, but 
+.IR lookfs , 
+which is an earlier
+iteration using libstyx, is very similar and should run on
+plan9.
+.SH FILES
+The source for this lab is in the archive on my
+.A http://caerwyn.com/ homepage.

@@ -1,0 +1,111 @@
+.SH NAME
+lab xx - wikifs for inferno
+.SH DESCRIPTION
+.PP
+I ported plan 9's wikifs to inferno. There were various aspects
+of the application I wanted to learn about--such as,
+the cache, 
+the transforms from wiki syntax to html, the method for using html 
+templates, and the details of creating the namespace--
+that it seemed worthwhile
+to write it in limbo to absorb it all. I also had a hunch
+I'd be borrowing a lot of the code for my next file system.
+.PP
+The differences between the original and the port are small. 
+The one significant difference is the approach 
+to locking data structures.
+.PP
+The original uses locks for the Map and the Cache
+memory as well as file locks for accessing disk.
+.PP
+For the port I attempted to avoid the memory locks altogether.
+One reason being that when the Flush message is received I
+attempt to kill the proc processing the request,
+but that might leave stray locks. The file locks get freed 
+when the file references are garbage collected.
+.PP
+To eliminate locks, I take advantage of limbo's
+garbage collection and try to use immutable types, or
+pass-by-value semantics.
+.PP
+For example, the Map is stored in a global variable.
+When the Map is read in from a file a new structure
+is created locally then assigned to that variable.
+The map is not changed (except for timestamps) after
+that and always remains self consistent.
+.PP
+The find routine for the map makes a local 
+copy of the reference to the map 
+and uses that safe knowing that the reference
+will stay unchanged for the duration of it's use.
+All memory will be collected if in the mean time
+a new map has been loaded.
+.PP
+With the cache I use a last-in-wins policy.
+This saves us the trouble of worrying about locks
+at the cost of extra reads of the disk file
+because of data added to the cache but
+lost because of overwriting the global cache references.
+Once data is cached is is unchanged (except for timestamps)
+so no locking is required once a function has a local reference
+to the cache data.
+.PP
+Here's an example of code from the cache handling.
+I create a new Wcache object, 
+.BR c , 
+and I want to add it to
+the cache. The cache is an 
+.B array of list of ref Wcache
+so when I add an item I create a new list and
+assign it to an array location, overwriting whatever list
+reference may have been there. It will be garbage collected
+if no other code references it.
+Also, the cache needs to be bounded, so I set a max length
+for every list. I remove items from the local copy of
+the list until there's room to add the new entry. Here
+.B tab
+is the global array.
+.EX
+	h := n%Nhash;
+	ol := tab[h];
+	c := ref Wcache(0, 0, 0, 0, nil, nil, nil, nil);
+	# ... c is properly initialized before added to the list
+	while(len ol >= Mcache){
+		evict := -1;
+		t := ~0;
+		for(l := ol; l != nil; l = tl l){
+			if((hd l).use < t){
+				t = (hd l).use;
+				evict = (hd l).n;
+			}
+		}
+		l = nil;
+		for(;ol != nil; ol = tl ol)
+			if((hd ol).n != evict)
+				l = hd ol :: l;
+		ol = l;
+	}
+	# last in wins!
+	tab[h] = c :: ol;
+.EE
+.PP
+Because limbo lists are read only we don't need to worry that
+the references in the list change (although the referenced objects might).
+We must guard against changing the referenced objects, except only
+trivially for the timestamps, and treat them as read only.
+.PP
+Not having to worry about locks does simplify the code. Enough
+that I'd look for opportunities to eliminate locks like this style of
+programming in the future.
+
+.SH FILES
+.EX
+.A http://caerwyn.com/lab/30/lookup.b lookup.b
+.A http://caerwyn.com/lab/30/testwrite.b testwrite.b
+.A http://caerwyn.com/lab/30/wiki.b wiki.b
+.A http://caerwyn.com/lab/30/wiki.m wiki.m
+.A http://caerwyn.com/lab/30/wiki2html.b wiki2html.b
+.A http://caerwyn.com/lab/30/wiki2text.b wiki2text.b
+.A http://caerwyn.com/lab/30/wikifs.b wikifs.b
+.A http://caerwyn.com/lab/30/wikipost.b wikipost.b
+.EE

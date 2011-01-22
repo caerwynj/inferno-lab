@@ -1,0 +1,175 @@
+.SH NAME
+lab 7 - sequencer; create a simple sequencer that can play
+back a subset of SKINI messages.
+.SH SETUP
+Inferno 4th Edition release 20040830.
+.SH DESCRIPTION
+.SS "2004/0928 20:37
+.I SKINI 
+is the sequencing language from the STK.
+It is a readable form of MIDI, and was designed
+to be "extensable and hackable"; all of which
+make it ideally suited to this application and Inferno.
+Here is a brief example
+.IP
+.EX
+// Measure number 1	=0
+NoteOn   	0.416667     2	  72	  64
+NoteOff  	0.208333     2	  72	  64
+NoteOn   	0            2	  71	  64
+NoteOff  	0.208333     2	  71	  64
+NoteOn   	0            2	  72	  64
+NoteOff  	0.416667     2	  72	  64
+NoteOn   	0            2	  67	  64
+NoteOff  	0.416667     2	  67	  64
+.EE
+.PP
+There is one command per line. The line begins
+with command name followed by parameters
+separated by space or tabs. The second parameter
+is always the time delta. For the 
+.I NoteOn
+command, the third argument is channel (or voice),
+fourth is midi pitch, and fifth if velocity (I guess! I'm ignoring it for now).
+.PP
+These SKINI messages are interpreted by 
+.IR sequencer ,
+which sends messages to one or more instruments and reads
+back audio data.
+.PP
+I created a basic instrument module, which should
+be used as a template for later instruments,
+called
+.IR simple .
+It uses the
+.I adsr
+and 
+.I wave
+modules.
+.PP
+The
+.I wave
+module I have described previously.
+.I Adsr
+is a standard Attack, Decay, Sustain,
+Release envelope. I copied the implementation
+from the STK.
+.PP
+.I Simple
+and
+.I sequencer
+use a new interface to assist
+in using other signal sources.
+.IP
+.EX
+Sig: adt {
+	ctl: ref Sys->FD;
+	data: ref Sys->FD;
+		
+	open: fn(s: string): ref Sig;
+	read: fn(s: self ref Sig, nsamples: int): array of real;
+	readbytes: fn(s: self ref Sig, nbyte: int): array of byte;
+};
+.EE
+.PP
+This will evolve. It is currently part of the 
+.I dsp
+module.
+.PP
+The source signals are opened by
+.I init.
+I made a small modification to
+.B signalfs.b
+moving the 
+.I init
+call from 
+.B signalfs.b:/serve
+to
+.B signalfs.b:/requestproc
+to avoid deadlock.
+.PP
+I created 
+.B /mnt/dsp
+for mounting
+.I signalfs
+and
+.B /mnt/dsp/raw
+because I am hardcoding the names of some signal sources and
+raw sound files.
+The raw files from the STK should be bound or copied to
+.BR /mnt/dsp/raw . 
+Therefore start as
+.IP
+.EX
+% bind /n/j/stk-4.1.3/rawwaves /mnt/dsp/raw
+% signalfs -a /mnt/dsp
+.EE
+.PP
+Setup the modules and /dev/audio
+.IP
+.EX
+% bind -a '#A' /dev
+% echo rate 22050 > /dev/audioctl
+% echo chans 1 > /dev/audioctl
+% echo add wave.dis wave > /mnt/dsp/ctl
+% echo add adsr.dis adsr > /mnt/dsp/ctl
+% echo add simple.dis simple > /mnt/dsp/ctl
+.EE
+.PP
+Run a SKINI file.
+.IP
+.EX
+% sequencer /mnt/dsp/simple < bachfugue.ski > /dev/audio
+.EE
+.PP
+The sequencer assumes 4 voices currently.
+It's very basic; just for testing while creating new instruments.
+It will most surely be rewritten.
+.SH CONCLUSION
+Here are the latest.
+.A http://caerwyn.com/lab/7/adsr.b adsr.b
+.A http://caerwyn.com/lab/7/bachfugue.ski bachfugue.ski
+.A http://caerwyn.com/lab/7/dsp.b dsp.b
+.A http://caerwyn.com/lab/7/dsp.m dsp.m
+.A http://caerwyn.com/lab/7/sequencer.b sequencer.b
+.A http://caerwyn.com/lab/7/signal.m signal.m
+.A http://caerwyn.com/lab/7/signalfs.b signalfs.b
+.A http://caerwyn.com/lab/7/simple.b simple.b
+.A http://caerwyn.com/lab/7/wave.b wave.b
+The SKINI language has more commands and features
+than implemented here.
+.PP
+Again, it is slow. I should buffer writes to the /dev/audio,
+maybe a few seconds worth, so the audio sounds smooth.
+Otherwise, I need to write to a file first then stream the
+file to
+.B /dev/audio.
+However, It's enough for testing while creating some of the more complex
+instruments from the STK.
+.PP
+The sequencer could be a module of signalfs like any other.
+Reads of the
+.I data
+return the audio data. The 
+.I ctl
+file is a synthetic file which could be edited within
+any editor. But this is a slightly different interface
+than other signals. An alternative is to use the
+skini file as a source file just like the raw files for the wave module.
+The sequencer module then represents patterns,
+which can be combined, looped, and sequenced just
+like any other signal.
+.SH "DAY DREAMING
+I can have a grid generating the sounds. 
+What is possible with unlimited cpu power?
+Using a grid we should
+be able to create, in realtime, a very complex
+syntesized soundscape.
+Could we use the plan9 grid for this?
+Run emu on each node, serve a signalfs, 
+bind them all into a local namespace, then generate
+the patterns. 8 channel, 24 bit, unlimited voice 
+and polyphony.
+
+.SH REFERENCES
+STK is now a link on the side bar.

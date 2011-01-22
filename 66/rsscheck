@@ -1,0 +1,17 @@
+#!/dis/sh.dis
+load std
+
+if {no $*}{
+	feeds=(http://caerwyn.com/ipn/atom.xml
+	http://inferno-os.blogspot.com/atom.xml)
+}{
+	feeds=$*
+}
+
+for u in $feeds {
+	echo
+	echo $u
+	hget $u |
+	 sed -n 's|.*<updated>(.*)</updated>|\1|g
+	 	s|<title type=''text''>(.*)</title>.*|	\1|gp;'
+}

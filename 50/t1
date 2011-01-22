@@ -1,0 +1,10 @@
+this is
+a test of multi-row
+records
+
+they are separated by 
+empty lines
+
+the xp util should be able
+to handle
+them easily

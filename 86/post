@@ -1,0 +1,56 @@
+lab 86 - srv
+<p>
+This from a <a href="http://9fans.net/archive/2008/04/56">post on 9fans</a>, and also on <a href="http://plan9.bell-labs.com/wiki/plan9/Tip_o%27_the_day/index.html">Tip O' the Day</a>
+<pre>
+   % dc >[0=1] | echo 0 > /srv/desk
+</pre><p>
+Plan 9's srv(3) acts as a bulletin board for open file 
+descriptors, other namespaces see all the files in srv, and
+so can read and write to /srv/desk.
+<p>
+Inferno has srv(3) which is a file2chan registry, but is also visible
+to all namespaces on the host.
+<p>
+The current implementation of sh-file2chan(1) does not allow the above.
+The closest I got was,
+<pre>
+% load file2chan
+% calc >[0=1] | {file2chan /chan/desk {rblock; putrdata &} {fetchwdata
+> /fd/0} } &
+
+% stream -b 1 /chan/desk
+
+% echo 1+1 > /chan/desk
+</pre>
+<p> 
+I tried implementing a command equivalent to srv(1) on Plan 9.
+It takes a command block or network addess and post
+it in the srv registry.
+<pre>
+  % srv {calc <[0=1]} /chan/desk
+</pre><p>
+It using an existing '#s' instance if there is one, else binds a new one.
+Now we can open a console to /chan/desk from another window
+<pre>
+  %  {cat & cat  >[1=0] < /dev/cons} <> /chan/desk
+</pre><p>
+and other windows can write to /chan/desk, the output will be
+seen in the console.
+<p>
+Questions. 
+<ol><li>Why isn't Plan 9 srv(3) in Inferno?
+<li>File2chan(2) seems under used. Is that because of the shell interface
+sh-file2chan?
+<li> Is there another interface that would make file2chan more usable?
+<li>
+Mount(1) supports mounting from a file, as Plan 9's does. But the
+inferno srv(3) device must do extra copies of the read and write buffers
+to implement the interface.
+Is the file interface of Plan9 srv more useful than the extra file2chan 
+syscall in Inferno?
+<li> Aren't there benefits to using channels in INferno
+to make file2chan preferable?
+
+
+<p>
+Files in this lab is the srv.b implementation.

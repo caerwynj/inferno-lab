@@ -1,0 +1,14 @@
+#!/dis/sh
+load arg
+args := $*
+arenasdir := /mnt/arenas
+(arg
+	d+ {arenasdir = $arg}
+	'*' {echo unkown option $opt}
+	- $args
+)
+
+Maxclumpsize=57344
+score := $1
+offset := `{dbm/fetch $arenasdir/idx $score}
+read -o $offset $Maxclumpsize < $arenasdir/arena | gunzip | gettarentry {cat}

@@ -1,0 +1,46 @@
+#!/dis/sh
+
+load expr arg string
+args := $*
+arenasdir := /mnt/arenas
+(arg
+	d+ {arenasdir = $arg}
+	'*' {echo unkown option $opt}
+	- $args
+)
+
+fn flush {
+	lev := $1
+	file := /tmp/vacs.${pid}^.$lev
+	nlev := ${expr $lev 1 +}
+	(perm device inst owner group size rest) := `{ls -l $file}
+	if {ntest ${expr $size 50000 gt }} {
+		putclump -d $arenasdir Pointertype^$lev $file >> /tmp/vacs.${pid}^.$nlev
+		> $file
+		flush $nlev
+	}
+}
+
+fn flushroot {
+	lev := $1
+	nlev := ${expr $lev 1 +}
+	file := /tmp/vacs.${pid}^.$lev
+	n := `{wc -l <$file}
+	if {ntest ${expr $n 1 gt} } {
+		putclump -d $arenasdir Pointertype^$lev $file >> /tmp/vacs.${pid}^.$nlev
+		flushroot $nlev
+	} {
+		putclump -d $arenasdir Roottype $file
+	}
+}
+#memfs
+read 1024 > /tmp/vac.${pid}
+while {! ~ $status eof} {
+	putclump -d $arenasdir Datatype /tmp/vac.${pid} >> /tmp/vacs.${pid}^.0
+	flush 0
+	read 1024 > /tmp/vac.${pid}
+}
+
+flushroot 0
+
+#rm -f /tmp/vac.${pid}*

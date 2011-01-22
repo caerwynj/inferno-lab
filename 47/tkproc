@@ -1,0 +1,8 @@
+#!/dis/sh -n
+
+pctl newpgrp
+run /lib/sh/win
+load expr
+load file2chan
+name:=$1
+{tkmkwin $name; file2chan /chan/$name {} {b:= ${unquote ${rget data}}; $b } } &

@@ -1,0 +1,19 @@
+</mkconfig
+
+TARG=\
+	post.html\
+	index.txt\
+	mux.dis\
+
+DISBIN=dis
+
+<$ROOT/mkfiles/mkdis
+
+all:V: $TARG
+
+post.html: text
+	man2html $prereq > $target
+
+index.txt: text
+	man -f $prereq > $target
+

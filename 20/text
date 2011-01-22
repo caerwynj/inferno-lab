@@ -1,0 +1,33 @@
+.SH NAME
+lab 20 - libmux in limbo
+.SH DESCRIPTION
+To learn about mux in detail I tried to implement libmux in
+limbo. It actually resembles the mux from libventi more than libmux.
+They are pretty similar.
+
+I was going to do a detailed description of the mux in devmnt
+but it turns out this has already been done 
+.A http://plan9.escet.urjc.es/usr/nemo/9.txt.gz  here
+by nemo.
+
+When I get this working it can be applied
+to the venti lib for session rpc, to build a libfs
+for direct client 9p interaction, bypassing devmnt,
+and for application protocol muxing, say for sam.
+
+This is a partial implementation. I didn't complete
+.IR send ,
+.IR  recv ,
+.I gettag 
+and 
+.I settag
+functions, so
+this has not been tested. I'm just posting it here now
+ so I don't lose track of it.
+I'll come back to it later, maybe writing more for the Venti library
+or libfs. This is more an excercise to understand the workings of libmux
+and venti's session rpc.
+
+.SH FILES
+.A http://caerwyn.com/lab/20/mux.b mux.b
+.A http://caerwyn.com/lab/20/mux.m mux.m

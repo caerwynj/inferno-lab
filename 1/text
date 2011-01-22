@@ -1,0 +1,200 @@
+.SH NAME
+lab 1 - implement ideas from postdate in inferno sh.
+write shell functions that are polymorphic along the valid
+timeline.
+.SH SETUP
+Inferno 4th edition release 20040830. Using
+.IR sh (1),
+and
+.IR tickfs (4)
+and associated commands, 
+.IR rng (1),
+.IR taq (1).
+.SH DESCRIPTION
+.B Sh 
+has command blocks which can be passed as params
+to commands, and executed. I want to exploit this
+to see if I can implement much of the flavor of Postdate
+in the shell.
+I already have 
+.B tickfs
+in Inferno which supports bi-temporal binary relations.
+So the value for a tickfs entry could be the 
+.B sh
+command block.
+.PP
+Create a new relation with entry of command block
+.IP
+.EX
+% mount -c {tickfs} /n/tick
+% touch /n/tick/sh.bt
+% echo ${quote i . add {fc $1 $2 +}} > /n/tick/sh.bt
+% rng , |taq -1rm /n/tick/sh.bt
+1094173750	add	'{fc $1 $2 +}'
+.EE
+.PP
+I want shell function to return the command block from
+tickfs. It has to be a substitution function to keep it as a command
+block, because echo causes it to be a string.
+.IP
+.EX
+% subfn pd {
+	f = $1
+	(a b c) = `{echo `{date -n} $f . |taq /n/tick/sh.bt}
+	result = ${unquote $"c}
+}
+% echo ${pd add}
+{fc $1 $2 +}
+.EE
+.PP
+I can now call the function
+.BR add ; 
+the code comes from a lookup
+in 
+.B tickfs
+.IP
+.EX
+% ${pd add} 1 1
+2
+.EE
+.PP
+I'll create a function I want to vary along the timeline.
+I can also define variables using the same method.
+I'll create a substition function that uses
+.B rng
+to give the date in epoch format. And then
+use that in 
+.B ${pd}
+to select the effective fuction or variable
+.IP
+.EX
+% subfn rng {
+	r = $1
+	(a b c) = `{rng $r}
+	result =  $b
+}
+
+% date ${rng 20040901}
+Wed Sep 01 00:00:00 EDT 2004
+
+% subfn pd{
+	(f r) = $*
+	(a b c) =  `{echo ${rng $r} $f .  | taq /n/tick/sh.bt}
+	result = ${unquote $"c}
+}
+.EE
+.PP
+.B Pdfn
+defines new functions in tickfs.
+It takes args 
+.B rng name {cmd}
+.IP
+.EX
+% fn pdfn {
+	(r args) = $*
+	echo ${quote i ${rng $r} $args} > /n/tick/sh.bt
+}
+% pdfn 20040101 rate {fc $1 2 x}
+% pdfn 20040601 rate {fc $1 4 x}
+% pdfn . rate {fc $1 8 x}
+% pdfn 20040101 a 10
+.EE
+.PP
+Now call these functions at different times
+.IP
+.EX
+% ${pd rate 0401} 1
+2
+% ${pd rate 0701} 1
+4
+% ${pd rate 1201} ${pd a 1201}
+80
+.EE
+.PP
+In Postdate I had a dictionary stack.
+In Inferno the /n/tdb/sh.bt, or other .bt, file
+is the dictionary. I can push and pop easily
+from list in sh.
+.IP
+.EX
+% pdstk = (n/tick/sh.bt)
+% fn pdpush { pdstk = ($1 $pdstk)}
+% fn pdpop {pdstk = ${tl $pdstk}}
+.EE
+.PP
+I have to redefine 
+.B pdfn
+and 
+.B pd 
+to use
+.B ${hd $pdstk}
+instead of hardcoded
+.BR /n/tick/sh.bt .
+.PP
+The usual mode of processing tickfs
+result sets is in a pipeline. If I define
+a temporal package as a tickfs file
+with a 
+.B main
+sh command block, the 
+.B pdpkg
+command will call 
+.B main
+on one triad at a time from
+stdin.
+It doesn't need to convert from
+YYYYMMDD format to epoch
+because triads always come in epoch
+format. 
+We'll get around that by just defining
+another
+.B pd
+function, say
+.BR epd ,
+that takes seconds since the epoch.
+.IP
+.EX
+% subfn epd{
+	(f r) = $*
+	(a b c) =  `{echo $r $f .  | taq ${hd $pdstk}}
+	result = ${unquote $"c}
+}
+
+% fn pdpkg {
+	pdpush $1
+	getlines {
+		(t k v) = ${unquote $line}
+		${epd main $t} $k $v
+	}
+	pdpop
+}
+
+% pdfn 20040201 main {fc $2 10 x}
+% touch /n/tick/tick.bt
+% echo i . a 1 > /n/tick/tick.bt
+% echo i . b 2 > /n/tick/tick.bt
+% echo i . c 3 > /n/tick/tick.bt
+% rng , |taq -1rm /n/tick/tick.bt |pdpkg /n/tick/sh.bt
+10
+20
+30
+.EE
+.PP
+
+.SH CONCLUSION
+I have created shell functions and variables that
+can vary along the valid time line. 
+I created packages, blocks of temporal shell code,
+that can be applied to tickfs result set.
+It is more featureful that Postdate, since we
+have the whole shell and inferno at our disposal.
+It is slow. I'm not concerned with the perfomance
+now. I want to find out if there's some interesting functions
+that I can implement that can vary along the timeline.
+.PP
+Postdate also has the effective valid time stack. We could implement
+the stack in the same way as
+.B pdstk
+but really the effective time is in the callstack since it is passed
+as a param to every call of
+.BR pd .

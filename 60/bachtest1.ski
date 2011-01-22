@@ -1,0 +1,8 @@
+// Measure number 1	=0
+NoteOn   	0.3     2	  72	  64
+NoteOn   	0.2     3	  77	  64
+NoteOff  	6.0     2	  72	  64
+NoteOn   	2.0     2	  72	  64
+NoteOff  	3.0     2	  72	  64
+NoteOff  	0.2     3	  72	  64
+NoteOff  	0.5     3	  72	  64

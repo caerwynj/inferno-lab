@@ -1,0 +1,13 @@
+</mkconfig
+TARG=\
+	markov.dis\
+	
+DISBIN=$ROOT$home/dis/cmd
+<$ROOT/mkfiles/mkdis
+all:V: $TARG
+clean:V:
+	rm -f *.dis *.sbl *.mid
+
+markov.tar:	guide mkfile markov.b skinate
+	puttar guide mkfile markov.b skinate > markov.tar
+

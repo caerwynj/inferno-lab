@@ -1,0 +1,63 @@
+NAME
+     lab 25 - Accumulator Generator
+
+DESCRIPTION
+     The problem by Paul Graham is stated and I quote
+
+          Write a function foo that takes a number n and returns
+          a function that takes a number i, and returns n
+          incremented by i.
+
+     I thought I'd attempt it in sh (I'm already assuming it's
+     not possible in limbo). Here's my first attempt, which is
+     wrong.
+     % subfn foo {
+     	n=$1
+     	result={i:=$1; n=`{fc $n $i +}; echo $n}
+     }
+     % n := 0
+     % x=${foo 3}
+     % $x 1
+     4
+     The problem is we can't create another accumulator generator
+     in the same scope, since it will overwrite the variable n. 
+     Sh uses dynamic variable binding instead of lexical binding,
+     as used by lisp.
+
+     The shell paper /doc/sh.ms:/lexical.binding/ mentions the
+     issue and proposes a workaround but it doesn't really solve
+     the stated problem. Here's a solution that incorporates the
+     workaround.
+     % subfn foo {
+     	n:=$1
+     	x:= '{i:=$1; $'$n'=`{fc $$'$n' $i +}; echo $$'$n'}'
+     	result = ${parse $"x}
+     }
+     % n := 1
+     % x=${foo n}
+     % $x 1
+     2
+     Now we're passing the name of a variable rather than the
+     number. We can now create a number of accumulator
+     generators. However, the syntax is ugly, and it's not
+     something we'd want to code often. This seems a pity.
+
+CONCLUSION
+     The problem is intended to emphasize the features of LISP,
+     and in particular lexical binding and higher order
+     functions. Indirectly it illustrates Greenspun's Rule:
+
+          Any sufficiently complicated C or Fortran program
+          contains an ad hoc, informally specified, bug-ridden,
+          slow implementation of half of common lisp.
+
+     Put another way, the limit case for implementing the
+     accumulator generator in sh is to turn it into a lisp
+     dialect by, say, writing a shell builtin to evaluate a lisp
+     type expression, or add lexical binding to the shell. It's
+     interesting to note, from reading about lisp recently, that
+     lisp used dynamic binding until the introduction of scheme
+     during the 1970s, and all dialects of lisp eventually
+     adopted it.
+
+                         Inferno Manual

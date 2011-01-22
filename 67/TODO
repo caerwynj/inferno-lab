@@ -1,0 +1,27 @@
+% date
+Wed Apr  4 00:06:21 GMT 2007
+
+things that imho would be worth having
+and also reminder of others.
+
+# linux kernel related (this should be in the next kernel released)
+- palmwkbd.c (from hackndev) adds support for 4 row palm wireless keyboard.
+- reduction of booting time (~ 30 sec) replacing udev by device files.
+- fix to the random stylus touch bug. 
+
+# t3 port related
+- corrected touchscreen calibration.
+- /dev/audio from audio-oss.c works both from input and output (use them).
+- added double click to touchscreen stylus so windows can be hidden/raised in wm.
+- added a "blank" command (apm_blank() ) to /dev/apm, the screen is unblank by pressing a key.
+- graphics can be managed by the framebuffer, but things are a bit more complicated
+  when handling input from touchscreen (both stylus & keys) as it's more model dependent,
+  find a good way to manage this.
+
+# inferno related
+- jit doesn't work in T3, as far i've tested (improvement in performance): 
+  the behaviour is that when loading a dis module it segfaults.
+- mc and fc hang up, /appl/cmd/mc.b:2389 : return sys->sprint("%g") results in hang,
+  changing it to "%f" results in a segfault on /emu/port/alloc.c:/^dopoolalloc(),
+  by now workaround using "%d", find the real reason.
+

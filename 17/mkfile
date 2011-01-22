@@ -1,0 +1,11 @@
+</mkconfig
+
+TARG=\
+	sam.dis\
+	samstub.dis\
+	samtk.dis\
+
+DISBIN=/dis/wm
+
+<$ROOT/mkfiles/mkdis
+

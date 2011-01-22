@@ -1,0 +1,5 @@
+# name of paper:textfile menuicon fullicon headlinefont articlefont module
+Thisburgh Press:thisburgh.txt /icons/news.bit /icons/thisburgh.bit *default* *default* readnews.dis
+Gaijin Shimbun:trofftut.txt /icons/gaijinsmall.bit /icons/gaijin.bit /fonts/lucm/unicode.9.font /fonts/lucm/unicode.9.font readnews.dis
+China Student News:confusius.txt /icons/csnsmall.bit /icons/csn.bit /fonts/pelm/fangsong.9.font /fonts/pelm/fangsong.9.font readnews.dis
+Lucent Newswire:alice /icons/lnw.bit /icons/lnw.bit *default* *default* readlnw.dis

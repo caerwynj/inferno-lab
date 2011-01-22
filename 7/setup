@@ -1,0 +1,3 @@
+echo add wave.dis wave > /mnt/dsp/ctl
+echo add adsr.dis adsr > /mnt/dsp/ctl
+echo add simple.dis simple > /mnt/dsp/ctl

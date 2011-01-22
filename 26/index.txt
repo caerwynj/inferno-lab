@@ -1,0 +1,73 @@
+NAME
+     lab 26 - Greenspun's rule
+
+DESCRIPTION
+     Let me state up front, I do not know much about lisp. I've
+     always been aware of it but never saw it's benefits so never
+     used it. However, recently I've begun to read more about it,
+     particularly the by Paul Graham, and his On Lisp (which I'm
+     still reading, on and off). I went a bit further and read
+     Steele and Sussman's The Art of the Interpreter. Also, as a
+     symptom of my Mathematica envy I became curious about
+     symbolic programming languages, computer algebra systems,
+     and how these are based on lisp dialects. I started playing
+     with and and also
+
+     And so I think I finally got what lisp was about. (I still
+     have much more reading to do. It's funny how a large and
+     rich subculture within computer science suddenly opens up to
+     you when you read about it's core language. I have to ask
+     myself, How could I not have noticed this for so long? The
+     same surprise occurred to me when reading about smalltalk.
+     It all makes me feel quite stupid and parochial.)
+
+     As an exercise in understanding lisp better I turned Inferno
+     shell into a lisp dialect. I wrote a builtin module that
+     provides an eval command and the seven primitive operators:
+     quote, atom, car, cdr, eq, cons and cond.
+
+     I followed approximately the code in Paul Graham's The Roots
+     of Lisp, and the interpreters described in the Steele and
+     Sussman paper.
+     % load ./lisp0.dis
+     % eval {atom `a}
+     t
+     % eval {atom `{a b c}}
+     nil
+     % eval {car `{a b c}}
+     a
+     Functions can be defined by assigning to a variable in
+     shell. Scope within eval is dynamic.
+     subst={{x y z} 
+     	{cond {{atom z} 
+     		   {cond {{eq z y} x} 
+     			    {`t z}}}
+     		{`t {cons {subst x y {car z}}
+     			      {subst x y {cdr z}}}}}}
+
+     % eval {subst `m `b `{a b { a b c} d} }
+     {a m {a m c} d}
+     The backquote is used as an abbreviation for the quote
+     primitive.
+
+     In the builtin I hijack the parse tree and read or transform
+     it for each primitive operator. I also use the shell Context
+     as my symbol table for function parameters, definitions and
+     variable values.
+
+CONCLUSION
+     The attached file is the first of a few versions I'll
+     provide as I add more features as described in Steele and
+     Sussman, in particular lexical binding.
+
+     I wonder whether there is more value to having a dialect of
+     lisp within the shell or whether a proper lisp
+     implementation like scheme should be linked into the inferno
+     VM or written in limbo. The shell already has a good
+     interface to the whole system and mixing programming
+     paradigms may have advantages. The problem is we may realize
+     Greenspun's rule by being ad hoc, informally specified, bug
+     ridden and slow.
+
+FILES
+                         Inferno Manual

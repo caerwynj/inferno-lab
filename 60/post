@@ -1,0 +1,32 @@
+lab 60 - sequencer using channels
+
+In the comments to <a href="http://caerwyn.com/ipn/2006/02/lab-53-granulator.html">lab 53</a> Rog suggested using channels to parse buffers between processes in place of the one-sample-at-a-time technique I was using in my earlier DSP attempts.
+<p>
+This lab is an attempt at Rog's suggestion. It's one limbo file that acts as a simple sequencer and generates it's own voices. 
+<p>
+Each instrument should have an interface:
+<pre>
+f: fn(c: chan of (array of real, 
+		chan of array of real), 
+	ctl: chan of (int, real));
+</pre>
+<p>
+This function is spawned and control messages are sent on the <i>ctl</i>
+channel, and the request for samples and the response channel are
+sent down <i>c</i>.
+<p>
+It really requires jit to be turned on to sound acceptable.
+<p>
+Here's a sample setup,
+<pre>
+% bind -a '#A' /dev
+% echo 1 > /dev/jit
+% sequencer4 < bachfugue.ski  > /dev/audio
+</pre><p>
+Uncomment <b>sequencer.b4:60</b> to add a little echo to the music.
+
+<p>
+I think I'm getting closer to Rog's ideas, but I'm not sure I'm still exploiting it to the fullest. I'm already liking this approach better. I do feel I can change things quicker and plug the modules together easier.
+<p>
+I'll try rearranging things some more. 
+

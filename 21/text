@@ -1,0 +1,35 @@
+.SH NAME
+lab 21 - popi
+.SH DESCRIPTION
+Ported popi from the book 
+.I "Beyond Photography - The Digital Darkroom
+which is
+.A http://spinroot.com/pico/ online
+and many of the examples from the book should work.
+
+I took the C code, translated it to limbo, then tried to add the
+trig functions and polar coordinates. I referenced Rich Burridge's version of
+popi to get ideas while adding the extra features.
+
+See the guide file (if you've mounted this from tcp!canto.hopto.org)
+for many of the examples from chapter 3.
+
+The combination of the program and the online text makes a good
+example of an active essay. While reading the text the user can
+type in the formulas and edit them to explore further into the tool
+and it's possibilites. It enhances reading of the text and understanding
+of the tool.
+.SH CONCLUSION
+This took longer to debug than I expected and I still have doubts
+about parts of it. The polar coordinates when used as a target
+do not work, rounding errors leave gaps in the matrix.
+
+I was going to implement conway's life as a special function
+and a method for repeating a transformation so life could be
+run on an imported graphic. There are endless possibilities here.
+
+I would like to implement a similar tool for sound wave editing.
+I could then plug the resulting waves into signalfs for looping
+and components of instruments.
+.SH FILES
+.A http://caerwyn.com/lab/21/popi.b popi.b

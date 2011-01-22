@@ -1,0 +1,37 @@
+palm t3 kernel:
+http://hackndev.com/node/644
+
+palm t3 ir kdb:
+http://hackndev.com/node/56
+
+inferno-fb2 (by santucco):
+http://archive.netbsd.se/?ml=Inferno-discussion&a=2006-08&m=2264059
+
+t3 reset:
+http://www.tankerbob.com/palm/resets.htm
+
+arm-toolchain: 
+http://www.handhelds.org/moin/moin.cgi/DevelopmentToolchains
+http://www.handhelds.org/download/projects/toolchain/
+
+win 9 rc
+# change INFERNO/mkconfig accordingly
+INFERNO=/home/salva/lib/repos/inferno-os
+PATH=$INFERNO/Linux/386/bin:$PATH
+cd $INFERNO/emu/Linux-fb; mk CONF'='emu-fba-arm
+cd $INFERNO/emu/Linux-fb; mk CONF'='emu-fba-arm install
+cd $INFERNO/emu/Linux-fb; mk CONF'='emu-fba-arm clean
+find $INFERNO -name '*.o' -exec rm -f {} \;
+find $INFERNO -name '*.a' -exec rm -f {} \;
+
+arm-gcc evtest.c -o evtest -I /usr/include/
+echo 50 > /sys/class/backlight/pxapwm-bl/brightness
+
+sudo ifconfig usb0 192.168.1.1
+scp o.emu-fba-arm root@192.168.1.231:/mnt/sd2/inferno/Linux/arm/bin/emu-fba-arm
+ssh root@192.168.1.231
+
+# ts correction
+xr  yr: 3695 3920
+xabs yabs: 3680 3640
+

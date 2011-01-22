@@ -1,0 +1,4 @@
+#!/dis/sh.dis
+# usage: oggplay - < file.ogg
+
+os oggdec -Q -R -b 16 -o - $* | raw2iaf | auplay -

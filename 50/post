@@ -1,0 +1,18 @@
+lab 50 - structural expressions
+
+I've been reading again Rob Pike's Structural Regular Expressions paper. It suggests variations on existing tools, sort, grep, diff and awk, where applying structural expressions might make the tools more versatile or change their character entirely. 
+<p>
+Inferno is missing awk and though it can be run externally I still feel such a tool ought to exist within Inferno. The reason being I want inferno to be good at being a programming environment using software tools.
+<p>
+Inferno has an implementation of the sam language described in the paper. I've thought about porting awk to inferno, but the paper suggests an alternative: to consider replacing with new tools built around the idea of structural expressions.
+
+<p>
+The commands implemented are x, y, g, v, p, which behave the same, and a, c, i which don't. Since the file being operated on is not being edited, the edit commands change the text represented by dot, in memory, and print it to standard output.
+For example, <i>a</i> will append it's argument text to dot and the write to stdout the dot text.
+<pre>
+% xp ',x a/ foo/p'
+</pre>
+
+<p>
+This tool is also potentially a mistake because the same 'sam' language means something different in the new context.
+Another problem maybe be to settle on this. It would be better to go further and try and build the awk like language.

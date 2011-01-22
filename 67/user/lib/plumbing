@@ -1,0 +1,126 @@
+# these are in order from most specific to least,
+# since first rule that fires wins.
+# to update: cat $home/lib/plumbing > /chan/plumb.rules
+# to read: cat /chan/plumb.rules
+# cat /chan/plumb.rules | awk '/^$/ {print "\n# rule " i++} ! /^$/ {print}' 
+
+emuroot=/mnt/dev/inferno-os
+editor=/dis/acme.dis
+addrelem=((#?[0-9]+)|(/[A-Za-z0-9_\^]+/?)|[.$])
+addr=:($addrelem([,;+\-]$addrelem)*)
+
+# ofimatic files go to os ooffice2
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '([a-zA-Z0-9_\-./]+)\.(ppt|doc|xls|odt)'
+data isfile     $0
+plumb alwaysstart ooffice2
+plumb start /dis/os.dis ooffice2 $emuroot/$file
+
+# PDF files go to os xpdf
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '([a-zA-Z0-9_\-./]+)\.(pdf|PDF)'
+data isfile     $0
+plumb alwaysstart pdf
+plumb start /dis/os.dis xpdf $emuroot/$file
+
+# PS files go to os gv
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '([a-zA-Z0-9_\-./]+)\.ps(\.gz)?'
+data isfile     $0
+plumb alwaysstart ps
+plumb start /dis/os.dis gv $emuroot/$file
+
+# OPF files go to ebook
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '([a-zA-Z0-9_\-./]+)\.opf?'
+data isfile     $0
+plumb alwaysstart opf
+plumb start /dis/ebook/ebook.dis $file
+
+# image files go to wm/view
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '([a-zA-Z0-9_\-./]+)\.(jpg|jpeg|gif|bit|png)'
+data isfile     $0
+plumb alwaysstart view
+plumb start /dis/wm/view.dis -i $file
+
+# sounds go to auplay
+kind is text
+data matches '[a-zA-Z0-9_\-./ ]+'
+data matches '([a-zA-Z0-9_\-./ ]+)\.iaf'
+data isfile     $0
+plumb alwaysstart auplay
+plumb start /dis/auplay.dis $file
+
+kind is text
+data matches '[a-zA-Z0-9_\-./ ]+'
+data matches '([a-zA-Z0-9_\-./ ]+)\.wav'
+data isfile     $0
+plumb alwaysstart auplay
+plumb start /dis/sh.dis -c 'wav2iaf $file | auplay -'
+
+kind is text
+data matches '[a-zA-Z0-9_\-,./ ]+'
+data matches '([a-zA-Z0-9_\-,./ ]+)\.(ogg|mp3)'
+data isfile     $0
+plumb alwaysstart auplay
+plumb start /dis/sh.dis -c 'mplay $file > /dev/null'
+
+# URLs go to wm/charon
+kind is text
+data matches '(https?|ftp|file|gopher|mailto|news|nntp|telnet|wais|prospero)://[a-zA-Z0-9_@]+([.:][a-zA-Z0-9_@]+)*/?[a-zA-Z0-9_?#~&/\-=+]+([:.][a-zA-Z0-9_?#~&/\-=+]+)*'
+plumb to web
+plumb start /dis/charon.dis $0
+#plumb start /dis/sh.dis -c 'wurl2txt $0'
+
+# file URLs go to wm/charon
+kind is text
+data matches '[a-zA-Z0-9_/\-]+\.(html|htm|php)?'
+data isfile $0
+data set file://localhost$file
+plumb to web
+plumb start /dis/charon.dis $data
+
+kind is text
+data matches '[a-zA-Z0-9_\-./]+'
+data matches '[a-zA-Z0-9_\-./]+\.(gzip|gz)'
+data isfile		$0
+data set		$file
+plumb alwaysstart gzip2txt
+plumb start /dis/sh.dis -c 'gzip2txt $file'
+
+# existing files, possibly tagged by line number, go to $editor
+kind is text
+data matches '([.a-zA-Z0-9_/\-]+[a-zA-Z0-9_/\-])($addr)?'
+data isfile		$1
+data set		$file
+attr add		addr=$3
+plumb to edit
+plumb start $editor $file
+
+# .m files are looked up in /module and passed to wm/brutus
+kind is text
+data matches '([.a-zA-Z0-9_/]+\.m)($addr)?'
+data isfile     /module/$1
+data set        /module/$0
+attr add		addr=$3
+plumb to edit
+plumb start $editor $file
+
+# man pages
+kind is text
+data matches '([a-zA-Z0-9\-]+)\(([0-9]+)\)'
+plumb alwaysstart man # nasty plumbing hack
+plumb start /dis/sh.dis -c '/dis/man -b $2 $1'
+
+# change plumb namespace
+kind is text
+data matches 'Local (.*)'
+plumb to none
+plumb start /dis/sh.dis -n -c $1
+

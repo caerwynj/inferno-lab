@@ -1,0 +1,74 @@
+.SH NAME
+useful tools
+.SH DESCRIPTION
+This is a light lab about some useful day-to-day tools,
+mainly language and music playing tools.
+
+.I gask
+is a simple script for doing searches with google, which is nice when you want
+to consult something while writting a text, it returns the output in textual form
+so it can be used/plumbed etc.
+
+.PP
+the next tools are for rapidly looking definitions in english/spanish/...
+on a dictionary, and they're handy when you aren't a native speaker.
+
+.I trgg
+.I (translate google)
+allows you to translate between any pair of languages that are supported by google,
+the usage of the command is 
+.EX
+trgg 'sl|dl' text, or piped |trgg 'sl|dl' where:
+	sl: is the source language (by default english)
+	dl: is the destination language (by default spanish)
+.EE
+
+.PP
+while
+.I dorg
+does a search on the dictionaries using the services of www.dict.org site,
+
+.PP
+.IR drae
+is is an interface to the "Real Academia de la Lengua" dictionary,
+so you can consult the meaning of spanish words.
+
+.PP
+And last but not least
+there's the google's
+.B "define:"
+keyword, that looks on the web for definitions 
+of the arguments provided.
+
+For interacting with google's services HTTP POST request support is needed,
+we can find it in webfsget as in the 
+.A http://caerwyn.com/ipn/2004/12/lab-24-google-api.html google-api
+lab, but we can also get it from hget.c and incorporate
+it to webgrab with a [-p post] option. That's the aproach followed.
+
+.I oggplay, madplay and audio,
+those three scripts are used to play music in the mp3 and ogg formats,
+for writting them i've needed to modify 
+.IR wav2iaf(1)
+and 
+.IR auplay(1)
+to work with data piped to it's standard input and write the result to
+it's standard output. And last audio is a small utility to query/set the parameters
+of 
+.B /dev/audioctl.
+
+With this rules it's very easy to set up a few plumbing rules, to handle music files.
+
+.SH FILES
+.A http://caerwyn.com/lab/66/hget hget
+.A http://caerwyn.com/lab/66/gask gask
+.A http://caerwyn.com/lab/66/trgg trgg
+.A http://caerwyn.com/lab/66/dorg dorg
+.A http://caerwyn.com/lab/66/drae drae
+.A http://caerwyn.com/lab/66/webgrab.b webgrab.b
+
+.A http://caerwyn.com/lab/66/audio audio
+.A http://caerwyn.com/lab/66/madplay madplay
+.A http://caerwyn.com/lab/66/oggplay oggplay
+.A http://caerwyn.com/lab/66/wav2iaf.b wav2iaf.b
+.A http://caerwyn.com/lab/66/auplay.b auplay.b

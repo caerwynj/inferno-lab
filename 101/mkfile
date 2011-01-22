@@ -1,0 +1,27 @@
+</mkconfig
+
+TARG=\
+	fetch.dis\
+	firstkey.dis\
+	keys.dis\
+	list.dis\
+	nextkey.dis\
+	store.dis\
+
+SYSMODULES=sys.m
+
+MODULES=btree.m
+
+DISBIN=/dis/btree
+
+</mkfiles/mkdis
+
+BINTARG= /dis/lib/btree.dis $BINTARG
+
+install:V:	$BINTARG
+
+nuke:V:
+	rm -f /dis/lib/btree.dis
+
+/dis/lib/%.dis:	%.dis
+	rm -f /dis/lib/$stem.dis && cp $stem.dis /dis/lib/$stem.dis

@@ -1,0 +1,16 @@
+#!/dis/sh -n
+
+header := {
+pctl newpgrp
+run /usr/caerwyn/limbo/squeak/tklib
+newwidget canvas
+}
+
+$header &
+
+
+#default config
+sleep 1
+echo -n .s configure -height 248 -width 248 -bg teal > /chan/tk.$apid
+echo /chan/tk.$apid
+

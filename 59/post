@@ -1,0 +1,75 @@
+lab 59 - acme stand alone complex
+
+A project that has been on my mind for quite a while is to package inferno's acme as a stand alone editor. I only  had Windows in mind as a target host, but the work should be quite easy to reproduce on other hosts.
+<p>
+I wanted the editor to blend well with the host system, and work as a substitute for other popular programmer editors such as vim, emacs, or jedit. There were a few things I felt needed to be in place for this to work.
+
+<ul>
+<li> cut & paste between the host and acme (lab 55)
+<li> for acme to resize with the host window 
+<li> dead simple packaging and install of acme on windows.
+</ul>
+<p>
+This lab covers the code to do the acme resize with host windows.
+<p>
+I copied the code from <b>/emu/port/devpointer.c<b> and made <b>devwmsz.c</b>. The code is almost identical except for the name changes. This device  holds a short queue of window resize events and serves a file <b>/dev/wmsize</b> that's  the same format as <b>/dev/pointer</b> with <i>x</i> and <i>y</i> fields representing the width and height of the host window.
+<p>
+I modified acme directly to support this new device instead of modifying wm modules, which might be more appropriate, I'm not sure. I added a new thread to /acme/gui.b to listen for resize events and resize the acme window appropriately.
+
+<pre>
+startwmsize(): chan of Rect
+{
+	rchan := chan of Rect;
+	fd := sys->open("/dev/wmsize", Sys->OREAD);
+	if(fd == nil)
+		return rchan;
+	sync := chan of int;
+	spawn wmsizeproc(sync, fd, rchan);
+	<-sync;
+	return rchan;
+}
+
+wmsizeproc(sync: chan of int, 
+	fd: ref Sys->FD, ptr: chan of Rect)
+{
+	sync <-= sys->pctl(0, nil);
+
+	b:= array[Wmsize] of byte;
+	while(sys->read(fd, b, len b) > 0){
+		p := bytes2rect(b);
+		if(p != nil)
+			ptr <-= *p;
+	}
+}
+</pre>
+<p>
+<b>/appl/acme/gui.b:/^eventproc/</b>  responds to the new event on the channel from <i>wmsizeproc</i>,
+<pre>
+eventproc()
+{
+	wmsize := startwmsize();
+	for(;;) alt{
+	wmsz := <-wmsize =>
+		win.image = win.screen.newwindow(wmsz, 
+			Draw->Refnone, Draw->Nofill);
+		p := ref zpointer;
+		mainwin = win.image;
+		p.buttons = Acme->M_RESIZE;
+		cmouse <-= p;
+...
+</pre>
+<p>
+I copied similar code into <b>/appl/wm/wm.b</b> so the standard window manager (included in this lab's files). After using it a little I think I prefer it not resizing. 
+
+<p>
+I use Acme:SAC as my main environment now, opening up another Inferno session when I want to do graphics work. 
+
+<p>
+I've created a page for the <a href="http://caerwyn.com/acme/">Acme:SAC download</a> where I'll post updates as I try to improve the packaging. The download is based on the  emu from 20060227 Inferno release and my <i>dried dung</i> inferno tree. 
+
+
+FILES
+<a href="http://caerwyn.com/lab/59">caerwyn.com/lab/59</a>
+<br>
+<a href="http://caerwyn.com/acme">Acme: Stand Alone Complex</a>
+

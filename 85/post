@@ -1,0 +1,116 @@
+
+lab  85 - stowage
+<p>
+In an earlier post I defined a <a href="http://caerwyn.com/ipn/2005/08/lab-41-venti-lite.html">venti-lite</a> based on two shell
+scripts, getclump and putclump, that stored files in a
+content addressed repository, which in that instance
+was just a gzip tar archive that I appended to, with
+an index.
+<p>
+After learning a little about the git SCM, this lab
+re-writes those scripts to use a
+repository layout more like git's.
+The key thing to know about the git repository is
+that it uses sha1sum(1) content addressing; it stores
+the objects as regular files in a filesystem using the
+hash as the directory and filename,
+<pre>
+  objects/hh/hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+</pre>
+<p>
+In the objects directory is 256 directories named for every
+2 character prefix of the sh1hash of the object. The filename
+is the remaining 38 characters of the hash.
+<p>
+Putclump calculates the hash, slices it to make the prefix and filename,
+tests if the file already exists, and if not writes the compressed data 
+to the new file.
+Here is the important part of putclump,
+<pre>
+	(sha f) := `{sha1sum $file}
+	(a b) := ${slice 0 2 $sha} ${slice 2 40 $sha}
+	
+	if {ftest -e $hold/objects/$a/$b} {} {
+		mkdir -p $hold/objects/$a
+		gzip < $file > $hold/objects/$a/$b
+	}
+</pre>
+<p>
+Getclump just needs to look up the file given a hash
+<pre>
+	sha := $1
+	(a b) := ${slice 0 2 $sha} ${slice 2 40 $sha}
+	files := `{ls $hold/objects/$a/$b^* >[2] /dev/null}
+	if {~ $#files 1} {gunzip < $files } 
+</pre>
+<p>
+Because the git repository just uses an existing file system
+to store objects, it makes it considerably easier to
+work with than the compacted file system like tar.gz,
+or an app specific binary format like venti.
+Developing new scripts can be easy, especially when
+we try to use existing tools, like applylog(8).
+<p>
+For example, I wrote a script, stow, that takes a .tar
+archive and stores it in the object repository, called the hold.
+The hold should be created first with the following directories,
+<pre>
+	/n/hold/logs
+	/n/hold/objects
+	/n/hold/stowage
+</pre>
+Then give stow the name of a .tar or .tgz file.
+Files not found in the hold and that were added are printed
+to stdout.
+<pre>
+	% stow acme-0.11.tgz
+	...
+	%
+</pre>
+<p>
+Stow uses updatelog(8) to create a stowage manifest file
+for the tarball we added. This manifest is saved under /n/stowage.
+The manifest records the pathname, perms, and sha1 hash
+of every file it adds to the hold.
+<p>
+Now that we've stowed all our tarballs in the hold we need a way of getting
+things out.
+<p>
+I built a holdfs, derived from tarfs(4), to read the stowage manifest and 
+present files from the hold. By default the file system is mounted on
+/mnt/arch.
+<pre>
+	% holdfs /n/hold/stowage/acme-0.11
+</pre>
+<p>
+With this implementation the hold with its stowage would replace a directory
+containing the tarpit of tarballs for an application history.
+<p>
+Further, we should be able to do analysis of a file history based on the
+stowage manifests.
+<p>
+The nautical references are intended to suggest a distributed
+and loosely coupled network like that of international shipping.
+The unit of transfer is a tarball.
+It is stowed into the ships hold, along with the manifest. 
+A hold filesystem reads the manifests and provides an
+interface to searching the hold.
+We also keep a ships log of what we stowed and when.
+I can extract patches, files, tarballs, or the complete stowage
+in my hold to share with someone else.
+<p>
+This is a remarkably simple system:
+<pre>
+     28 putclump.sh
+     16 getclump.sh
+     54 stow.sh
+    669 holdfs.b
+    767 total
+</pre>
+<p>
+Contained in this lab are a few experimental scripts 
+to build out more of an SCM. Explore at your leisure but
+they are no substitute for a real SCM at the moment.
+<p>
+A useful script would be to create a patchset between
+two tarballs.

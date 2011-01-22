@@ -1,0 +1,36 @@
+mapreduce
+	read next range
+	split range into list of M items
+	for each item in list
+		rexec on a randomly chosen node:
+			the map function; direct output
+			to the partition function which is
+			given a list of endpoints
+		
+	we should get a list of R endpoints
+	for each endpoint
+		rexec on node
+			the reduce worker
+			which reads in all data from the endpoint
+			sorts the data
+			and calls the reduce function with the
+			key and list of values.
+
+We'd need a new type for a list of endpoints or endpointsrv.
+This is given to the partition function.
+/endpointsrv tcp!node0 id
+
+rexec tcp!node1 "{(/fd); /filter $1 "{tq -1rm /n/tdb/tick.bt}} |
+	/part {/endpointsrv tcp!node0 id} 
+
+part reads each record hashes the key are writes
+the record to the endpoint on endpointsrv identified
+by the hash mod R.
+
+/endpointsrv tcp!node0 id |getendpoint "{
+	rexec tcp!node1 "{reduce "{tock}}  
+}
+
+getendpoint reads the list of endpoints
+provided by endpointsrv and call
+rexec on each with the reduce function

@@ -1,0 +1,2 @@
+mount -9 'tcp!plan9.bell-labs.com!wiki' /mnt/wiki
+Wiki

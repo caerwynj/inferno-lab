@@ -1,0 +1,344 @@
+# power series package
+# a power series is a channel, along which flow the coefficients
+
+type rat: struct of {
+	num, den : int;	# numerator, denominator
+};
+type pol: array of rat;	# polynomial
+type PS: chan of rat;	# power series
+type PS2: array[2] of PS; # pair of power series
+
+mkPS2:= prog() of PS2{	# make a pair
+	become mk(PS2 = {mk(PS), mk(PS)});
+};
+
+# Conventions
+# Upper-case for power series.
+# Lower-case for rationals.
+# Input variables: U,V,...
+# Output variables: ...,Y,Z
+
+# Integer gcd; needed for rational arithmetic
+
+rec gcd:= prog(u:int,v:int) of int{
+	become val{	if(u<0) result gcd(-u,v);
+			else if(u>v) result gcd(v,u);
+			else if(u==0) result v;
+			else result gcd(v%u,u);
+		   };
+};
+
+# Make a rational from two ints and from one int
+
+pairtorat:= prog(u:int,v:int) of rat{
+	g:= gcd(u,v);
+	become val {	if(v >= 0) result mk(rat={u/g,v/g});
+			else result mk(rat={-u/g,-v/g});
+		   };
+};
+
+inttorat:= prog(u:int) of rat{
+	become pairtorat(u,1);
+};
+
+zero:= inttorat(0);
+one:= inttorat(1);
+
+# Operations on rationals
+
+add:= prog(u:rat,v:rat) of rat{
+	become pairtorat(u.num*v.den+v.num*u.den, u.den*v.den);
+};
+
+
+mul:= prog(u:rat,v:rat) of rat{
+	become pairtorat(u.num*v.num,u.den*v.den);
+};
+
+neg:= prog(u:rat) of rat{
+	become pairtorat(-u.num,u.den);
+};
+
+sub:= prog(u:rat,v:rat) of rat{
+	become add(u,neg(v));
+};
+
+inv:= prog(u:rat) of rat{	# invert a rat
+	become pairtorat(u.den,u.num);
+};
+
+ratprint:= prog(u:rat){
+	if(u.den==1) print(u.num);
+	else print(u.num, "/", u.den);
+	print(" ");
+};
+
+# Print a power series
+
+Print:= prog(U:PS){
+	for(;;)
+		ratprint(<-U);
+};
+
+Printn:= prog(U:PS,n:int){
+	for(; n>0; n=n-1) ratprint(<-U);
+	print ("\n");
+};
+
+# Evaluate n terms of power series U at x=c
+
+rec eval:= prog(c:rat,U:PS,n:int) of rat{
+	if(n==0) become zero;
+	y:= <-U;
+	become add(y,mul(c,eval(c,U,n-1)));
+};
+
+# Power-series constructors return channels on which power
+# series flow.  They start an encapsulated generator that
+# puts the terms of the series on the channel.
+# Often the generator is anonymous; but some generators
+# are useful in their own right (e.g. split, rep)
+
+# add two power series
+
+Add:= prog(U:PS,V:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		for(;;) Z<-=add(<-U,<-V);
+	}();
+	become Z;
+};
+
+Cmul:= prog(c:rat,U:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		for(;;) Z<- = mul(c,<-U);
+	}();
+	become Z;
+};
+
+# subtract
+
+Sub:= prog(U:PS,V:PS) of PS{
+	become Add(U,Cmul(neg(one),V));
+};
+
+# Service routine: copy input to output
+
+copy:= prog(U:PS,Z:PS){
+	for(;;) Z<-=<-U;
+};
+
+# shift a power series and insert a new constant term
+#	Z = c + xU
+
+Shift:= prog(c:rat,U:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		Z<-=c;
+		become copy(U,Z);
+	}();
+	become Z;
+};
+
+# Multiply by monomial x^n
+# [cheaper than Mul(Mon(intorat(1),n),U)]
+
+Monmul:= prog(U:PS,n:int) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		for(; n>0; n=n-1) Z<-=zero;
+		become copy(U,Z);
+	}();
+	become Z;
+};
+
+# multiply by x
+
+Xmul:= prog(U:PS) of PS{
+	become Monmul(U,1);
+};
+
+# repeat the constant c
+
+rep:= prog(c:rat,Z:PS){
+	for(;;)
+	Z<-=c;
+};
+
+Rep:= prog(c:rat) of PS{
+	Z:=mk(PS);
+	begin rep(c,Z);
+	become Z;
+};
+
+# Monomial c*x^n
+
+Mon:= prog(c:rat,n:int)of PS{
+	Z:=mk(PS);
+	begin prog(){
+		for(; n>0; n=n-1) Z<-=zero;
+		Z<-= c;
+		become rep(zero,Z); 
+	}();
+	become Z;
+};
+
+# constant: c 0 0 0 0 ...
+
+Con:= prog(c:rat) of PS{
+	become Shift(c,Rep(zero));
+};
+
+# simple pole at 1: 1/(1-x) = 1 1 1 1 1 ...
+
+Ones:= Rep(one);
+
+# convert polynomial to power series; poly is an
+# array of coefficients, constant term first
+
+Poly:= prog(a:array of rat) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		i:=0;
+		for(; i<len(a); i=i+1) Z<-=a[i];
+		become copy(Rep(zero),Z);
+	}();
+	become Z;
+};
+
+# split a stream into two, which may be read at different rates.
+# the service routine "split" cannot be fully encapsulated in
+# Split; see Exp for an example.
+
+rec {
+ split:= prog(U:PS,ZZ:PS2){
+	u := <-U;
+	i : int;
+	select{
+	case ZZ[i=] <-= u: {
+		YY := Split(U);
+		begin copy(YY[i],ZZ[i]);
+		ZZ[1-i] <-= u;
+		become copy(YY[1-i],ZZ[1-i]);
+	}
+	};
+ };
+
+ Split:= prog(U:PS) of PS2{
+	ZZ := mkPS2();
+	begin split(U,ZZ);
+	become ZZ;
+ };
+}
+
+# multiply. The algorithm is
+# 	let U = u + x*UU
+#	let V = v + x*VV
+#	then UV = u*v + x*(u*VV+v*UU) + x*x*UU*VV
+
+rec Mul:= prog(U:PS,V:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		u := <-U;
+		v := <-V;
+		Z<-=mul(u,v);
+		UU := Split(U);
+		VV := Split(V);
+		W := Add(Cmul(u,VV[0]),Cmul(v,UU[0]));
+		Z<-=<-W;
+		become copy(Add(W,Mul(UU[1],VV[1])),Z);
+	}();
+	become Z;
+};
+
+# derivative
+ 
+Diff:= prog(U:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		<-U;
+		i : int;
+		for(i=1; ; i=i+1)
+			Z<-=mul(inttorat(i),<-U);
+	}();
+	become Z;
+};
+
+# integrate, with const of integration
+
+Integ:= prog(c:rat,U:PS) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		i : int;
+		for(i=1; ; i=i+1) {
+			Z<-=mul(pairtorat(1,i),<-U);
+		}
+	}();
+	become Shift(c,Z);
+};
+
+# binomial theorem (1+x)^c
+
+Binom:= prog(c:rat) of PS{
+	Z:=mk(PS);
+	begin prog(){
+		n:= 1;
+		t:rat = inttorat(1);
+		for(;;){
+			Z<-=t;
+			t = mul(mul(t,c),pairtorat(1,n));
+			c = sub(c,one);
+			n = n+1;
+		}
+	}();
+	become Z;
+};
+
+# reciprocal of a power series
+#	let U = u + x*UU
+#	let Z = z + x*ZZ
+#	(u+x*UU)*(z+x*ZZ) = 1
+#	z = 1/u
+#	ZZ = -(z*UU + x*UU*ZZ)/u
+
+Recip:= prog(U:PS) of PS{	#CHECK THE ALGEBRA
+	ZZ:=mkPS2();
+	begin prog(){
+		z:=inv(<-U);
+		UU:=Split(Cmul(neg(z),U));
+		become split(Shift(z,Add(Cmul(z,UU[0]),
+			Xmul(Mul(UU[1],ZZ[0])))),ZZ);
+	}();
+	become ZZ[1];
+};
+
+# exponential of a power series with constant term 0
+# (nonzero constant term would make nonrational coefficients)
+# bug: the constant term is simply ignored
+#	Z = exp(U)
+#	DZ = Z*DU
+#	integrate to get Z
+
+Exp:= prog(U:PS) of PS{
+	ZZ:=mkPS2();
+	begin split(Integ(one,Mul(ZZ[0],Diff(U))),ZZ);
+	become ZZ[1];
+};
+
+# substitute V for x in U
+#	let U = u + xUU
+# 	then S(U,V) = u + V*S(V,UU)    
+
+rec Subst:= prog(U:PS,V:PS) of PS {
+	Z:= mk(PS);
+	begin prog(){
+		Z<- = <-U;
+		become copy(Mul(V,Subst(U,V)),Z);
+	}();
+	become Z;
+};
+
+"# powser";
+
+Printn(Exp(Ones), 10);

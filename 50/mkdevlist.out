@@ -1,0 +1,5 @@
+DEVS=devroot.obj devcons.obj devenv.obj devmnt.obj devpipe.obj devprog.obj devprof.obj devsrv.obj devdup.obj devssl.obj devcap.obj devfs.obj devcmd.obj cmd.obj devindir.obj devdraw.obj devip.obj ipif.obj ipaux.obj deveia.obj devaudio.obj audio.obj devmem.obj devarch.obj 
+LIBS=interp tk freetype math draw memlayer memdraw keyring crypt 
+PORT=alloc.obj cache.obj chan.obj dev.obj dial.obj dis.obj discall.obj env.obj error.obj errstr.obj exception.obj ex.obj fs.obj inferno.obj latin.obj main.obj parse.obj pgrp.obj print.obj proc.obj qio.obj random.obj sysfile.obj uqid.obj 
+INIT=emuinit 
+ROOT=/dev /fd /prog /net /net /chan /nvfs /env 

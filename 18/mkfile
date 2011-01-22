@@ -1,0 +1,14 @@
+</mkconfig
+
+TARG=\
+	post.html\
+	index.txt\
+
+all:V: $TARG
+
+post.html: text
+	man2html $prereq > $target
+
+index.txt: text
+	man -f $prereq > $target
+

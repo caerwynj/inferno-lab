@@ -1,0 +1,21 @@
+#!/dis/sh
+# manage/toggle backlight lcd
+load std
+minbr=1
+sysdir=/n/local/sys/class/backlight/pxapwm-bl
+actual=`{cat $sysdir/actual_brightness}
+
+if{~ $1 blank suspend}{
+	echo -n $1 > /dev/apm
+}{~ $1 '+'}{
+	echo `{mc $actual + 10} > $sysdir/brightness
+}{~ $1 '-'}{
+	echo `{mc $actual - 10} > $sysdir/brightness
+}{~ $1 [0-9][0-9]}{
+	echo $1 > $sysdir/brightness
+}{~ $actual $minbr}{
+        echo 40 > $sysdir/brightness
+}{
+        echo $minbr > $sysdir/brightness
+}
+

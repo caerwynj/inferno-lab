@@ -1,0 +1,10 @@
+starters.menu:0:0:640:480:starters.bit
+bufw10:185:354:250:376:tick.bit
+bufw24:185:376:250:396:tick.bit
+bufw48:185:396:250:418:tick.bit
+breadst6:540:296:592:320:tick.bit
+breadst6ch:540:318:592:342:tick.bit
+breadst12:540:360:592:384:tick.bit
+breadst12ch:540:382:592:404:tick.bit
+main.menu:330:416:430:438:main-sel.bit
+show.menu:440:416:578:438:show-sel.bit

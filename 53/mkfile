@@ -1,0 +1,15 @@
+</mkconfig
+
+TARG=\
+	dsp.dis\
+	granulator.dis\
+
+SYSMODULES=\
+	bufio.m\
+
+MODULES=\
+	dsp.m\
+
+DISBIN=dsp
+
+<$ROOT/mkfiles/mkdis

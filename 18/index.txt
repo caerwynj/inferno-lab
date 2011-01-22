@@ -1,0 +1,48 @@
+NAME
+     lab 18 - mux
+
+DESCRIPTION
+     Much of my recent reading has led me back to various
+     implementations of a multiplexer. This is an important and
+     powerful abstraction and I want to understand it better. I
+     know very little about it now. I'd like to implement one in
+     limbo, for example to multiplex the link between sam and
+     samterm as suggested in the paper. Hence my interest in sam
+     in the earlier lab.
+
+     Here is a some of the things I've been reading recently
+     about multiplexers. See if you see a pattern. J. Hickey's
+     Master thesis at MIT implements for plan9 which puts a 9p
+     multiplexer into user space and provides asynchonous IO for
+     user threads.
+
+     Search 9fans for where there is some interesting discussion
+     on the use of multiplexers in plan9.
+
+     For example, an by rog and russ's And futher proposals by
+     russ for mux, 9p multiplexing and 9p multiplexing.
+
+     See also an implementation of a generic rpc multiplexer,
+     libmux, in
+
+     The various window systems by Rob Pike, mux, 8½, and rio are
+     multiplexers for their environment, the screen, mouse and
+     keyboard.
+
+     The spree game engine is a multiplexer at the application
+     leve for the object hierarchy managed by the server.
+
+     And in inferno /emu/port/devmnt.c is the multiplexer for 9p.
+
+     In the original paper the authors argued the principal
+     function of an operating system is to multiplex access to
+     hardware, and should do nothing else. Multiplexers are vital
+     to providing 9p service and in protium the authors argue
+     they are a vital piece of infrastructure for distributed
+     applications. 
+
+     In summary, this is something I need to learn more about.
+     I'll proceed in these labs with studying the code to libmux
+     and devmnt and try to implement the mux for the sam session.
+
+                         Inferno Manual

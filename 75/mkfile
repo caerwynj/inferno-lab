@@ -1,0 +1,26 @@
+</mkconfig
+
+TARG=\
+	scope.dis\
+	fft.dis\
+	ffttest.dis\
+	seq.dis\
+	post.html\
+
+DISBIN=$ROOT$home/dis/cmd
+
+<$ROOT/mkfiles/mkdis
+
+%.html: %
+	sed 's|^\.A (http://.*) (.*)|<a href="\1">\2</a>|' $prereq > $prereq.s
+	man2html $prereq.s > $target
+	sed 's|&lt;a href="(http://.*)"&gt;(.*)&lt;/a&gt;|<a href="\1">\2</a>|' $target > $target.s
+	cp $target.s $target
+	rm $prereq.s $target.s
+%.txt: %
+	man2txt $prereq > $target
+scope.tar: `{ls}
+	puttar $prereq > $target
+	
+clean:V:
+	rm *.dis *.sbl *.html *.txt

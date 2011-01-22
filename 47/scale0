@@ -1,0 +1,30 @@
+#!/dis/sh -n
+
+header := {
+pctl newpgrp
+name := $1
+run tklib
+tkmkwin $name
+chan scale
+tk namechan $wid scale
+x scale .s 
+x pack .s
+x update
+onscreen place
+
+logfile /chan/$name.log  &
+{ while {} {echo ${recv scale} > /chan/$name.log} }&
+
+file2chan /chan/$name {
+	rreadone "{tkdump .s}
+} {
+	x ${rget data}
+	x update
+}
+}
+
+$header $1
+#default config
+x .s configure -from 0.1 -to 1.0 -resolution 0.1 -command {send scale} -orient horizontal
+x update
+

@@ -1,0 +1,56 @@
+.SH NAME
+lab 12 - implement an oscilloscope for signals from
+signalfs.
+.SH DESCRIPTION
+I implemented an oscilloscope called
+.I scope 
+to view the signals produced by signalfs,
+or other PCM data such as an iaf file
+stripped of it's header.
+.IP
+.EX
+% scope < bach.raw > /dev/null
+.EE
+.PP
+It writes it's input to it's output, but it
+doesn't sound very good if directed
+to 
+.BR /dev/audio .
+It writes small blocks of samples
+with small delays between writes, 
+making it sound very choppy.
+.PP
+.I Scope
+tries to draw 25 frames a second, getting
+a tick from a timer, and reads 1/25th 
+of a second of samples from the input,
+then draws it on a Tk panel.
+.PP
+This is 
+.I might
+be  useful when
+recording input from a microphone
+.IP
+.EX 
+% scope < /dev/audio > out.raw
+.EE
+.PP
+It takes as parameter the sample rate
+and number of channels, stereo or mono.
+.SH CONCLUSION
+Not being able to listen and see the waveform
+at the same time makes it less useful. How do
+we keep in sync the visual and audio streams?
+.PP
+I'd like to present a similar graph using the FFT,
+but I keep getting errors from the fft module. It correctly
+does the transform but isn't able to permute
+the numbers into normal order (I think, I
+do not know enough about this.)
+Commenting out the 
+"optional code"
+in
+.B /appl/math/fft.b
+seemed to make it work, at least make it not exit.
+.SH FILES
+.A http://caerwyn.com/lab/12/scope.b scope.b

@@ -1,0 +1,223 @@
+dev
+	root
+	cons archds lcd
+	env
+#	gpio
+	mnt
+	pipe
+	prog
+	rtc
+	srv
+	dup
+	draw screen swcursor
+	pointer
+	ip	bootp ip ipv6 ipaux iproute arp netlog ptclbsum iprouter plan9 nullmedium pktmedium
+	ether netif netaux ethermedium
+#	ata
+#	uart
+
+	nds
+	dldi
+	audio invhit
+
+ip
+#	il
+	tcp
+	udp
+#	rudp
+#	igmp
+	ipifc
+	icmp
+	icmp6
+	ipmux
+
+lib
+	interp
+	tk
+	draw
+	memlayer
+	memdraw
+	prefab
+	keyring
+	sec
+	mp
+	math
+	kern
+
+mod
+	sys
+	draw
+	tk
+	keyring
+	prefab
+
+port
+	alarm
+	alloc
+	allocb
+	chan
+	dev
+	dial
+	dis
+	discall
+	exception
+	exportfs
+	inferno
+	latin1
+	nocache
+	nodynld
+	parse
+	pgrp
+	print
+	proc
+	qio
+	qlock
+	random
+	sysfile
+	taslock
+	xalloc
+
+link	
+#	lcd
+#	ether589
+#	ethertdk
+#	pppmedium ppp compress
+
+misc
+
+code
+	int main_pool_pcnt = 50;
+	int heap_pool_pcnt = 30;
+	int image_pool_pcnt = 20;
+	int cflag = 0;
+
+	int consoleprint = 1;
+	int redirectconsole = 1;
+	char debug_keys = 1;
+	int panicreset = 0;
+	char *tkfont = "/fonts/lucidasans/unicode.6.font";
+	int	tkstylus = 1;
+	
+init
+	pbinit
+
+root
+	/chan	/
+	/dev	/
+	/dis
+	/env	/
+	/fd	/
+	/net	/
+	/net.alt	/
+	/nvfs /
+	/prog	/
+	/osinit.dis
+
+# intialisation
+	/dis/touchcal.dis
+
+# dos file system
+	/dis/dossrv.dis
+	/dis/disk/format.dis
+
+# kfs file system
+	/dis/disk/kfs.dis
+	/dis/disk/kfscmd.dis
+	
+	/dis/lib/arg.dis
+	/dis/lib/bufio.dis
+	/dis/lib/daytime.dis
+	/dis/lib/devpointer.dis
+	/dis/lib/env.dis
+	/dis/lib/filepat.dis
+	/dis/lib/gamer.dis
+	/dis/lib/irsim.dis
+	/dis/lib/mpeg.dis
+	/dis/lib/readdir.dis
+	/dis/lib/styx.dis
+	/dis/lib/string.dis
+	/dis/mux/audioctl.dis
+	/dis/mux/comics.dis
+	/dis/mux/connect4.dis
+	/dis/mux/fnn.dis
+	/dis/mux/gamed.dis
+	/dis/mux/games.dis
+	/dis/mux/movie.dis
+	/dis/mux/mux.dis
+	/dis/mux/news.dis
+	/dis/mux/pizza.dis
+	/dis/mux/readlnw.dis
+	/dis/mux/readnews.dis
+	/dis/mux/rec-pb.dis
+	/dis/mux/tv.dis
+	/dis/mux/tvlist.dis
+	/dis/mux/web.dis
+	/dis/mux
+	/dis/sh.dis
+	/icons/audioctl.bit
+	/icons/csn.bit
+	/icons/csnsmall.bit
+	/icons/email.bit
+	/icons/envelope.bit
+	/icons/film.bit
+	/icons/gaijin.bit
+	/icons/gaijinsmall.bit
+	/icons/ibc.bit
+	/icons/lnw.bit
+	/icons/movie.bit
+	/icons/news.bit
+	/icons/noentry.bit
+	/icons/pizza.bit
+	/icons/register.bit
+	/icons/thisburgh.bit
+	/icons/tvlist.bit
+	/icons/wallst.bit
+	/icons/web.bit
+	/icons/rec-pb/cd.bit
+	/icons/rec-pb/corner-ll.bit
+	/icons/rec-pb/corner-lr.bit
+	/icons/rec-pb/corner-ul.bit
+	/icons/rec-pb/corner-ur.bit
+	/icons/rec-pb/edge-h.bit
+	/icons/rec-pb/edge-v.bit
+	/icons/rec-pb/ff.bit
+	/icons/rec-pb/line.bit
+	/icons/rec-pb/mic.bit
+	/icons/rec-pb/pause.bit
+	/icons/rec-pb/play.bit
+	/icons/rec-pb/pop.bit
+	/icons/rec-pb/push.bit
+	/icons/rec-pb/rec.bit
+	/icons/rec-pb/rew.bit
+	/icons/rec-pb/slider.bit
+	/icons/rec-pb/sliderpattern.bit
+	/icons/rec-pb/speaker.bit
+	/icons/rec-pb/stop.bit
+	/icons/rec-pb/synth.bit
+	/services/basic
+	/services/news/config
+	/services/news/confusius.txt
+	/services/news/thisburgh.txt
+	/services/news/lnw/a0599
+	/services/news/lnw/a0611
+	/services/news/lnw/a0612
+	/services/news/lnw/a0613
+	/services/news/lnw/a0615
+	/services/news/lnw/a0616
+	/services/news/lnw/a0618
+	/services/news/lnw/a0619
+	/services/news/lnw/a0620
+	/services/news/lnw/a0621
+	/services/news/lnw/a0622
+	/services/news/lnw/a0623
+	/services/news/lnw/a0624
+	/services/news/lnw/a0625
+	/services/news/lnw/a0626
+	/services/news/lnw/a0627
+	/services/news/lnw/a0628
+	/services/news/lnw/a0629
+	/services/news/lnw/a0630
+	/services/news/lnw/a0631
+	
+	/n/local
+	/usr/inferno

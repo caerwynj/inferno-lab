@@ -1,0 +1,253 @@
+atom
+ a asdf 123 + -
+
+list
+ {a b c}
+
+
+{define a 1}
+
+			adj
+				word
+		adj
+			word
+	adj
+		word
+word
+
+{a}
+	block
+word(a)	nil
+
+
+{a b c}
+			block
+		adj		word(c)
+	adj		word(b)
+word(a)	nil
+
+atom() true if atom false otherwise.
+The empty list is considered to be an atom
+
+
+numberp() returns true if number false otherwise.
+
+eq() true if two atoms are identical.
+
+car() produces first element of a list
+assuming argument is a list (BLOCK).
+
+cons() produces a new list from sexpr and a list.
+
+list() can take any number of arguments and produce a list.
+
+
+quote() returns the constant sexpr of its argument.
+abbreviated to `quote (BQ)
+
+Within our shell builtin
+the special forms map to limbo constructs
+
+cond -> if
+
+
+eval(exp, env, procedures)
+	if(atom(exp))
+		if(exp=='nil')
+			return nil
+		else if(exp=='true')
+			return true;
+		else if(numberp(exp)
+			return exp
+		else
+			return env.get(exp)
+	else if(car(exp) == 'quote')
+
+
+(define (args) (ops on args))
+
+((args) (ops on args))
+
+
+cons
+
+		Adj
+			word
+	Adj
+		word
+word
+
+becomes:
+			adj
+				word
+		adj
+			word
+	adj
+		word
+word
+
+quote
+		BQ
+	word
+
+
+		BQ
+	BLOCK
+word
+
+Doesn't work:
+% eval {cons `a `{}}
+{}
+
+
+% eval {cons `a {cons `b {cons `c `{}}}}
+
+Test cases
+% eval {atom `a}
+t
+% eval {atom `{a b c}}
+nil
+% eval {atom `nil}
+t
+% eval {atom {atom `a}}
+t
+% eval {atom `{atom `a}}
+nil
+% eval {eq `a `a}
+t
+% eval {eq `a `b}
+nil
+% eval {eq `{a b c}}
+nil
+% eval {car `{a b c}}
+a
+% eval {cdr `{a b c}}
+{b c}
+% eval {cons `a `{b c}}
+{a b c}
+{}
+% eval {cons `a {cons `b `{d}}}
+{a b d}
+% eval {cons `a `{}}
+
+
+Need to remove SEQ from tree
+
+ eval {cdr `{a
+b c}}
+{;b c}
+% eval {car {cdr `{a
+b c}}}
+
+%
+subst={{x y z} 
+	{cond {{atom z} 
+		   {cond {{eq z y} x} 
+			    {`t z}}}
+		{`t {cons {subst x y {car z}}
+			      {subst x y {cdr z}}}}}}
+
+% eval {subst `m `b `{a b { a b c} d} }
+bind {x y z} to m
+bind x y z to m
+bind z to m
+set z=m
+bind x y to b
+bind y to b
+set y=b
+bind x to {a b {a b c} d}
+set x={a b {a b c} d}
+m
+
+The above doesn't work because we don't consider
+the empty list as an atom.
+
+
+f={{x y} {cons {car x} {cdr y}}}
+
+We haven't got recursive functions working yet.
+
+Yay!
+% subst={{x y z} 
+	{cond {{atom z} 
+		   {cond {{eq z y} x} 
+			    {`t z}}}
+		{`t {cons {subst x y {car z}}
+			      {subst x y {cdr z}}}}}}
+% eval {subst `m `b `{a b { a b c} d} }
+{a m {a m c} d}
+
+
+we could compile limbo module to operate on lists.
+Then we could incrementally compile newly defined
+lisp procedures.
+
+We also want shell builtins to be callable within
+the eval procedure so we can extend the language
+with builtins. For example by adding arbitrary precision
+arithmetic.
+
+We then want to implement a yacas/mathematica
+type language with a normal form of the lisp expression.
+We can the perform transformations on the symbolic
+language be defining new transform functions.
+
+
+We could define new builtins as substitution builtins
+which eval could evaluate because they return Listnodes
+
+subfn {etc.}
+
+Then when we get the "value" of the function we lookup
+the sfn-"value" of it and apply it to the code.
+But we also want to make the distinction with real
+shell code and run real substitution functions in 
+shell using ctxt.run and returning the listnode back
+to the eval procedure.
+
+Either way is cool way of integrating shell and lisp.
+
+We could use $subfn syntax for running shell substitution functions.
+We then get the regex code for free.
+
+eval {x {$regex ...}}
+
+
+eval {len 'a string'}
+
+Use a naming convention such as Upper case initial character
+to distinguish eval's builtins and functions. except for the special forms.
+
+Partition
+Select
+Map
+Plus
+Minus
+
+
+eval {Select f `{a b c d}}
+
+All functions are transformations of the symbol tree.
+
+We want pattern matching to apply transformations
+
+Square[ x_ + y_] -> x^2 + y^2
+
+Mathematica operators /. and /@
+
+
+also add macros. Macro is like adding to the set of special forms,
+the arguments are not evaluated before being passed to the macro.
+
+Write the yacas parser in sh-lisp which compiles the code the sh-lisp,
+which can then evaluate it.
+
+Once the lisp implementation of yacas is available we can translate
+it to sh-lisp. Then we can use the yacas code within inferno
+and start building up a library.
+Just build a mathamatica parser using yacc which builds a parse
+tree similar to shell's.
+
+We may need a decent lisp implementation built into inferno,
+and not the shell hack. But the shell hack ties in nicely with
+the rest of the system.

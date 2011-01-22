@@ -1,0 +1,9 @@
+main.menu:0:0:640:480:main.bit
+youchoose:156:308:480:332:youchoose-sel.bit
+panpizza.menu:112:336:230:360:panpizza-sel.bit
+thincrisp.menu:112:361:264:386:thincrisp-sel.bit
+stuffed.menu:112:386:318:410:stuffed-sel.bit
+starters.menu:418:336:526:360:panpizza-sel.bit
+sidedish.menu:390:361:526:385:sidedish-sel.bit
+beverage.menu:396:386:526:410:beverage-sel.bit
+show.menu:254:418:394:440:show-sel.bit

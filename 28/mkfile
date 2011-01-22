@@ -1,0 +1,21 @@
+</mkconfig
+
+TARG=\
+	post.html\
+	index.txt\
+
+DISBIN=dis
+
+<$ROOT/mkfiles/mkdis
+
+dir=`{pwd |sed 's@/usr/caerwyn@/n/ftp@'}
+all:V: $TARG
+
+upload:V: $TARG
+	cp $TARG $dir
+
+post.html: text
+	man2html $prereq > $target
+
+index.txt: text
+	man -f $prereq > $target

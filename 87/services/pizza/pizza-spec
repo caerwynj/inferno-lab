@@ -1,0 +1,163 @@
+Pizza menus must fit on a TV screen of 640 by 480 pixels.
+Information should not get closer than ten pixels from the edges.
+Essentially, the menu displays should be such that things
+can be selected from them by pointing to them and bringing up
+new menus (submenus).
+
+Selection in menus is on the basis of rectangles.  Every
+selectable item should be placed such that a rectangle
+can be drawn around it whose edge is entirely on the white
+background of the menu.
+
+Change `Pizza Villa' into `Mom's Pizza'.  The logo is just fine.
+It should probably appear on every menu somewhere.
+
+Layout can be anything you like.  To indicate choosable items
+I've included them in brackets [like this].
+
+The main menu should have some welcoming message and allow
+people to choose from one of the submenus (everything that's
+indented from the left margin is part of a menu):
+
+main menu:
+	Welcome to Mom's Pizza
+
+	We deliver orders anywhere in
+	the world*
+
+	What would you like:
+
+	   [You Choose, Surprise me! $13.99]
+
+	[Pan Pizza]		[Starter]
+	[Thin'n'Crispy]		[Side dishes]
+	[Stuffed Crust Pizza]	[Beverage]
+
+	Check out our [Family Specials]!
+
+	Hit the SUR key on your remote control
+	for operating instructions
+
+	* Except Antarctica
+
+The footnote should be in a size that makes it only barely legible.
+
+After some items have been selected, a page should appear that
+lists the order and gives the total price.  We'll compose that
+page from rectangles containing item names and numbers.
+We need a header saying something like:
+
+	Mom's Pizza
+
+	To change your order, select the item,
+	type the number (zero to delete the
+	item) and hit Enter.
+
+	You have ordered:
+
+and a trailer saying:
+
+	Subtotal:
+	Tax:
+	Total:
+	
+	[I want to order more]
+
+	[My order is complete]
+
+We'll fill in an address and a number of minutes.  The address
+has no known vertical size, so it shouldn't be boxed in.
+
+We also need images containing the digits 0 through 9, a
+dollar sign, and a period.  With these we'll make up the prices.
+
+This particular menu will often grow to be taller than the screen.
+We'll make it scroll up and down.
+
+
+Starter's menu:
+
+	Mom's Pizza
+
+	Buffalo Wings
+	Delicious chicken wings coated in mild hot sauce
+	Single	(10)	[$ 4.99]
+	Double	(24)	[$ 7.50]
+	Party	(48)	[$13.50]
+
+	Breadsticks
+	Single order (6 sticks)	[$1.59]
+		with cheese	[$2.59]
+	Double order (12 sticks)[$2.59]
+		with cheese	[$4.59]
+
+
+Beverages Menu:
+
+	Mom's Pizza
+
+	Soda
+			Small	Medium	Large
+	Coke		[$.70]	[$.95]	[$1.25]
+	Diet coke	[$.70]	[$.95]	[$1.25]
+	Root beer	[$.70]	[$.95]	[$1.25]
+	7UP		[$.70]	[$.95]	[$1.25]
+
+
+Side dishes menu:
+
+	Mom's Pizza
+
+	Side dishes
+
+	French fries	[$.65]
+	Cole slaw	[$.75]
+	Antipasto	[$2.59]
+
+Pan Pizza
+Thin'n'Crispy menu's:
+
+	Mom's Pizza
+
+	Pan Pizza -- a favourite, baked golden brown in a deep dish pan
+(or Thin'n'Crispy  -- Our original crust rolled extra thin)
+
+		2 toppings   extra toppings
+	Small	[$ 7.69]	$ .50	
+	Medium	[$ 8.99]	$1.00
+	Large	[$11.99]	$1.50
+
+	Choose your Toppings
+	Meats:	[Pepperoni, [Italian sausage], [Beef topping],
+		[Ham], [Bacon], [Pork topping]
+	Veggies:[Anchovies], [Black Olives], [Artichoke],
+		[Mushroom], [Onions], [Green peppers],
+		[Jalapenos], [Extra cheese]
+
+
+Stuffed Crust Pizza menu:
+
+	Cheese
+	[$9.99]
+
+		Specialty Pizza
+		[$11.99]
+
+			Grand Supreme
+			[$12.99]
+
+
+Exit menu:
+
+	Mom's Pizza
+
+	Thank you for your order.
+
+	We'll deliver within .. minutes
+	to ...
+
+	If your order hasn't arrived at ..
+	it's free.
+
+Just leave spaces at the dots for us to fill in something.
+

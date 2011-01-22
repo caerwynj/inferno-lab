@@ -1,0 +1,27 @@
+#!/bin/sh
+# counterpart of p9p's "u" and "9" for Inferno
+
+HOST=`uname -s`
+ARCH=`uname -m | sed -n 's/i.86/386/p; s/x86_64/386/p; s/arm.*/arm/p'`
+
+case "$INFERNO" in
+'')
+	;;
+*)
+	PATH=`
+		echo "$PATH" |
+		sed '
+			s,'$INFERNO/$HOST/$ARCH/bin:',,g
+			s,':$INFERNO/$HOST/$ARCH/bin',,g
+		'
+	`
+	PATH="$INFERNO/$HOST/$ARCH/bin:$PATH"
+	export PATH
+	;;
+esac
+
+case $# in
+[1-9]*)
+       exec "$@"
+       ;;
+esac

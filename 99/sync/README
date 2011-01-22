@@ -1,0 +1,77 @@
+removed directories:
+	/FreeBSD/
+	/Hp/
+	/Inferno/
+	/Irix/
+	/NetBSD/
+	/OpenBSD/
+	/Plan9/
+	/asm/
+	/libbio/
+	/libdynld/
+	/libkern/
+	/liblogfs/
+	/libnandfs/
+	/libprefab/
+	/libtk/
+	/tools/
+	/utils/
+	/appl/alphabet/
+	/appl/collab/
+	/appl/demo/
+	/appl/ebook/
+	/appl/spree/
+	/appl/tiny/
+	/appl/wm/
+
+forked directories:
+	/appl/acme/
+	/appl/charon/
+	/acme/
+
+
+synched proto:
+Linux
+	+
+Nt
+	+
+appl
+	cmd
+		+
+	grid
+		+
+	lib
+		+
+	math
+		+
+emu
+	+
+lib
+	+
+lib9
+	+
+libdraw
+	+
+libinterp
+	+
+libkeyring
+	+
+libmath
+	+
+libmemdraw
+	+
+libmemlayer
+	+
+libmp
+	+
+libsec
+	+
+include
+	+
+man
+	+
+module
+	+
+
+
+In comparison we ignore mkfiles.

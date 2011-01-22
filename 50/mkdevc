@@ -1,0 +1,55 @@
+xp '
+c
+#include "dat.h"
+#include "fns.h"
+#include "error.h"
+#include "interp.h"
+#include "emu.root.h"
+
+.
+c/ulong ndevs=8+/
+,x/^dev\n(	.+\n)+/ y/^dev\n/ x/(.*\n)+/ >{wc -l}
+c/;\n/
+,x/^dev\n(	.+\n)+/ y/^dev/ {
+	x/.*\n/ s/^	([a-z]+)/extern Dev \1devtab;\n/
+	s/./Dev* devtab[]={\n/
+	x/.*\n/ s/^	([a-z]+)/	\&\1devtab,\n/
+}
+c
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+	nil,
+};
+
+.
+,x/^link\n(	.+\n)+/ y/^link/ x/.*\n/ s/^	([a-z]+)/extern void \1link(void);\n/
+c/void links(void){\n/
+,x/^link\n(	.+\n)+/ y/^link/ x/[a-z]+/s/.*/	&link();\n/
+c/}\n\n/
+
+,x/^mod\n(	.+\n)+/ y/^mod\n/ x/.*\n/ s/^	([a-z]+)/extern void \1modinit(void);\n/
+c/void modinit(void){\n/
+,x/^mod\n(	.+\n)+/ y/^mod\n/ x/^	[a-z]+/ s/([a-z]+)/	\1modinit();\n/
+c/}\n\n/
+
+,x/^ip\n(	.+\n)+/ y/^ip\n/ {
+	s/./#include "..\/ip\/ip.h"\n/
+	x/.*\n/ s/^	([a-z]+)/extern void \1init(Fs*);\n/
+	s/./void (*ipprotoinit[])(Fs*) = {\n/
+	x/.*\n/ s/^	([a-z]+)/	\1init,\n/
+	s/./	nil,\n};\n\n/
+}
+
+,x/^code\n(	.+\n)+/ y/^code\n/p
+
+c
+char* conffile="emu";
+ulong kerndate= KERNDATE;
+.
+' t3

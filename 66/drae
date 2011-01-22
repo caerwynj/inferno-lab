@@ -1,0 +1,9 @@
+#!/dis/sh.dis
+# "Limpia, fija y da esplendor", Real Academia (1713)
+#form=`{hget http://buscon.rae.es/diccionario/cabecera.htm |
+#	sed -n 's/<form action="//; s/" method="post" target="formularios">.*//p'}
+x=$*
+form=/draeI/SrvltGUIBusUsual
+q=`{echo $x|sed 's/ /+/g'}
+
+hget 'http://buscon.rae.es'^$form^'?LEMA=+'^$q^'+' | os htmlfmt 

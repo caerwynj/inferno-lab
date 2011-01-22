@@ -1,0 +1,4 @@
+#!/dis/sh
+
+$home/python/PyAssist.py $acmewin
+

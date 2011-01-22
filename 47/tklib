@@ -1,0 +1,131 @@
+load tk std expr file2chan
+
+fn x {
+	or {tk $wid $*} {
+		echo error on tk cmd $"*':' $status >[1=2]
+	}
+}
+
+subfn x {
+	result = ${tk $wid $*}
+	if {~ $result '!*'} {
+		echo error on tk cmd $"*':' $result >[1=2]
+	}
+}
+
+fn tkwin {
+	if {! ~ $#* 2} {
+		echo usage: tkwin name {command} >[1=2]
+		raise usage
+	}
+	wid := ${tk window $1}
+	while {} {
+		tk winctl $wid ${recv $wid}
+	} &
+	$2
+}
+
+# more for interactive use
+fn tkmkwin {
+	if {! ~ $#* 1} {
+		echo usage: tkmkwin name >[1=2]
+		raise usage
+	}
+	wid = ${tk window $1}
+	while {} {
+		tk winctl $wid ${recv $wid}
+	} &
+}
+
+fn onscreen {
+	tk onscreen $wid $1
+}
+
+fn tkpos {
+	x := ${tk $wid . cget actx}
+	y := ${tk $wid . cget acty}
+	width := ${tk $wid . cget actwidth}
+	height := ${tk $wid . cget actheight}
+	echo send '$wid ''!reshape . -1' $x $y ${expr $x $width + $y $height +}  ''''
+}
+
+fn tkdump {
+# actx acty actwidth actheight background foreground jump
+	opts = (activebackground activeforeground anchor
+		 bitmap borderwidth disabledcolor font  highlightcolor
+		highlightthickness image  justify orient padx pady relief selectbackground
+		selectborderwidth selectforeground takefocus text underline xscrollcommand
+		yscrollcommand bigincrement  from height label resolution showvalue
+		sliderlength sliderrelief state tickinteral to width)
+	special = ( command) 
+	tag := $1
+	echo '{header := ' $header
+	echo '@ $header' 
+	tkpos
+	for (i in $opts) {
+		result = ${tk $wid $tag cget $i}
+		if {~ $result '!*' } {} {echo x $tag configure -$i $result}
+	}
+	result = ${tk $wid $tag get 0.0 end}
+	if {~ $result '!*' } {} {echo x $tag insert 0.0 ${quote '{' ^ $result ^ '}' }}
+	echo x update'}'
+
+}
+
+fn titlebar {
+	x 'frame .Sq -bg green -borderwidth 1'
+	x 'label .Sq.title -anchor w -bg #aaaaaa -fg white'
+	x 'button .Sq.e -bitmap exit.bit -command {send wm_title exit} -takefocus 0'
+	x 'pack .Sq.e -side right'
+	x 'button .Sq.top -bitmap task.bit -command {send wm_title task} -takefocus 0'
+	x 'pack .Sq.top -side right'
+	x 'button .Sq.m -bitmap maxf.bit -command {send wm_title size} -takefocus 0'
+	x 'pack .Sq.m -side right'
+	x 'bind .Sq <Button-1> {send wm_title move %X %Y}'
+	x 'bind .Sq <Double-Button-1> {send wm_title lower .}'
+	x 'bind .Sq <Motion-Button-1> {}'
+	x 'bind .Sq <Motion> {}'
+	x 'bind .Sq.title <Button-1> {send wm_title move %X %Y}'
+	x 'bind .Sq.title <Double-Button-1> {send wm_title lower .}'
+	x 'bind .Sq.title <Motion-Button-1> {}'
+	x 'bind .Sq.title <Motion> {}'
+	x 'pack .Sq.title -side left'
+	x 'pack .Sq -fill x'
+	x update
+}
+
+fn titleproc {
+	chan := $1
+	{toggle:=0; while {} {
+	d := ${recv $chan}
+	if {~ $toggle 0} {titlebar; toggle=1} {
+	width := ${tk $wid .s cget actwidth}
+	height := ${tk $wid .s cget actheight} 
+	x .s configure -height $height -width $width
+	x destroy .Sq; toggle=0} } } &
+
+}
+
+fn newwidget {
+	name := tk.${pid}
+	widget := $1
+
+	tkmkwin $name
+	x $widget .s
+	x pack .s -expand 1 -fill both
+	x destroy .Wm_t
+	chan titlechan^$wid
+	tk namechan $wid titlechan^$wid
+	x bind .s '<Button-3> {send '^ titlechan^$wid ^' toggle}'
+	x update
+	onscreen place
+
+	file2chan /chan/$name {
+		rreadone "{tkdump .s}
+	} {
+		x ${rget data}
+		x update
+	}
+
+	titleproc titlechan$wid
+}

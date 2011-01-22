@@ -1,0 +1,11 @@
+#!/dis/sh -n
+
+header := {
+pctl newpgrp
+run /usr/caerwyn/limbo/squeak/tklib
+newwidget entry
+}
+
+$header &
+echo /chan/tk.$apid
+

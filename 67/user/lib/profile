@@ -1,0 +1,48 @@
+#!/dis/sh.dis
+# configure ns/env/etc
+load std
+
+user=`{cat /dev/user}
+home=/usr/$user
+if {~ $emuhost Linux}{
+	bind -c '#U*' /n/local
+}{~ $emuhost Nt}{
+	bind -c '#UC:/' /n/local
+}
+
+if {! ftest -f /net/dns}{
+	ndb/dns -r
+}
+if {! ftest -f /net/cs}{
+	ndb/cs
+}
+
+bind -a '#C' /
+bind -a '#t' /dev
+if {ftest -d '#A'}{
+	bind -a '#A' /dev
+	echo in vol 55 > /dev/audioctl
+	echo out vol 30 > /dev/audioctl
+}
+if {ftest -d '#S'}{
+	bind -a '#S' /dev
+}
+
+bind -b $home/dis/sh  /dis
+bind -b $home/dis/cmd /dis
+bind -b $home/dis/lib /dis/lib
+bind -b $home/dis/wm  /dis/wm
+bind -b $home/dis/acme  /dis/acme
+bind -b $home/dis/acme-bin  /acme
+
+# jit segfaults on t3 handheld (arm)
+if {! ~ `{cat /dev/sysname} corto}{
+	echo 1 > /dev/jit
+}{
+	blight 40
+}
+
+echo 'do you want to launch wm/wm? [Enter=y]'
+if {{wantwm=`{read} && ~ $#wantwm 0}}{
+	wm/wm &
+}

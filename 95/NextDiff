@@ -1,0 +1,42 @@
+#!/dis/sh
+
+fn findwin {
+	file = $1
+	< /mnt/acme/index getlines {
+		(w x y z zz f rest) := ${split ' ' $line }
+		if {~ $f $file} {echo $w}
+	}
+}
+
+fn highlight {
+	file = $1
+	lineno = $2
+	a := `{findwin $file}
+	if {! ~ $#a 0} {
+		cd /mnt/acme/$a
+		<> addr {
+			echo -n $lineno > addr
+			echo 'dot=addr' > ctl
+			echo show > ctl 
+		}
+	}{
+		plumb $file:$lineno
+	}
+}
+
+cwd = `pwd
+cd /mnt/acme/$acmewin
+{
+	echo -n 'addr=dot' >ctl
+	(a b) := `cat 
+	echo -n '/^[^\-<>].*\n/' > addr
+	echo -n 'dot=addr' > ctl
+	echo -n show > ctl
+	(f1 cmd f2) := `{getline data}
+	(f1 l1) = ${split ':' $f1}
+	(f2 l2) = ${split ':' $f2}
+	f1 = `{cleanname -d $cwd $f1}
+	f2 = `{cleanname -d $cwd $f2}
+	highlight $f1 $l1
+	highlight $f2 $l2
+} <> addr

@@ -1,0 +1,9 @@
+Holdfs takes the name of a log.
+
+A wrapper script takes a sha1 prefix, finds a match, getclump the file to a tmpfile,
+then runs holdfs on the result.
+
+holdfs asdf323
+
+
+Need to push and pull changes with the svn tree.

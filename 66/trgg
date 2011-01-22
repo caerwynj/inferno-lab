@@ -1,0 +1,29 @@
+#!/dis/sh.dis
+# hl,langpair,ie,oe
+# from the Hitchhiker's guide to the Galaxy, Babel's Fish
+# hget $ultools | u grep -o '<option value="[a-z][a-z]|[a-z][a-z]">' | sed -n 's/<option value="//;s/">//p'
+load std
+
+ultools='http://www.google.es/language_tools'
+utext='http://translate.google.com/translate_t'
+
+fn filter () { sed 's/ /+/g; s/''/''''/g' }
+
+x=$*
+if {~ $#lp 0}{
+	lp='en|es'
+}
+
+if {~ $1 [a-z][a-z]'|'[a-z][a-z]}{
+	lp=${hd $x}; x=${tl $x};
+}
+if {~ $#x 0}{
+	text=`{cat | filter}
+}{
+	text=`{echo $x | filter}
+}
+post='hl=en&ie=UTF8&oe=UTF8&langpair='^$lp^'&text='^$"text^'&'
+#echo $lp; echo $"post; echo
+
+hget -p $"post $"utext | 
+sed 's|.*<div id=result_box dir=ltr>||; s|</div></td></tr>.*|\n|g; /^[#.]/d; /[\#{<].*[>}\#]/d; /\/\//d;'

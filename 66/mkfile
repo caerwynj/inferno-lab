@@ -1,0 +1,21 @@
+</mkconfig
+
+TARG=\
+	post.txt\
+	post.html\
+	webgrab.dis\
+	wav2iaf.dis\
+	auplay.dis\
+
+DISBIN=$home/dis/dis
+
+<$ROOT/mkfiles/mkdis
+
+all:V:	$TARG
+
+%.html: %
+	man2html $prereq > $target
+%.txt: %
+	man2txt $prereq > $target
+clean:
+	rm -f *.sbl *.dis *.html *.txt

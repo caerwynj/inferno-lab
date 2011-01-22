@@ -1,0 +1,29 @@
+/n/local/m/a/guide
+win
+blight;
+wm/view -i
+
+svc/auth
+svc/styx
+svc/rstyx
+netstat
+player;
+voip;
+
+/dev/
+/doc
+/n/local/m/f
+/n/local/m/l/p
+/n/local/m/l/v
+/n/local/m/l/c
+/n/local/m/l/e-
+/usr/salva/work/doc/
+/lib/ebooks
+
+# bookmars inferno
+http://www.cs.rit.edu/~ats/inferno/
+http://gsyc.escet.urjc.es/docencia/asignaturas
+http://cm.bell-labs.com/sources/contrib/rog
+http://collyer.net/
+http://gentoo-wiki.com/Embedded_Gentoo
+http://openwince.sourceforge.net/jtag/

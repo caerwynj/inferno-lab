@@ -1,0 +1,64 @@
+.SH NAME
+lab 6 - signal modules; implement filter (again) 
+for signalfs and test 
+the recursiveness of the file server.
+.SH SETUP
+Inferno 4th Edition 20040830. See also labs 4 an 5.
+.SH DESCRIPTION
+.SS "2004/0922 21:24
+Changed filter.b to use the clone interface.
+The
+.I ctl
+file accepts a 
+.B source
+command which takes a filename or another signal
+source which may be served by the same signalfs
+.IP
+.EX
+% echo source /usr/caerwyn/lab/6/mnt/wave > mnt/filter/2/ctl
+.EE
+.PP
+The filter module then opens
+.I ctl
+reads the number of the conversation directory and then
+opens 
+.IR data .
+The filter is then responsible for setup of the signal source.
+It should probably pass through commands written to 
+.I ctl
+that it does not understand, so the wave can be controlled
+through the filter 
+.IR ctl .
+.PP
+I made a small change to
+.B signalfs.b
+to not fork the namespace so the mount of the server
+affects the current process and the filter module
+is able to access the wave
+.IP
+.EX
+176c178
+< 	pidc <-= sys->pctl(0, nil);
+---
+> 	pidc <-= sys->pctl(Sys->FORKNS, nil);
+.EE
+.PP
+.SH CONCLUSION
+The recursion (if that's the right term) works.
+Filter reads data from wave served by the
+same file server; or it could be a different file
+server running remotely.
+.PP
+This was a quick lab session to resolve
+my doubts about signalfs. Need to really
+start implementing all the filters. Especially
+those that combine multiple sources.
+.SH FILES
+.A http://caerwyn.com/lab/6/dsp.b dsp.b
+.A http://caerwyn.com/lab/6/dsp.m dsp.m
+.A http://caerwyn.com/lab/6/envelope.b envelope.b
+.A http://caerwyn.com/lab/6/filter.b filter.b
+.A http://caerwyn.com/lab/6/noise.b noise.b
+.A http://caerwyn.com/lab/6/signal.m signal.m
+.A http://caerwyn.com/lab/6/signalfs.b signalfs.b
+.A http://caerwyn.com/lab/6/wave.b wave.b

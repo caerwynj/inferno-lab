@@ -1,0 +1,23 @@
+Subject: cryptfs
+
+i implemented a simple (naive?) cryptfs
+using file2chan to interpose
+cryptography between, say, disk/kfs and
+its storage.
+
+the code is available at my blog,
+http://caerwyn.home.comcast.net/ipn
+which is all about inferno :)
+
+i may have missed something obvious in
+the implementation making it hopelessly
+insecure.  If so, I'd like to hear about
+it.
+
+what is amazing to me is how easy this
+was to do.  from thinking of the idea
+while driving home, to coding it that
+evening, and have it work, was only a
+few hours.  only in inferno.
+
+-caerwyn

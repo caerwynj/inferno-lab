@@ -1,0 +1,11 @@
+</mkconfig
+SRC=`{ls *.b}
+TARG=${SRC:%.b=%.dis}
+
+MODULES=`{ls *.m}
+
+SYSMODULES=\
+
+DISBIN=/acme/dis
+<$ROOT/mkfiles/mkdis
+

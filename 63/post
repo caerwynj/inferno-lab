@@ -1,0 +1,20 @@
+lab 63 - Calendar for acme
+<p>
+I wrote a little calendar client for acme based on Inferno's wm/calendar(1).
+It uses rawdbfs(1) in the same way to store calendar entries. 
+<p>
+The calendar window displays a calendar much like cal(1) and has commands <i>Next</i> and <i>Prev</i> to move between months. Days that have calendar entries have a plus superscript symbol. Right click on the days of the month to open and edit a calendar entry.
+<p>
+To use it make sure you have a directory /mnt/schedule, and a file in your home directory called, schedule.
+<pre>
+mkdir /mnt/schedule
+touch schedule
+Calendar schedule
+</pre>
+<p>
+Or
+<pre>
+Local rawdbfs schedule /mnt/schedule
+Calendar
+</pre>
+

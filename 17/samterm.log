@@ -1,0 +1,36 @@
+Samterm started
+receiver started
+sender started
+					Tversion 0
+					Tstartcmdfile 3e8
+Hversion: 2
+Hnewname: 0
+Hbindname: 0, 3e8
+Hcurrent: 0
+Hmovname: 0, ~~sam~~
+Hcheck0: 0
+					Tcheck 0
+Hack
+					Tack
+Hcheck: 0
+Hunlock
+					Tworkfile 0 2 2
+					Ttype 0 0 n
+
+Hunlock
+					Tworkfile 0 7 7
+					Ttype 0 2 !pwd
+
+Hgrowdata: 0, 7, 25, /home/caerwyn/20040830!
+Hcheck0: 0
+					Tcheck 0
+Hack
+					Tack
+Hcheck: 0
+Hsetdot: 0, 32, 32
+Hunlock
+					Tworkfile 0 34 34
+					Ttype 0 32 q
+
+Hexit
+					Texit

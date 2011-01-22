@@ -1,0 +1,53 @@
+.SH NAME
+lab 13 - flute
+.SH DESCRIPTION
+I implemented more of the STK library but his time as a
+straight forward translation to a limbo module.
+Much of the protected classes and filters are in 
+.B dsp.b
+as ADTs. They all share a similar interface that includes
+functions
+.I mk
+for building the object
+and 
+.I tick
+for processing the next sample.
+.PP
+The instruments are generally larger to implement but
+follow the same interface. They can be plugged
+into a signal module and then read and controlled from within
+signalfs.
+.PP
+I've included a few simple modules that can be used to
+start a new instrument.
+I also tried to implement the more complicated Flute.
+It's close, but still doesn't sound right. It all needs a lot
+more debugging.
+.PP
+To test the flute
+.IP
+.EX
+% signalfs -a /mnt/dsp
+% echo add flute.dis flute > /mnt/dsp/ctl
+% sequencer /mnt/dsp/flute < bach.ski > /dev/audio
+.EE
+.PP
+Sequencer has some small improvements to handle more
+voices and open them as needed. The number of voices
+does not need to be limited but it gets bogged down with
+four.
+.SH CONCLUSION
+Still more work to be done, but I'm almost at the point
+where I can start building a base set of 
+hopefully interesting instruments.
+.SH FILES
+The latest 
+.A http://caerwyn.com/lab/13/dsp.b dsp.b
+.A http://caerwyn.com/lab/13/dsp.m dsp.m
+.A http://caerwyn.com/lab/13/flute.b flute.b
+.A http://caerwyn.com/lab/13/sequencer.b sequencer.b
+.A http://caerwyn.com/lab/13/signal.m signal.m
+.A http://caerwyn.com/lab/13/signalfs.b signalfs.b
+.A http://caerwyn.com/lab/13/simple0.b simple0.b
+.A http://caerwyn.com/lab/13/simple1.b simple1.b
+.A http://caerwyn.com/lab/13/simple2.b simple2.b

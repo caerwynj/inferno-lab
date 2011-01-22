@@ -1,0 +1,45 @@
+#!/dis/sh.dis
+# script to share an audio device
+# check this:
+# since there's a lot of echo in the sound received
+# playing/adjusting bufsize can be useful, since
+# stream issues writes of bufsize, so until not enough
+# data (bufsize bytes) is obtained it's not transmited
+# to the other end.
+
+x:=$*
+bufsize=`{
+	{
+	echo 'nchans='^`{sed -n 's/^chans (.+) .+/\1/p' /dev/audioctl}
+	echo 'srate='^`{sed -n 's/^rate ([0-9]+) .*/\1/p' /dev/audioctl}
+	echo 2 '*' nchans '*' srate '/' 32
+	} | mc 
+}
+
+if {! ~ $#x 0}{
+	server=$x
+}{
+	server=192.168.1.1
+}
+
+wm/sh -w 370 -h 55 -ic {
+	echo ${quote button 'listen' 'styxlisten -A ''tcp!*!styx'' export ''#A''
+'} > /chan/shctl
+	echo ${quote button '!listen' 'kill Styxlisten Export | sh
+'} > /chan/shctl
+
+	echo ${quote button 'mnt' 'mount -A tcp!$server!styx /n/remote
+'} > /chan/shctl
+
+	echo ${quote button 'ctl' 'cp  /n/remote/audioctl /dev/audioctl
+'} > /chan/shctl
+
+	echo ${quote button 'stream' 'stream -a -b $bufsize /dev/audio /n/remote/audio
+'} > /chan/shctl
+	echo ${quote button '!stream' 'kill Stream | sh
+'} > /chan/shctl
+
+	echo ${quote button 'stat' 'netstat
+'} > /chan/shctl
+
+}

@@ -1,0 +1,96 @@
+.SH NAME
+lab 29 - embedded graphs
+.SH DESCRIPTION
+Taking inspiration from 
+.IR Mathematica 's 
+notebook user interface, I tried implementing graphs
+embedded within the shell window, 
+.IR wm/sh . 
+The idea being that a scrolling page
+of graphs, text and images is easier to manage than many overlapping
+windows. I feel this especially while I'm iteratively running commands,
+generating data and viewing graphs.
+.PP
+The shell window provides a history of activity. By including other windows
+in that history
+I can look back at the graphs I generated, what data generated them, 
+what command was used to generate the data, and so on. With
+overlapping windows this context can be lost. 
+.PP
+.I Wm/sh
+used in this way now behaves as a rudimentary window manager. 
+It is easy to imagine ways in which it becomes inconvient to use. Such
+as interacting with two windows separated
+by a large block of text. But it still might add a useful alternative to the
+.I wm/wm
+and 
+.I acme
+window manager styles.
+
+.SH IMPLEMENTATION
+.PP
+The graphs are Tk windows embedded within the text of the shell window.
+The graph can respond to events,
+and in this case clicking inside the graph updates the displayed coordinates.
+.PP
+I didn't know how to do any of this, or even that Tk made it possible,
+until I looked at the editor 
+.IR wm/brutus .
+.I Brutus
+seems to be a forgotten application
+within Inferno and not very stable. It supports
+embedding of images, tables, and excerpts of code within
+the text and simple formatting. 
+It is still useful to
+trawl through such programs for snippets of code.
+Finding the code to embed Tk windows within text was enlightening.
+.PP
+I used the brutus extension interface
+.B brutusext.m
+to implement the graph module. The graph module itself
+was adapted from
+.BR /appl/math/gr.b .
+.PP
+The shell already comes with a file system inteface
+.B /chan/shctl
+to communicate with external programs.
+I added to 
+.I wm/sh 
+two commands to be recognized by this file.
+.IP
+.EX
+% echo graph filename > /chan/shctl
+.EE
+.PP
+where
+.I filename
+contains a set of coordinates. 
+.I Wm/sh 
+displays a graph within the shell window.
+.A http://caerwyn.com/ipn/lab/29/screenshot.gif [screenshot]
+.PP
+I also added a command to display images. For example,
+.IP
+.EX
+% echo bitmap /icons/coin.bit > /chan/shctl
+.EE
+.PP
+To clear memory from all the Tk objects created,
+.IP
+.EX
+% echo clear >/chan/shctl
+.EE
+.SH SUMMARY
+.PP
+By adding this feature many other possibilities and questions
+quickly arise. How can we collapse individual embedded windows?
+Can we cut and paste the embeds? What about saving the whole
+contents of the shell window, including embeds, and restoring
+them later for browsing.
+.I Wm/brutus 
+again points the way to doing some of this, by
+creating a simple markup using SGML or sexprs to store
+the contents as an expression.
+.SH FILES
+.A http://caerwyn.home.comcast.net/lab/29/graph.b graph.b
+.A http://caerwyn.home.comcast.net/lab/29/sh.b sh.b

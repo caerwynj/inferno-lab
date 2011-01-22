@@ -1,0 +1,33 @@
+</mkconfig
+
+TARG=\
+	dsp.dis\
+	signalfs.dis\
+	envelope.dis\
+	noise.dis\
+	wave.dis\
+	filter.dis\
+	adsr.dis\
+	simple.dis\
+	sequencer.dis\
+
+SYSMODULES=\
+	bufio.m\
+	draw.m\
+	daytime.m\
+
+MODULES=\
+	signal.m\
+	dsp.m\
+
+DISBIN=../../dis
+
+
+<$ROOT/mkfiles/mkdis
+
+install:V:	$BINTARG
+%.install:V:	$DISBIN/%
+%.installall:V:	$DISBIN/%
+
+$DISBIN/%:	%.sh
+	cp $stem.sh $target && chmod a+rx $target

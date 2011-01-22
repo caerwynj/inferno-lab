@@ -1,0 +1,40 @@
+lab 87 - mux for nintendo ds
+<p>
+In an earlier post I talked about <a href="http://caerwyn.com/ipn/2006/02/lab-54-mux-for-4th-edition.html">updating mux to 4th edition Inferno</a>
+in the hope of one day running it on a Nintendo DS.
+<p>
+Well, Inferno is now booting on the DS so I got to try it for real.
+<p>
+I started with getting the mux window manager working
+in standard inferno. Then I changed the resolution down to 256x192
+and tried to get everything to fit.  The files in this lab include the 
+version of mux I ended up putting in the <a href="http://caerwyn.com/downloads/ipds1.nds">nds file</a> running on the DS.
+<p>
+Things to try if you download it.  Rocker moves up and down selection.
+'A' key enters, 'B' key backs out back up to the higher level.
+'Start' key returns to the top level menu.
+<p>
+Try Today's Newspaper, and The Thisburgh has the only working graphic.
+Under news, click through to actually read an article.  Under games,
+try connect4.  Audio control would look cool if any of the graphics
+actually came in.  The Financial Reports gives a ticker.  It scrolls
+slowly only because of the sleep interval in the code is incorrect.
+<p>
+If you want to try this version of mux using using hosted inferno
+just remember you need to compile prefab into your emu. 
+Include prefab in the mod and lib sections of your emu config file,
+also uncomment prefab in the /libinterp/mkfile.
+<p>
+Mux uses <a href="http://www.vitanuova.com/inferno/man/2/ir.html">irsim</a> for key controls. I changed my local inferno-ds code to have the DS keys output
+the same characters as used by irsim. 
+<p>
+The files in this lab include the movies and tvlist apps.
+These didn't fit on the 4MB .nds file. But they will fit when we get the GBA ROM
+or dldi interface working.
+<p>
+I think mux is a good path to follow for DS development.  Its
+small, starts quickly, uses the keys effectively since it was designed
+for remote controls, the programs are easy to understand, and they hit
+most of the applications I'd like to start with, small games, news
+reader, email reader, simple database browser (movies, tvlist), and
+audio.

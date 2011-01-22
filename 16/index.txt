@@ -1,0 +1,59 @@
+NAME
+     lab 16 - set up a styx service for active essays
+
+DESCRIPTION
+     I created a readonly unauthenticated styx service for
+     readers of IPN, who have inferno installed, and want to read
+     the lab notes in acme and execute the embedded scripts. From
+     here on I'll use the term canto for active essays authored
+     and "read" (rather to execute or chant) in the Inferno
+     environment.
+
+     This entry in my notebook is my first attempt of the new
+     style. It describes the files and formats of the service.
+
+     Mount the service and open acme on the file for this lab.
+     	mkdir /n/canto
+     	mount -A tcp!canto.hopto.org!6700 /n/canto
+     	acme -c1 /n/canto/16/index.txt
+
+     Each canto is in a numbered directory containing the
+     following files:
+
+     text the raw contents of the notes in man(6) format
+
+     post.html
+          the text file converted to html using man2html for
+          sending to the blog.
+
+     guide
+          the file containing executable code within acme (see
+          below)
+
+     index.txt
+          the main contents, usually text formatted using man(1).
+
+     Instead of embedding possibly long scripts within the main
+     text, they are in the guide file, and at the appropriate
+     point in the text are referenced. Right click on the link
+     and then middle click on the selected text.
+     	guide:/^pi/+1
+
+     While reading a canto at least three frames will be open;
+     the index.txt, the guide file containing the executable
+     expressions, and the Errors file containing the output from
+     the scripts. I prefer to run acme with one column which
+     fills half the screen and leave the other half of the screen
+     for windows I open such as shell windows, debugger, task
+     manager, etc.
+     	guide:/^man/+1
+
+     The canto directory also contains limbo source code,
+     possibly a mkfile and the executable dis files. The canto
+     will contain links to the source instead of directly
+     embedding samples in the text. E.g.
+     	man2html.b:1
+     This will open other windows in acme and jump to the point
+     in the code being discussed in the text.
+
+                         Inferno Manual

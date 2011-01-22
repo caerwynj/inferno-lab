@@ -1,0 +1,30 @@
+#!/dis/sh
+load expr arg string
+
+arenasdir := /mnt/arenas
+args := $*
+(arg
+	d+ {arenasdir = $arg}
+	'*' {echo unkown option $opt}
+	- $args
+)
+
+#assumes a certain block size for data which is not
+# evenly divided by scores
+# e.g. 41 is not a divisor of 1024
+
+fn dump {
+	score := $1
+	data = "{getclump -d $arenasdir $score}
+	if {~ ${alen $data} 1024} {
+		echo -n $data
+	} {
+		echo -n $data |getlines {dump $line}
+	}
+}
+
+if {! ~ $#* 1} {
+	echo usage: vcat '[-d arenadir]' score > /fd/2
+	exit
+}
+dump $1

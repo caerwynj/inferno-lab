@@ -1,0 +1,125 @@
+.SH NAME
+lab 2 - use file2chan to create a cryptfile that
+encrypts/decrypts all read and writes to an underlying
+file. This cryptfile can then be used by kfs to create
+a crypt file system.
+.SH SETUP
+Inferno 4th edition release 20040830. Using
+.IR kfs(4),
+.IR file2chan(2),
+.IR keyring-crypt(2).
+.SH DESCRIPTION
+.I Keyring-crypt
+contains  ECB algorithms for block encryption
+and random access to files. I'll use the Ideaecb
+for this session.
+.PP
+I setup a simple file2chan prog that layers
+atop another file and passes through the read/writes.
+.EX
+.A http://caerwyn.com/lab/2/cryptfile0.b cryptfile0.b
+.EE
+Tested this.
+.IP
+.EX
+% > t1
+% cryptfile0 /chan/crypt t1
+% echo this is a test > /chan/crypt
+% cat /chan/crypt
+this is a test
+% ls -l /chan/crypt
+--rw-rw---- s 0 caerwyn caerwyn 0 May 27 14:41 /chan/crypt
+.EE
+.PP
+The size of the file is always 0.
+I checked the
+.B /appl/cmd/disk/kfs.b
+for calls it makes to the file.
+All reads and writes are blocks; blocksize can
+be given as a parameter. It calls
+.B fstat
+in one place to get the file size.
+I changed it to take the size of the file
+as a parameter.
+.IP
+.EX
+% diff /n/fossildump/2004/0910/usr/inferno/appl/cmd/disk/kfs.b kfs.b 
+370a371
+> wrenlen := 0;
+400a402
+> 		's' => wrenlen = int arg->earg();
+2863c2865,2868
+< 	return int (d.length / big RBUFSIZE);
+---
+> 	if(wrenlen != 0)
+> 		return int (big wrenlen / big RBUFSIZE);
+> 	else
+> 		return int (d.length / big RBUFSIZE);
+.EE
+.PP
+I wrote the next iteration of cryptfile
+to perform block writes which must
+be a multiple of 8 for Ideaecb.
+.EX
+.A http://caerwyn.com/lab/2/cryptfile1.b cryptfile1.b
+.EE
+.PP
+I set
+.B BUFSIZE 
+to 8 and tested. I tested without the encryption until
+I got the block read/writes correct. Here is an example
+with encryption on.
+.IP
+.EX
+% zeros 1024 1 > t1
+% cryptfile1 /chan/crypt t1 '0123456789abcdef'
+% echo this is a test > /chan/crypt
+% read 10 < /chan/crypt
+this is a % 
+read 10 < t1 |xd
+0000000 76b3129a eab1c334 c0df0000
+000000a
+.EE
+.PP
+I tested
+.B cryptfile1
+with kfs. I changed the 
+.B BUFSIZE
+to 512 and used the same size for kfs.
+.IP
+.EX
+% zeros 1024 2048 > kfs.file
+% ls -l kfs.file
+--rw-rw---- U 4 caerwyn caerwyn 2097152 Sep 11 12:37 /n/local/kfs.file
+% cryptfile1 /chan/crypt  kfs.file '0123456789abcdef'
+% mount -c {disk/kfs -b 512 -r -P -s 2097152 /chan/crypt} /n/kfs
+kfs: reaming the file system using 512 byte blocks
+kfs: initializing minimal user table
+% echo this is a test > /n/kfs/t1
+% ls -l /n/kfs/t1
+--rw-rw-rw- M 14 none adm 15 Sep 11 12:40 /n/kfs/t1
+% cat /n/kfs/t1
+this is a test
+.EE
+.PP
+
+.SH CONCLUSION
+Layering of filesystems is fascinating. There is very
+clear separation between programs, a well defined interface, and reuse of
+code to accomplish something new.
+In this example we have the kfs on top of cryptfile
+on top of the host file system. And of course other file
+systems can be run on top of the files within kfs, such
+as tarfs.
+.PP
+I haven't looked into the security of this solution.
+ECB itself is not as secure as CBC, but only ECB
+is usable for random access to blocks.
+There is likely
+to be known plaintext within the kfs.file such as
+the magic word at the start.
+Also, decrypted data is stored in memory and might
+be swapped to disk by the host system.
+.PP
+A small enhancements would be to prompt twice
+for password, or passphrase, without echo.

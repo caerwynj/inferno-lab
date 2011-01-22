@@ -1,0 +1,10 @@
+</mkconfig
+
+SRC=Assist.b\
+	acmewin.dis\
+
+install:V: /dis/Assist.dis /dis/lib/acmewin.dis
+	rm -f /dis/Assist.dis && cp Assist.dis /dis/Assist.dis
+	rm -f /dis/lib/acmewin.dis && cp acmewin.dis /di/lib/acmewin.dis
+
+</mkfiles/mkdis

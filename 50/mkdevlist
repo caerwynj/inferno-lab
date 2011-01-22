@@ -1,0 +1,25 @@
+xp '
+c/DEVS=/
+,x/^dev\n(	.+\n)+/ y/^dev/ x/.*\n/ {
+	s/^	([a-z]+)/dev\1.obj /
+	y/^	[a-z]+/ x/[a-z]+/ a/.obj /
+}
+c/\n/
+
+c/LIBS=/
+,x/^lib\n(	.+\n)+/ y/^lib/ x/[a-z]+/ a/ /
+c/\n/
+
+c/PORT=/
+,x/^port\n(	.+\n)+/ y/port/ x/[a-z]+/ a/.obj /
+c/\n/
+
+c/INIT=/
+,x/^init\n(	.+\n)+/ y/^init/ x/[a-z]+/ a/ /
+c/\n/
+
+c/ROOT=/
+,x/^root\n(	.+\n)+/ y/^root/ x/^	[\/a-z]+/ x/[\/[a-z]+/ a/ /
+c/\n/
+
+' t3

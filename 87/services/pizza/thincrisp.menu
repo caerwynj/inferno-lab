@@ -1,0 +1,6 @@
+thincrisp.menu:0:0:640:480:thincrisp.bit
+thin-small:56:322:120:350:tick.bit
+thin-medium:56:352:140:380:tick.bit
+thin-large:56:382:120:410:tick.bit
+main.menu:48:418:148:443:main-sel.bit
+show.menu:156:418:293:443:show-sel.bit

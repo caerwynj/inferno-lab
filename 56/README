@@ -1,0 +1,13 @@
+# RUN THE FOLLOWING COMMANDS
+cp acmewin.m /module
+cp acmewin.b /appl/lib
+limbo acmewin.b
+cp acmewin.dis /dis/lib
+cp charon.b chutils.* /appl/charon
+{cd /appl/charon; mk install}
+
+# Then inside Acme run the following then minimize charon
+# browse links by right-clicking on the superscripts or words
+# with superscripts.
+
+charon -doacme 1

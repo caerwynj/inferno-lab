@@ -1,0 +1,21 @@
+</mkconfig
+
+TARG=\
+	airc.dis\
+	acmewin.dis\
+	irc.dis\
+
+
+MODULES=\
+	acmewin.m\
+	irc.m\
+
+
+SYSMODULES=\
+	sh.m\
+	sys.m\
+	draw.m\
+
+DISBIN=..
+
+<$ROOT/mkfiles/mkdis

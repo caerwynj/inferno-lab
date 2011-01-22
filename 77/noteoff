@@ -1,0 +1,7 @@
+#!/dis/sh
+# complete empty `NoteOff' skini messages
+
+awk '
+	/NoteOn/ {notes[n++] = $3 "	" $4"	" $5; print}
+	/^NoteOff$/ { print "NoteOff	0.0			" notes[--n]; }
+'

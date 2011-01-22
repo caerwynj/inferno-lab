@@ -1,0 +1,148 @@
+#!/dis/sh
+
+load std 
+
+if { ~ $#* 0} {
+	echo inferno synchronization:
+	echo '  appl	show changed limbo files'
+	echo '  sys	show changed C source files'
+	echo '  man	show changed man pages'
+	echo '  lib		show changed /lib files'
+	echo '  cmd	show changed sh scripts below /dis'
+	echo '  update	refresh file tree info for local and remote'
+	echo '  adiff	adiff selected file with inferno-os equivalent'
+	echo '  diff	diff selected file with inferno-os equivalent'
+	echo '  missing	show files missing from local tree'
+	echo '  added	show files added to local tree'
+	exit
+}
+
+run $home/sync/infrc
+
+bind $infernoroot /n/inferno-os
+bind -c $home/sync /n/sync
+limbolocal=/n/sync/limbolocal
+limboremote=/n/sync/limboremote
+syslocal=/n/sync/syslocal
+sysremote=/n/sync/sysremote
+manlocal=/n/sync/manlocal
+manremote=/n/sync/manremote
+liblocal=/n/sync/liblocal
+libremote=/n/sync/libremote
+cmdlocal=/n/sync/cmdlocal
+cmdremote=/n/sync/cmdremote
+
+args := $*
+cmd := ${hd $args}
+args := ${tl $args}
+if { ~ $cmd appl} {
+	for i in `{comm -13 /n/sync/changed ${pipe from {comm -12 $limbolocal $limboremote}}} {
+		if {! cmp -s $i /n/inferno-os^$i} {
+			echo diff -u $i $infernoroot^$i
+			echo cp  $infernoroot^$i $i 
+			echo
+		}
+	}
+} {~ $cmd sys} {
+
+for i in `{comm -13  /n/sync/changed ${pipe from {comm -12 $syslocal $sysremote}}} {
+	f := `{basename $i}
+	file := $infernoroot^$i
+	if {~ $i '/libmp/*'} {
+		if {ftest -e $infernoroot/libmp/port/$f } {
+			file = $infernoroot/libmp/port/$f
+		}
+	} { ~ $i '/libsec/*'} {
+		if {ftest -e $infernoroot/libsec/port/$f} {
+			file = $infernoroot/libsec/port/$f
+		}
+	}
+	if {! cmp -s /sys^$i $file} {
+		echo diff -u  /sys^$i $file
+		echo cp $file /sys^$i
+		echo
+	}
+}
+
+} {~ $cmd diff } {
+	# given an acme-sac file diff it with the inferno-os equivalent.
+	cwd = `pwd
+	diff -u ${hd $args} /n/inferno-os^ `{cleanname -d $cwd ${hd $args}}
+} {~ $cmd adiff} {
+	# given an acme-sac file diff it with the inferno-os equivalent.
+	cwd = `pwd
+	adiff `{cleanname -d $cwd ${hd $args}} $infernoroot^ `{cleanname -d $cwd ${hd $args}}
+} {~ $cmd update} {
+
+	# limbo code
+	fs print {select {match -r '.*\.[mby]$'}  {proto -r '#U' /n/sync/limbo-sync.proto}} | sed 's/#U//' | sort > $limbolocal
+	fs print {select {match -r '.*\.[mby]$'}  {proto -r /n/inferno-os /n/sync/limbo-sync.proto}} | sed 's@/n/inferno-os@@' | sort > $limboremote
+
+	# system code
+	fs print {select {match '*.[ch]'} {walk /sys}} | sed 's@/sys@@' |sort> $syslocal
+	fs print {select {match '*.[ch]'} {proto -r /n/inferno-os /n/sync/inf-sync.proto}} | sed 's@/n/inferno-os@@;s@libmp/port@libmp@;s@libsec/port@libsec@' |sort > $sysremote
+	
+	# man pages
+	 fs print {select {mode -d} {walk /man}} |sort > $manlocal
+	 fs print {select {mode -d} {filter {not {match .svn}}  {walk /n/inferno-os/man}}} | sed 's@/n/inferno-os@@' | sort > $manremote
+
+	# lib
+	fs print {select {mode -d} {walk /lib}} | sort > $liblocal
+	fs print {select {mode -d} {filter {not {match .svn}}  {walk /n/inferno-os/lib}}}| sed 's@/n/inferno-os@@' | sort > $libremote
+
+	# cmd
+	fs select {and {not {match *.dis}} {mode -d}} '#U/dis' | sed 's/#U//' | sort > $cmdlocal
+	fs print {select {and {not {match *.dis}} {mode -d}} {filter {not {match .svn}}  {walk /n/inferno-os/dis}}} | sed 's@/n/inferno-os@@' | sort > $cmdremote
+
+
+} {~ $cmd missing} {
+	for i in `{comm -13 $home/sync/removed ${pipe from {comm -13  $limbolocal $limboremote}}} {
+		echo cp $infernoroot^$i $i
+	}
+	for i in `{comm -13 $home/sync/removed ${pipe from {comm -13  $syslocal $sysremote}}} {
+		echo cp $infernoroot^$i /sys^$i
+	}
+	for i in `{comm -13 $home/sync/removed ${pipe from {comm -13  $manlocal $manremote}}} {
+		echo cp $infernoroot^$i $i
+	}
+	for i in `{comm -13 $home/sync/removed ${pipe from {comm -13  $liblocal $libremote}}} {
+		echo cp $infernoroot^$i $i
+	}
+	for i in `{comm -13 $home/sync/removed ${pipe from {comm -13  $cmdlocal $cmdremote}}} {
+		echo cp $infernoroot^$i $i
+	}
+} {~ $cmd added} {
+	comm -23  $limbolocal $limboremote
+	comm -23  $syslocal $sysremote
+	comm -23  $manlocal $manremote
+	comm -23  $liblocal $libremote
+	comm -23  $cmdlocal $cmdremote
+} { ~ $cmd man} {
+	for i in `{comm -13 /n/sync/changed ${pipe from {comm -12 $manlocal $manremote}}} {
+		if {! cmp -s $i /n/inferno-os^$i} {
+			echo diff -u $i $infernoroot^$i
+			echo cp  $infernoroot^$i $i 
+			echo
+		}
+	}
+} { ~ $cmd lib} {
+	for i in `{comm -13 /n/sync/changed ${pipe from {comm -12 $liblocal $libremote}}} {
+		if {! cmp -s $i /n/inferno-os^$i} {
+			echo diff -u $i $infernoroot^$i
+			echo cp  $infernoroot^$i $i 
+			echo
+		}
+	}
+} { ~ $cmd cmd} {
+	for i in `{comm -13 /n/sync/changed ${pipe from {comm -12 $cmdlocal $cmdremote}}} {
+		if {! cmp -s $i /n/inferno-os^$i} {
+			echo diff -u $i $infernoroot^$i
+			echo cp  $infernoroot^$i $i 
+			echo
+		}
+	}
+}
+
+
+
+

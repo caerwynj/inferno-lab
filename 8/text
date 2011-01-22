@@ -1,0 +1,64 @@
+.SH NAME
+lab 8 - small update to treemap.
+.SH DESCRIPTION
+Tmap is a small util that takes the output of 
+.B du
+and presents a treemap using algorithms from UMD
+.A http://www.cs.umd.edu/hcil/treemap/  HCILab
+.PP
+To make it a bit more useful I want to zoom into the treemap
+and zoom out again.
+Button one selects a rectangle highlights it and
+it's path and presents information about the path
+and file sizes.
+Button two zooms one level into the selected
+area, where the mouse clicked.
+Button three zooms out one level.
+.PP
+This was easy to add using Tk. I bind a command
+to the mouse events and send a message down a channel.
+On receiving the message I change the root of the tree, 
+regenerate the layout and redraw the rectangles.
+.SH CONCLUSION
+I find this a useful tool to find patterns 
+in disk usage, such as large or duplicate files.
+Often the file hierachies are very deep,
+and so drilling down interactively is great.
+.PP
+I should re-implement this by drawing directly on
+an image instead of using Tk. I seem to be running
+out of memory using Tk because I am not keeping
+track of the Tk tags when creating new rectangles,
+and I'm creating so many of them. It may also
+be faster, but I don't know.
+.PP
+There is a bug in the squarified view where the directory
+is rendered as if it is a file, using the totalsize of all sub elements.
+I haven't found what causes this. The other views seem okay.
+.PP
+I think the treemap is a beautiful view of the filesystem.
+I'd like to put it to more use. 
+.PP
+In a collaborative environment
+the treemap of a filesystem is a shared map of the system. The rectangles,
+which represent files, are color coded for the users who have them open. 
+This could fit in as an engine to spree, or collab.
+We'd need to monitor all styx messages,
+similar to Styxmon.
+.PP
+The prog device shows all files open and process activity.
+Processes might also be presented as a treemap.
+.PP
+The treemap could then be made more interactive.
+Files are plumbed, to open and edit them.
+The files are annotated and new annotations
+are seen by all users of the treemap.
+.PP
+This looks like a good excuse to play with spree.
+.SH FILES
+.A http://caerwyn.com/lab/8/tmap.b tmap.b
+.A http://caerwyn.com/lab/8/treemap.b treemap.b
+.A http://caerwyn.com/lab/8/treemap.m treemap.m
+.SH REFERENCES
+UMD HCI Lab
+.A http://www.cs.umd.edu/hcil HCIL

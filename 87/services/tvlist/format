@@ -1,0 +1,293 @@
+1 (12)
+	a(2)		type
+			EP	sports
+			MV	movie
+			SH	show
+			SP	special
+	n(6)		gok
+			doesnt look like vcrplus (but its gotta be)
+	n(4)		gok
+2 a(*)	channel
+	ABC
+	AMC
+	ARTS
+	AT
+	BET
+	BRAVO
+	CBS
+	CHANAM
+	CHC
+	CINE
+	CINE2
+	CMTV
+	CNBC
+	CNN
+	CNNH
+	CNNI
+	COMEDY
+	COURT
+	CSPAN
+	CSPAN2
+	DISN
+	DISN2
+	ENCORE
+	ESPN
+	ESPN2
+	ETV
+	EWTN
+	FAM
+	FLIX
+	FOX
+	FX
+	GALA
+	HBO
+	HBO2
+	HBO3
+	HSN
+	HSN2
+	HTS
+	INSP
+	KTLA
+	LIFE
+	MIND
+	MSG
+	MTV
+	NBC
+	NIK
+	NSPT
+	PBS
+	PRIME
+	PRINET
+	QVC
+	SCCH
+	SCIFI
+	SHOW
+	SHOW2
+	SPSO
+	STARZ
+	TBN
+	TCM
+	TDC
+	TLC
+	TMC
+	TNC
+	TNN
+	TNT
+	TOON
+	TRAV
+	TWC
+	UPN
+	USA
+	VH1
+	VISN
+	WB
+	WGN
+	WORL
+	WPIX
+	WSBK
+	WTBS
+	WWOR
+3 n(8)	date
+	19950909	contains 8 days
+4 n(4)	time
+	1500		24hr clock (eastern?)
+5 n(4)	duration
+	0030
+6 a(*)	title
+	Gomer Pyle
+7 a(*)	sub-title
+	The Booty Prize
+8 a(*)	synopsis
+	Gomer and Sgt. Carter win the battalion booby prize.
+9 a(*)	blueness
+	Adult Situations
+	Brief Nudity
+	Graphic Language
+	Graphic Violence
+	Language
+	Mild Violence
+	Nudity
+	Rape
+	Strong Sexual Content
+	Violence
+10 a(*)	year
+	either n(4) or blank
+	1943
+11 a(*)	rating
+	G
+	NC-17
+	NR
+	PG
+	PG-13
+	R
+12 a(*)	keyword actor first name
+13 a(*)	keyword actor last name
+14 a(*)	keyword actor first name
+15 a(*)	keyword actor last name
+16 a(*)	keyword genra
+	Action
+	Adults only
+	Adventure
+	Animals
+	Animated
+	Anthology
+	Art
+	Auto
+	Awards
+	Ballet
+	Baseball
+	Basketball
+	Beauty
+	Bicycle
+	Biography
+	Boat
+	Bodybuilding
+	Bowling
+	Boxing
+	Bus./Financial
+	Bus./Financial Special
+	Bus./Financial Talk
+	Business
+	Children
+	Children Special
+	Children Talk
+	Childrens Music
+	Classic
+	Collectibles
+	Comedy
+	Comedy-drama
+	Computers
+	Cooking
+	Crime
+	Crime drama
+	Dance
+	Diving
+	Docudrama
+	Documentary
+	Drama
+	Educational
+	Electronics
+	Event
+	Exercise
+	Family
+	Fantasy
+	Fashion
+	Fiction
+	Fishing
+	Football
+	Fundraiser
+	Game
+	Golf
+	Health
+	Historical
+	Historical drama
+	Hockey
+	Holiday
+	Holiday Special
+	Horror
+	Horse
+	House/Garden
+	Housewares
+	How-to
+	International
+	Interview
+	Jewelry
+	Magazine
+	Martial arts
+	Medical
+	Miniseries
+	Motor
+	Motorcycle
+	Movie
+	Music
+	Music Special
+	Music Talk
+	Musical
+	Musical comedy
+	Musical romance
+	Mystery
+	Nature
+	News
+	Non Event
+	Olympics
+	Outdoors
+	Public Affairs
+	Racing
+	Racquet
+	Reality
+	Religious
+	Rodeo
+	Romance
+	Romance-comedy
+	Rugby
+	Running
+	Science
+	Science fiction
+	Self-help
+	Shopping
+	Situation
+	Skating
+	Skiing
+	Soap
+	Soccer
+	Softball
+	Spanish
+	Special
+	Sports
+	Sports Event
+	Sports Talk
+	Sports, Non-Event
+	Suspense
+	Suspense-comedy
+	Swimming
+	Talk
+	Tennis
+	Track/Field
+	Travel
+	Variety
+	Volleyball
+	War
+	Water
+	Weather
+	Western
+	Western comedy
+	Wrestling
+17 a(*)	keyword genra
+18 a(*)	keyword genra
+19 a(*)	keyword genra
+20 a(*)	keyword genra
+21 a(*) keyword blank
+22 a(*)	type mimics col 1
+	Movie
+	Shows
+	Sports
+23 a(*)	subtype
+	Action-Adventure
+	Animated
+	Auto
+	Baseball
+	Basketball
+	Bowling
+	Boxing
+	Children
+	Comedy
+	Documentary
+	Drama
+	Football
+	Golf
+	How-to
+	Music/Fine Arts
+	Musical
+	Mystery-Suspense
+	News/Business
+	Other
+	Rodeo
+	Romance
+	Rugby
+	Scifi-Horror
+	Soccer
+	Talk
+	Tennis
+	Track/Field
+	Volleyball
+	Western

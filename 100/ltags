@@ -1,0 +1,9 @@
+#!/dis/sh
+
+os -t ( /n/D/ctags57/ctags.exe  -n 
+	'--tag-relative=yes'
+	'--langdef=limbo' 
+	'--langmap=limbo:.b.m' 
+	'--regex-limbo=/^([a-zA-Z][a-zA-Z0-9]+)\(.*\)/\1/m/' 
+	'--regex-limbo=/([a-zA-Z][a-zA-Z0-9]+) *: *adt */\1/t/'  
+	'--regex-limbo=/([a-zA-Z][a-zA-Z0-9]+) *: *module */\1/c/'  )  $*

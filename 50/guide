@@ -1,0 +1,21 @@
+edit 'c/fc /
+,x/[0-9]+/a/ /
+c/ + rep\n/' t2
+
+
+edit 'c/DEVS=/
+,x/^dev\n(	.+\n)+/y/^dev/x/.*\n/{
+s/^	([a-z]+)/dev\1.obj /
+y/^	[a-z]+/x/[a-z]+/a/.obj /
+}
+c/\n/' t3
+
+edit '
+c/LIBS=/
+,x/^lib\n(	.+\n)+/y/^lib/x/[a-z]+/a/ /
+c/\n/
+' t3
+
+edit 'c/PORT=/
+,x/^port\n(	.+\n)+/y/port/x/[a-z]+/a/.obj /
+c/\n/' t3

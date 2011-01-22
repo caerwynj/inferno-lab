@@ -1,0 +1,130 @@
+NAME
+     lab 27 - sh sexpr
+
+DESCRIPTION
+     The implementation of the lisp dialect in lab 26 had some
+     problems. For each car or cdr operator I recursively
+     descended the syntax tree rather than holding the lists in
+     memory in a more convenient fomat and simply taking the head
+     or tail of the list.
+
+     I did not want to build further on this implementation.
+     Instead I wanted to rewrite eval to use the sexprs(2) module
+     and convert the sh's syntax tree to an s-expression.
+
+     Converting from the syntax tree to an s-expression is pretty
+     easy to do, though it took me a while to remember the
+     method. The first file lisp1.b is a brute force
+     implementation, which of course once I got working I
+     remembered the method I should of used.
+
+          % load ./lisp1
+          % eval {a {b} c}
+          (a (b) c)
+          % unload ./lisp1
+
+     The second file lisp2.b maintains a global stack of lists of
+     sexprs. As it recursively descends the syntax tree it pushes
+     expressions onto the list at the top of the stack. If it
+     descends into a new block, it pushes a new list.
+
+     Next lisp3.b handles all the syntax tree's node types. The
+     result is an sexpr which preserves all information from the
+     shell's abstract syntax tree.
+
+          % load ./lisp3
+          % eval {echo `{a b c} &}
+          ((Nowait echo (Quote (a b c))))
+          % eval { echo "{ (a (nested (list)))}}
+          (echo (SquashQuote ((List a (List nested (List list))))))
+          % eval {a 
+          sequence
+          of
+          cmds}
+          (Seq (a) (Seq (sequence) (Seq (of) (cmds))))
+          % unload ./lisp3
+
+     The sequences should really be flattened to (Seq (a)
+     (sequence) (of) (cmds)) But since I wanted to treat newlines
+     not as sequences of commands but as lists I didn't bother. 
+
+     The point here is that we represent the sh's abstract syntax
+     tree as a symbolic expression ready for manipulation and
+     evaluation. A new symbolic expression could be composed and
+     converted back to the sh's AST for evaluation by the shell.
+     The above builtin should not really be called eval since I
+     am not evaluating the expression. I am just converting from
+     input form into s-expression form.
+
+     In lisp4.b I implemented the special forms, cons,car,cdr,
+     and atom, which are all trivial to implement given the sexpr
+     data structure. I also added a builtin FullForm to print an
+     shell expression converted to an s-expression, and eval now
+     evaluates the expression using lisp semantics.
+
+          % load ./lisp4.dis
+          % FullForm { a b c {d} e {{f}}}
+          (a b c (d) e ((f)))
+          % FullForm {echo (a b c) `{cat t1}}
+          (echo (List a b c) (quote (cat t1)))
+          % eval {cdr `{a b c}}
+          (b c)
+
+     In lisp5.b I added the define and lambda expressions
+     bringing me back to the point I was at in lab 26. I have
+     followed the evolution of eval described in the Sussman and
+     Steele paper, The Art of the Interpreter. The environment
+     for the eval builtin is stored as an sexpr and no longer
+     uses the shell's Context.
+
+     The scope in lisp5.b is dynamic. The next step was to add
+     lexical scope as is done in lisp6.b
+
+          % eval {define {subst x y z} 
+          	{cond {{atom z} 
+          		   {cond {{eq z y} x} 
+          			    {`t z}}}
+          		{`t {cons {subst x y {car z}}
+          			      {subst x y {cdr z}}}}}}
+          % eval {subst `m `b `{a b { a b c} d} }
+          (a m (a m c) d)
+
+FUTURE
+     There are several steps to take including adding side
+     effects, macros, and a method for calling builtins. Only
+     side effects are still needed to implement the accumulator
+     generator and some handling for math expressions.
+
+     This is still just for experimentation. It may be valuable
+     in the long run to implement a real scheme compiler for dis.
+
+     Part of the experimentation is to try multiple evaluators,
+     one of them is a lisp dialect, another is sh. I should try
+     transforming the s-expression back to the sh syntax tree for
+     evaluation or display to the user.
+
+     The principle being that I can take a parse tree, transform
+     to FullForm (s-expressions), evaluate using a chosen
+     evaluator, then transfrom to another parse tree for display.
+     (I am not going to start using XML/XSL in these labs.)
+
+     I can experiment with a variety of input forms: man(6)
+     macros, popi input form, Mathematica syntax. I can treat the
+     s-expression as the standard form for all expressions within
+     inferno and establish a standard semantics for this form.
+
+     The are other possible eval semantics I should look at:
+     Transform by applying rules until the expression reaches a
+     fixed point (as in Mathematica); All unbound variable names
+     and functions to remain as symbols (as in other Computer
+     Algebra Systems like Maxima).Seeessaysby Fateman on
+     different symbolic evaluators.
+
+     Long term, I want a powerful, expressive, succinct language
+     that can be embedded within a narrative and edited, and
+     evaluated within the document by the editor (acme). If I can
+     plug new languages into the inferno shell it may make a good
+     vehicle for a range of expressive languages that could be
+     included within an active essay.
+
+                         Inferno Manual

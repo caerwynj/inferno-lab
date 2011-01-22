@@ -1,0 +1,9 @@
+pi
+	fc pi 
+
+man
+	wm/man -f text
+
+man2html
+	man2html text > post.html
+	man -f text > index.txt
