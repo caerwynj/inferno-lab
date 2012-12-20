@@ -1,0 +1,32 @@
+
+
+Voice
+----
+3 oscillators (Pitch, 1/2 Pitch, Double Pitch)
+ADSR envelope
+16 note polyphony
+
+Global effects
+----
+1  filter (onepole)
+2 delays
+
+Polyphony
+-----
+We'd like say 12 Note polyphony
+across all channels.
+
+All channels are the same voice
+so we could ignore voice.
+
+When we keyon for a note
+we need to remember which 
+inst we used so we can send the
+keyoff to the right one.
+
+But if that inst has already been
+used for another note, we
+must ignore the keyoff.
+
+We need a map for the keyon pitch
+to the inst.

@@ -1,0 +1,7 @@
+</mkconfig
+
+TARG=\
+	midi.dis\
+	midiplay.dis\
+
+<$ROOT/mkfiles/mkdis
