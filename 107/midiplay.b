@@ -244,9 +244,7 @@ Inst.mk(insts: Source, f: Instrument): ref Inst
 
 master(nil: Source, c: Sample, ctl: Control)
 {
-	inst := array[1] of ref Inst;  # one channel
-	voice := 0;
-	mix := Inst.mk(inst, mixer);
+	inst := Inst.mk(array[16] of {* => Inst.mk(nil, fm)}, poly);  # one channel, 16 note polyphony
 	wrc := chan of array of real;
 	delay1 := Inst.mk(nil, delay);
 	delay1.ctl <-= (CDELAY, 0.18);
@@ -262,22 +260,10 @@ master(nil: Source, c: Sample, ctl: Control)
 	lfo2.ctl <-= (CFREQ, 0.4);
 	lfo2.ctl <-= (CHIGH, 0.2);
 	lfo2.ctl <-= (CLOW, 0.1);
-	tot := 0;
 
 	for(;;) alt {
 	(a, rc ) := <-c =>
-		tot += len a;
-		if(tot >= BLOCK){
-			t := array[1] of real;
-#			lfo1.c <-= (t, wrc);
-#			t = <-wrc;
-#			filt1.ctl <-= (CFREQ, t[0]);
-#			lfo2.c <-= (t, wrc);
-#			t =<- wrc;
-#			delay2.ctl <-= (CDELAY, t[0]);
-			tot -= BLOCK;
-		}
-		mix.c <-= (a, wrc);
+		inst.c <-= (a, wrc);
 		filt1.c <-= (<-wrc, wrc);
 		delay1.c <-= (<-wrc, wrc);
 		delay2.c <-= (<-wrc, wrc);
@@ -285,58 +271,46 @@ master(nil: Source, c: Sample, ctl: Control)
 	(m, n) := <-ctl =>
 		case m {
 		CKEYON =>
-			inst[voice].ctl <-= (m, n);
+			inst.ctl <-= (m, n);
 		CKEYOFF =>
-			inst[voice].ctl <-= (m, n);
-		CVOICE =>
-			# voice = int n;
-			# Only one channel
-			voice = 0;
-			# two note polyphony for each voice using 'fm' as the generator
-			if(inst[voice] == nil)
-				inst[voice] = Inst.mk(array[16] of {* => Inst.mk(nil, fm)}, poly);
+			inst.ctl <-= (m, n);
 		}
 	}
 }
 
 fm(nil: Source, c: Sample, ctl: Control)
 {
-	waves := array[3] of {* => array[1] of {Inst.mk(nil, waveloop)}};
+	waves := array[3] of {* =>  Inst.mk(nil, waveloop)};
 	vibrato := Inst.mk(nil, waveloop);
 	depth := 0.1;
 	vibrato.ctl <-= (CFREQ, 10.0);
 	ratios := array[3] of {1.0, 0.5, 2.0};
-	env := array[3] of ref Inst;
-	for(i := 0; i < 3; i++){
-		env[i] = Inst.mk(waves[i], adsr);
-		env[i].ctl <-= (CATTACK, 0.01);
-		env[i].ctl <-= (CDECAY, 0.11);
-		env[i].ctl <-= (CSUSTAIN, 0.3);
-		env[i].ctl <-= (CRELEASE, 0.001);
-	}
-
-	mix := Inst.mk(env, mixer);
+	mix := array[1] of { * =>  Inst.mk(waves, mixer)};
+	env := Inst.mk(mix, adsr);
+	env.ctl <-= (CATTACK, 0.01);
+	env.ctl <-= (CDECAY, 0.11);
+	env.ctl <-= (CSUSTAIN, 0.3);
+	env.ctl <-= (CRELEASE, 0.001);
 	b := array[BLOCK*channels] of real;
 	wrc := chan of array of real;
 	for(;;) alt{
 	(a, rc) := <-c =>
-		mix.c <-= (a, wrc);
+		env.c <-= (a, wrc);
 		a =<- wrc;
 		vibrato.c <-= (b[:len a], wrc);
 		x :=<- wrc;
-		for(i = 0; i < len a; i++)
+		for(i := 0; i < len a; i++)
 			a[i] *= (1.0 + x[i] * depth);
 		rc <-= a;
 	(m, n) := <-ctl =>
 		case m {
 		CKEYON =>
-			for(i = 0; i < 3; i++) {
-				env[i].ctl <-= (m, n);
-				waves[i][0].ctl <-= (CFREQ, n * ratios[i]);
+			env.ctl <-= (m, n);
+			for(i := 0; i < 3; i++) {
+				waves[i].ctl <-= (CFREQ, n * ratios[i]);
 			}
 		CKEYOFF =>
-			for(i = 0; i < 3; i++)
-				env[i].ctl <-= (m, n);
+			env.ctl <-= (m, n);
 		}
 	}
 }
