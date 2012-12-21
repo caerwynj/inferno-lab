@@ -807,15 +807,18 @@ noise(): array of real
 
 # generic utils
 
+quieter := 0.23999999999999932;
 norm2raw(v: array of real): array of byte
 {
 	b:=array[len v *2] of byte;
 	j:=0;
 	for(i:=0;i<len v;i++){
-		sample := v[i] * 32767.0;
-		if(sample> 32767.0)
+		sample := v[i] * quieter * 32767.0;
+		if(sample> 32767.0){
 			sample = 32767.0;
-		else if(sample < -32767.0)
+			quieter -= 0.01;
+			if(dbg) sys->print("quieter %g\n", quieter);
+		}else if(sample < -32767.0)
 			sample = -32767.0;
 		b[j++] = byte sample;
 		b[j++] = byte (int sample >>8);
