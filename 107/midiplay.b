@@ -69,12 +69,12 @@ interleave(hdr: ref Header): list of  Skini
 {
 	skini: list of Skini;
 	for(;;){
-		min := 100000;
+		min := Sys->Maxint;
 		for(i:=0; i< len hdr.tracks; i++){
 			if(len hdr.tracks[i].events > 0 && hdr.tracks[i].events[0].delta < min)
 				min = hdr.tracks[i].events[0].delta;
 		}
-		if(min == 100000)
+		if(min == Sys->Maxint)
 			break;
 		l : list of ref Event;
 		for(i=0; i< len hdr.tracks; i++){
@@ -139,6 +139,9 @@ outevent(m: ref Event):  ref Skini
 			Midi->NOTEOFF =>
 				realtime := real e.delta / tickrate;
 				s =  ref Skini("NoteOff", realtime, e.mchannel, e.param1, 0);
+			* =>
+				realtime := real e.delta / tickrate;
+				s = ref Skini("NoteOff", realtime, 0, 0, 0);
 		}
 	Sysex =>
 		fprint(fildes(2), "sysex\n");
@@ -290,7 +293,7 @@ fm(nil: Source, c: Sample, ctl: Control)
 	env.ctl <-= (CATTACK, 0.01);
 	env.ctl <-= (CDECAY, 0.11);
 	env.ctl <-= (CSUSTAIN, 0.3);
-	env.ctl <-= (CRELEASE, 0.001);
+	env.ctl <-= (CRELEASE, 0.01);
 	b := array[BLOCK*channels] of real;
 	wrc := chan of array of real;
 	for(;;) alt{
@@ -337,6 +340,7 @@ poly(inst: Source, c: Sample, ctl: Control)
 			for(j := 0; j < npoly; j++){
 				if(pitch[j] == n){
 					inst[j].ctl <-= (m, n);
+					pitch[j] = 0.0;
 				}
 			}
 		}
