@@ -1,0 +1,22 @@
+</mkconfig
+
+TARG=\
+	picsar.dis\
+	pics.dis\
+	clock.dis\
+	menuhit.dis\
+	rioclient.dis\
+	riolib.dis\
+
+
+MODULES=\
+	rioclient.m\
+	menuhit.m\
+	riolib.m\
+
+SYSMODULES=\
+
+
+DISBIN=$ROOT/dis/wm
+
+<$ROOT/mkfiles/mkdis
