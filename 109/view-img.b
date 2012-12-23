@@ -11,12 +11,9 @@ include "bufio.m";
 	bufio: Bufio;
 	Iobuf: import bufio;
 
-include "imagefile.m";
-	imageremap: Imageremap;
-	readgif: RImagefile;
-	readjpg: RImagefile;
-	readxbitmap: RImagefile;
-	readpng: RImagefile;
+include "img.m";
+	img: Img;
+	ByteSource, ImageSource, MaskedImage: import img;
 
 include "tk.m";
 	tk: Tk;
@@ -63,6 +60,8 @@ realinit(ctxt: ref Draw->Context, argv: list of string)
 	tk = load Tk Tk->PATH;
 	tkclient = load Tkclient Tkclient->PATH;
 	selectfile = load Selectfile Selectfile->PATH;
+	img = load Img Img->PATH;
+	img->init(ctxt);
 
 	sys->pctl(Sys->NEWPGRP, nil);
 	tkclient->init();
@@ -84,10 +83,6 @@ realinit(ctxt: ref Draw->Context, argv: list of string)
 		"*.png (PNG image files)",
 		"*.xbm (X Bitmap image files)"
 		};
-
-	imageremap = load Imageremap Imageremap->PATH;
-	if(imageremap == nil)
-		badload(Imageremap->PATH);
 
 	bufio = load Bufio Bufio->PATH;
 	if(bufio == nil)
@@ -162,56 +157,24 @@ readimages(file: string, errdiff: int) : (array of ref Image, array of ref Image
 	if(fd == nil)
 		return (nil, nil, sys->sprint("%r"));
 
-	(mod, err1) := filetype(file, fd);
-	if(mod == nil)
-		return (nil, nil, err1);
-
-	(ai, err2) := mod->readmulti(fd);
-	if(ai == nil)
-		return (nil, nil, err2);
-	if(err2 != "")
-		sys->fprint(stderr, "view: %s: %s\n", file, err2);
-	ims := array[len ai] of ref Image;
-	masks := array[len ai] of ref Image;
-	for(i := 0; i < len ai; i++){
-		masks[i] = transparency(ai[i], file);
-
-		# if transparency is enabled, errdiff==1 is probably a mistake,
-		# but there's no easy solution.
-		(ims[i], err2) = remap(ai[i], display, errdiff);
-		if(ims[i] == nil)
-			return(nil, nil, err2);
+	data := array[1024] of byte;
+	i := 0;
+	while((b := fd.getb()) != Bufio->EOF){
+		data[i++] = byte b;
+		if (i == len data)
+			data = (array[len data * 2] of byte)[0:] = data[0:];
 	}
+	bs := ref ByteSource(data[0:i], 1, filetype(file, fd), 0, i);
+	is := ImageSource.new(bs, 0, 0);
+	(ans, mim) := is.getmim();
+	if(ans == Img->Mimerror){
+		return (nil, nil, "error");
+	}
+	ims := array[1] of ref Image;
+	masks := array[1] of ref Image;
+	ims[0] = mim.im;
+	masks[0] = mim.mask;
 	return (ims, masks, nil);
-}
-
-remap(raw: ref RImagefile->Rawimage, display: ref Draw->Display, errdiff: int): (ref Draw->Image, string)
-{
-	case raw.chandesc { 
-	RImagefile->CRGB =>
-		r := chanstopix(raw.chans, raw.r.dx(), raw.r.dy());
-		im := display.newimage(raw.r, Draw->RGB24, 0, Draw->White);
-		im.writepixels(im.r, r);
-		return (im, "");
-	* =>
-		return imageremap->remap(raw, display, errdiff);
-	}
-}
-
-chanstopix(chans : array of array of byte, width, height: int): array of byte
-{
-	r := chans[0];
-	g := chans[1];
-	b := chans[2];
-
-	rgb := array [3*len r] of byte;
-	bix := 0;
-	for (i := 0; i < len r ; i++) {
-		rgb[bix++] = b[i];
-		rgb[bix++] = g[i];
-		rgb[bix++] = r[i];
-	}
-	return rgb;
 }
 
 viewcfg := array[] of {
@@ -412,51 +375,32 @@ plumbfile(): string
 	}
 }
 
-Tab: adt
-{
-	suf:	string;
-	path:	string;
-	mod:	RImagefile;
-};
 
 GIF, JPG, PIC, PNG, XBM: con iota;
 
-tab := array[] of
-{
-	GIF => Tab(".gif",	RImagefile->READGIFPATH,	nil),
-	JPG => Tab(".jpg",	RImagefile->READJPGPATH,	nil),
-	PIC => Tab(".pic",	RImagefile->READPICPATH,	nil),
-	XBM => Tab(".xbm",	RImagefile->READXBMPATH,	nil),
-	PNG => Tab(".png",	RImagefile->READPNGPATH,	nil),
-};
 
-filetype(file: string, fd: ref Iobuf): (RImagefile, string)
+filetype(file: string, fd: ref Iobuf): int
 {
-	for(i:=0; i<len tab; i++){
-		n := len tab[i].suf;
-		if(len file>n && file[len file-n:]==tab[i].suf)
-			return loadmod(i);
-	}
-
+	fd.seek(big 0, 0);
 	# sniff the header looking for a magic number
 	buf := array[20] of byte;
 	if(fd.read(buf, len buf) != len buf)
-		return (nil, sys->sprint("%r"));
+		return Img->UnknownType;
 	fd.seek(big 0, 0);
 	if(string buf[0:6]=="GIF87a" || string buf[0:6]=="GIF89a")
-		return loadmod(GIF);
-	if(string buf[0:5] == "TYPE=")
-		return loadmod(PIC);
+		return Img->ImageGif;
+#	if(string buf[0:5] == "TYPE=")
+#		return loadmod(PIC);
 	jpmagic := array[] of {byte 16rFF, byte 16rD8, byte 16rFF, byte 16rE0,
 		byte 0, byte 0, byte 'J', byte 'F', byte 'I', byte 'F', byte 0};
 	if(eqbytes(buf, jpmagic))
-		return loadmod(JPG);
+		return Img->ImageJpeg;
 	pngmagic := array[] of {byte 137, byte 80, byte 78, byte 71, byte 13, byte 10, byte 26, byte 10};
 	if(eqbytes(buf, pngmagic))
-		return loadmod(PNG);
+		return Img->ImagePng;
 	if(string buf[0:7] == "#define")
-		return loadmod(XBM);
-	return (nil, "can't recognize file type");
+		return Img->ImageXBit;
+	return Img->UnknownType;
 }
 
 eqbytes(buf, magic: array of byte): int
@@ -467,43 +411,6 @@ eqbytes(buf, magic: array of byte): int
 	return i == len magic;
 }
 
-loadmod(i: int): (RImagefile, string)
-{
-	if(tab[i].mod == nil){
-		tab[i].mod = load RImagefile tab[i].path;
-		if(tab[i].mod == nil)
-			sys->fprint(stderr, "view: can't find %s reader: %r\n", tab[i].suf);
-		else
-			tab[i].mod->init(bufio);
-	}
-	return (tab[i].mod, nil);
-}
-
-transparency(r: ref RImagefile->Rawimage, file: string): ref Image
-{
-	if(r.transp == 0)
-		return nil;
-	if(r.nchans != 1){
-		sys->fprint(stderr, "view: can't do transparency for multi-channel image %s\n", file);
-		return nil;
-	}
-	i := display.newimage(r.r, display.image.chans, 0, 0);
-	if(i == nil){
-		sys->fprint(stderr, "view: can't allocate mask for %s: %r\n", file);
-		exit;
-	}
-	pic := r.chans[0];
-	npic := len pic;
-	mpic := array[npic] of byte;
-	index := r.trindex;
-	for(j:=0; j<npic; j++)
-		if(pic[j] == index)
-			mpic[j] = byte 0;
-		else
-			mpic[j] = byte 16rFF;
-	i.writepixels(i.r, mpic);
-	return i;
-}
 
 paneldraw(t: ref Tk->Toplevel, dst: ref Image, r: Rect, src, mask: ref Image, p: Point)
 {
