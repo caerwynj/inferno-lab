@@ -25,7 +25,7 @@ Remember to export the namespace before trying it out.
 
 I recently saw on Hacker News a repost of Peter Norvig's spelling corrector. I thought this would make an easy first trial of my python acmewin code. I implemented a client to offer spelling suggestions to an editor window. It works somewhat like my earlier acme content assist code. This client opens the event file of another window it is assisting and writes text out to its own window. In this case it offers a suggested spelling for the word currently being typed.
 
-![109523203021-Acme-SAC](http://www.flickr.com/photos/caerwyn/3655796216/)
+![109523203021-Acme-SAC](109523203021-acme-sac_3655796216_o.png)
 
 Here's the implementation. Note that this is single threaded and it is not reading the event file of the second window. I haven't gotten that far in the Python book.
 
