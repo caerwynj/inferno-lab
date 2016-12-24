@@ -16,7 +16,7 @@ I use inferno for fun. the lab sessions took place at home, in the evenings, usu
 I wanted the labs to cover a wide range of subjects, to cross over disciplinary boundaries, to go wherever my interest took me. Inferno offered a good environment to do this work, for a variety of reasons explored in the labs.
 
 
-* lab 110 inferno archive edition
+* [lab 110 inferno archive edition](110/lab110.md)
 * lab 109 wm/view true color
 * lab 108 wavplay
 * lab 107 midiplay
