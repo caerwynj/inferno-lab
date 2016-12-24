@@ -24,7 +24,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 105 automounter
 * lab 104 ducts
 * lab 103 python content assist
-* lab 102 python acme client
+* [lab 102 python acme client](102)
 * lab 101 limbo B+ tree
 * lab 100 limbo tags
 * lab 99 catching up with inferno-os
