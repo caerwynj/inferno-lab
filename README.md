@@ -42,7 +42,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 86 srv
 * lab 85 stowage
 * lab 84 gridfs pattern (mapreduce)
-* lab 83 lcmd local cpu
+* [lab 83 lcmd local cpu](83)
 * lab 82, again txt2iaf
 * lab 82 iaf2txt and iaf2wav
 * trainspotting
