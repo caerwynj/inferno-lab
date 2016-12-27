@@ -24,9 +24,9 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 106 unix rudp port
 * lab 105 automounter
 * lab 104 ducts
-* lab 103 python content assist
+* [lab 103 python content assist](103)
 * [lab 102 python acme client](102)
-* lab 101 limbo B+ tree
+* [lab 101 limbo B+ tree](101)
 * lab 100 limbo tags
 * lab 99 catching up with inferno-os
 * lab 98 acme Ctag
