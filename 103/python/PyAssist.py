@@ -1,4 +1,4 @@
-#!/dis/python26
+#!/dis/python
 
 import sys
 from acmewin import Acmewin
