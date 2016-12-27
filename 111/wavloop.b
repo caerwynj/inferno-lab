@@ -127,7 +127,7 @@ skip(n: int)
 	}
 }
 
-getcue(l: int): (int, array of Cue)
+getcue(): (int, array of Cue)
 {
 	cues: array of Cue;
 	ncue := getl("Num Cue Points");
@@ -161,7 +161,7 @@ getfmt(l: int) : (int, Fmt)
 	return (l, fmt);
 }
 
-getsmpl(l: int) : (int, array of Loop)
+getsmpl() : (int, array of Loop)
 {
 	loops : array of Loop;
 	
@@ -260,7 +260,7 @@ init(nil: ref Draw->Context, argv: list of string)
 		"cue " =>
 			cues : array of Cue;
 			if(dbg) sys->print("get%s\n", a);
-			(l, cues) = getcue(l);
+			(l, cues) = getcue();
 			wave.cuepoints = cues;
 		"fmt " =>
 			f: Fmt;
@@ -270,7 +270,7 @@ init(nil: ref Draw->Context, argv: list of string)
 		"smpl" =>
 			loops: array of Loop;
 			if(dbg) sys->print("get%s\n", a);
-			(l, loops) = getsmpl(l);
+			(l, loops) = getsmpl();
 			wave.loops = loops;
 		"data" =>
 			sample : array of byte;
@@ -317,8 +317,6 @@ getint(a: array of byte): int
 
 findzero(b: ref WaveBuf)
 {
-	t:=10;
-	
 	if(len b.wave.loops == 0)
 		return;
 	nbytes := b.wave.fmt.chans*(b.wave.fmt.bits/8);

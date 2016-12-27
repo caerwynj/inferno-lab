@@ -16,10 +16,11 @@ I use inferno for fun. the lab sessions took place at home, in the evenings, usu
 I wanted the labs to cover a wide range of subjects, to cross over disciplinary boundaries, to go wherever my interest took me. Inferno offered a good environment to do this work, for a variety of reasons explored in the labs.
 
 * [lab 112 editinacme](112)
-* [lab 110 inferno archive edition](110/README.md)
+* [lab 111 wavloop](111)
+* [lab 110 inferno archive edition](110)
 * lab 109 wm/view true color
 * lab 108 wavplay
-* lab 107 midiplay
+* [lab 107 midiplay](107)
 * lab 106 unix rudp port
 * lab 105 automounter
 * lab 104 ducts
@@ -48,7 +49,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * trainspotting
 * lab 80 drawterm plugin
 * lab 79 acme javascript
-* lab 78 dynamic dispatch
+* [lab 78 dynamic dispatch](78)
 * lab 77 the unexpected markov
 * lab 76 using svn with code.google.com
 * biomimicry
