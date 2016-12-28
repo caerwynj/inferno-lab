@@ -5,6 +5,8 @@ include "sys.m";
 	open, print, sprint, fprint, dup, fildes, pread, pctl, read, write,
 	OREAD, OWRITE: import sys;
 include "draw.m";
+	draw: Draw;
+	Font: import draw;
 include "bufio.m";
 include "acmewin.m";
 	win: Acmewin;
@@ -26,10 +28,22 @@ Navigator: module {
 stderr: ref Sys->FD;
 cwd: string;
 plumbed := 0;
+ctxt: ref Draw->Context;
 
-init(nil: ref Draw->Context, args: list of string)
+font: ref Font;
+width := 65;
+tabwid := 8;
+mintab := 1;
+
+Dirlist : adt {
+	r : string;
+	wid : int;
+};
+
+init(ct: ref Draw->Context, args: list of string)
 {
 	sys = load Sys Sys->PATH;
+	draw = load Draw Draw->PATH;
 	win = load Acmewin Acmewin->PATH;
 	win->init();
 	str = load String String->PATH;
@@ -40,7 +54,7 @@ init(nil: ref Draw->Context, args: list of string)
 	if(plumbmsg->init(1, nil, 0) >= 0){
 		plumbed = 1;
 	}
-	
+	ctxt = ct;
 	args = tl args;
 	if (len args != 0)
 		cwd = names->cleanname(hd args);
@@ -50,6 +64,7 @@ init(nil: ref Draw->Context, args: list of string)
 	w.wname("/+Navigator");
 	w.wtagwrite("Get Pin");
 	w.wclean();
+	getwidth(w);
 	dolook(w, cwd);
 	spawn mainwin(w);
 }
@@ -110,19 +125,124 @@ dolook(w: ref Win, file: string): int
 		else
 			w.wname(file + "/+Navigator");
 		w.wreplace(",", "");
-		w.wwritebody("..\n");
+		
+		dlp := array[16] of ref Dirlist;
+		ndl := 0;
+		dl := ref Dirlist;
+		dl.r = "..";
+		dl.wid = font.width(dl.r);
+		dlp[ndl++] = dl;
 		for(i := 0; i < n; i++){
 			s := "";
 			if(a[i].qid.qtype & Sys->QTDIR)
 				s = "/";
-			w.wwritebody(sprint("%s%s\n", a[i].name, s));
+			dl = ref Dirlist;
+			dl.r = sprint("%s%s", a[i].name, s);
+			dl.wid = font.width(dl.r);
+			if(ndl >= len dlp)
+				dlp = (array[len dlp * 2] of ref Dirlist)[0:] = dlp[:];
+			dlp[ndl++] = dl;
 		}
+		columnate(w, dlp, ndl);
 		w.ctlwrite("dump Navigator " + cwd + "\n");
 		w.wclean();
 	}else{
 		return 0;
 	}
 	return 1;
+}
+
+getwidth(w: ref Win)
+{
+	if(ctxt == nil || draw == nil)
+		return;
+	if((fd := open(sprint("/mnt/acme/%d/ctl", w.winid), Sys->ORDWR)) == nil){
+		sys->fprint(sys->fildes(2), "Navigator: couldn't open /dev/acme/ctl %r\n");
+		return;
+	}
+	buf := array[256] of byte;
+	if((n := read(fd, buf, len buf)) <= 0){
+		sys->fprint(sys->fildes(2), "Navigator: couldn't read /dev/acme/ctl %r\n");
+		return;
+	}
+	(nf, f) := sys->tokenize(string buf[:n], " ");
+	if(nf != 8){
+		sys->fprint(sys->fildes(2), "Navigator: bad fields \n");
+		return;
+	}
+	f0 := tl tl tl tl tl f;
+	if((font = Font.open(ctxt.display, hd tl f0)) == nil){
+		sys->fprint(sys->fildes(2), "Navigator: bad font \n");
+		return;
+	}
+	tabwid = int hd tl tl f0;
+	mintab = font.width("0");	
+	width = int hd f0;
+	# sys->print("width %d tabwid %d mintab %d\n", width, tabwid, mintab);
+	return;
+}
+
+max(x : int, y : int) : int
+{
+	if (x > y)
+		return x;
+	return y;
+}
+
+min(x : int, y : int) : int
+{
+	if (x < y)
+		return x;
+	return y;
+}
+
+columnate(win: ref Win, dlp : array of ref Dirlist, ndl : int)
+{
+	i, j, w, colw, mint, maxt, ncol, nrow: int;
+	dl : ref Dirlist;
+
+	getwidth(win);
+	(maxt, mint) = (tabwid, mintab);
+	# mint = charwidth(t.frame.font, '0');
+	# go for narrower tabs if set more than 3 wide
+	# t.frame.maxtab = min(dat->maxtab, TABDIR)*mint;
+	# maxt = t.frame.maxtab;
+	# maxt = min(tabwid, 3)*mint;
+	colw = 0;
+	for(i=0; i<ndl; i++){
+		dl = dlp[i];
+		w = dl.wid;
+		if(maxt-w%maxt<mint || w%maxt==0)
+			w += mint;
+		if(w % maxt)
+			w += maxt-(w%maxt);
+		if(w > colw)
+			colw = w;
+	}
+	if(colw == 0)
+		ncol = 1;
+	else
+		ncol = max(1, width/colw);
+	nrow = (ndl+ncol-1)/ncol;
+
+	for(i=0; i<nrow; i++){
+		for(j=i; j<ndl; j+=nrow){
+			dl = dlp[j];
+			win.wwritebody(dl.r);
+			if(j+nrow >= ndl)
+				break;
+			w = dl.wid;
+			if(maxt-w%maxt < mint){
+				win.wwritebody("\t");
+				w += mint;
+			}
+			do{
+				win.wwritebody("\t");
+				w += maxt-(w%maxt);
+			}while(w < colw);
+		}
+		win.wwritebody("\n");
+	}
 }
 
 skip(s, cmd: string): string
