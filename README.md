@@ -30,10 +30,10 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 100 limbo tags
 * lab 99 catching up with inferno-os
 * lab 98 acme Ctag
-* lab 97 acme Navigator
+* [lab 97 acme Navigator](97)
 * lab 96 acme color schemes
-* lab 95 acme side-by-side diff
-* lab 94 acme content assist
+* [lab 95 acme side-by-side diff](95)
+* [lab 94 acme content assist](94)
 * lab 92 vxinferno
 * lab 91 using freetype
 * lab 89 Electroquongton
@@ -72,7 +72,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 61 javascript tool
 * lab 60 sequencer using channels
 * lab 59 acme stand alone complex
-* lab 58 dried dung
+* [lab 58 fallible software](58)
 * lab 57 createuser
 * lab 56 acme web
 * [lab 55 cut paste](55)
