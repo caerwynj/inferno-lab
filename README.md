@@ -75,10 +75,10 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 58 dried dung
 * lab 57 createuser
 * lab 56 acme web
-* lab 55 cut paste
+* [lab 55 cut paste](55)
 * lab 54 mux for 4th edition
 * lab 53 granulator
-* lab 52 text files
+* [lab 52 text files](52)
 * lab 51 plumbing from firefox
 * lab 50 structural expressions
 * lab 49 wrappers
