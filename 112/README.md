@@ -23,8 +23,13 @@ I added a new script /lib/sh/plumb to will be launched by the cell command to se
 	plumb  $*
 	echo halt > /dev/sysctl
 
-The final step is to create a shortcut to the Acme.exe command with the necessary arguments and place the shortcut in the "Send To" folder.  ![shortcut](editinacme-shortcut.png) 
+The final step is to create a shortcut to the Acme.exe command with the necessary arguments and place the shortcut in the "Send To" folder.  
+
+![shortcut](editinacme-shortcut.png) 
+
 Open the Windows explorer and in the address bar type `shell:sendto`. Create a shortcut with the name 'editinacme'. The shortcut will have the target `Acme.exe /lib/sh/plumb` and have it start in the root of your acme-sac folder.  Also set the property to have it run minimized.
 
-You should now be able to select a file in Windows Explorer and open the menu Send To and select editinacme. ![editinacme](editinacme.png)
+You should now be able to select a file in Windows Explorer and open the menu Send To and select editinacme. 
+
+![editinacme](editinacme.png)
 

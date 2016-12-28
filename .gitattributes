@@ -17,3 +17,5 @@
 *.RTF	 diff=astextplain
 
 *.png -text
+*.bit -text
+*.dis -text
