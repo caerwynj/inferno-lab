@@ -1,5 +1,7 @@
+# NAME
 lab 88 - degrees of freedom
 
+# NOTES
 The Vitanuova downloads page has historical snapshots of Inferno source from 1996 to 2003 containing all three editions before Inferno went open source. I was curious to see how well Inferno has sustained a standard set of interfaces over the last ten years so I downloaded all of them and poked around.
 
 The biggest overall change came with 4th edition, when many parts of the system were upgraded, including the Styx protocol, several builtin modules, dis format, the limbo language and VM. Also, significantly, Inferno adopted open source licenses granting developers the freedom to modify any part of the system: something that might impact sustainability for good or ill.

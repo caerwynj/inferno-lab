@@ -41,7 +41,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * [lab 88 degrees of freedom](88)
 * lab 87 mux for nintendo ds
 * lab 86 srv
-* lab 85 stowage
+* [lab 85 stowage](85)
 * lab 84 gridfs pattern (mapreduce)
 * [lab 83 lcmd local cpu](83)
 * lab 82, again txt2iaf
