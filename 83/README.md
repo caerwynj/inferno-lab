@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 83 - lcmd local cpu
 
-#NOTES
+# NOTES
 While thinking of the Simple Grid Tutorial Part 1 and Part 2, I wondered whether I could implement the equivalent of rcmd(1) but for a local emu launched using os(1). For example,
 
 	 lcmd math/linbench 100

@@ -38,7 +38,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 91 using freetype
 * lab 89 Electroquongton
 * lab 90 Multicast DNS and Zeroconf
-* lab 88 degrees of freedom
+* [lab 88 degrees of freedom](88)
 * lab 87 mux for nintendo ds
 * lab 86 srv
 * lab 85 stowage
@@ -47,6 +47,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 82, again txt2iaf
 * lab 82 iaf2txt and iaf2wav
 * trainspotting
+* lab 81 Nintendo DS
 * lab 80 drawterm plugin
 * lab 79 acme javascript
 * [lab 78 dynamic dispatch](78)
@@ -97,7 +98,6 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 36 Geryon's registry
 * lab 35 Geryon, another Inferno grid
 * lab 34 lexis semantic binary model
-* lab.tar.gz
 * lab 33 profile lockfs
 * lab 32 lockfs
 * lab 31 accumulator generator in limbo

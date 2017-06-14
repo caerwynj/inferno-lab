@@ -1,7 +1,7 @@
-#NAME
+#  NAME
 lab 112 - editinacme
 
-#NOTES
+#  NOTES
 Create a command to add to the Windows "Send To" menu so I can send files to Acme SAC plumber from inside Windows Explorer. This has been done before using the B command for sam editor and `editinacme` for Acme from Plan 9 from User Space.
 
 I'll be using a a shortcut to Acme.exe in the "Send To" folder. It needs to avoid the usual Acme start up and instead mount Acme's styx service, bind the plumber to /chan and send the arguments from the command line to the plumber.

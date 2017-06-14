@@ -1,7 +1,7 @@
-# NAME
+#  NAME
 lab 102 - python acme client
 
-# NOTES
+#  NOTES
 A recent post to 9phackers announced Pyxp, another implementation of Styx in Python.
 
 I immediately downloaded Pyxp and tried it out. I had no trouble using it so I started thinking about python clients I could write. Python is still new to me so writing a styx client was an excuse to get more practice.
@@ -77,6 +77,6 @@ To run this we need to know the id of the window we are assisting, so we need a 
 
 Now that I have a simple assist-like client working I'd like to develop it further. I'd like to try having content assist for python inside acme. It should be possible to adapt the python code that implements the IDLE editor to this purpose.
 
-#FILES
+# FILES
 inferno-lab/102 
 big.txt the large text file used to train the spelling corrector. Note that the path is hardcoded in spell.py and should be changed locally.

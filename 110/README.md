@@ -26,15 +26,15 @@ Another important aspect of this is to have a collection of emulators that run o
 
 Here's where we are with support inside Inferno:
 
-File type	Inferno support
-JPG, PNG	Supported by wm/view
-WAV	Supported by wavplay
-MIDI	Limited support by midiplay
-ePub	Support for older OEB versions in ebook/ebook. I've started updating to support ePub standard.
-Plain text	Supported
-HTML4.0	Limited support in Charon
-PDF	Unsupported, but MJL's PDF library are the beginnings of limited support
-AVI-DV	No support
-MPEG-2	Some support for an MPEG device. Could try to use Raspberry-Pi device support for MPEG-2
-tar, gzip	Supported
-bzip2	Unsupported
+	File type	Inferno support
+	JPG, PNG	Supported by wm/view
+	WAV	Supported by wavplay
+	MIDI	Limited support by midiplay
+	ePub	Support for older OEB versions in ebook/ebook. I've started updating to support ePub standard.
+	Plain text	Supported
+	HTML4.0	Limited support in Charon
+	PDF	Unsupported, but MJL's PDF library are the beginnings of limited support
+	AVI-DV	No support
+	MPEG-2	Some support for an MPEG device. Could try to use Raspberry-Pi device support for MPEG-2
+	tar, gzip	Supported
+	bzip2	Unsupported

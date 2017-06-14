@@ -1,6 +1,6 @@
-#NAME
+# NAME
 lab 111 - wavloop
-#NOTES
+# NOTES
 [WAV file format](http://www.sonicspot.com/guide/wavefiles.html) contains audio sample data and optionally meta-data that describe the offsets of sample loops and cue points. The loop offsets are used by sampler software to generate a continuous sound, and the cue points mark the point in the sample data where the sound fades away after the note has been released.
 
 A WAV file "smpl" chunk will identify the  sample offset of the start and end of the loop in the sound data. Using wavplay.b as a starting point I tried to loop a sampled sound. 

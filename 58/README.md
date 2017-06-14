@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 58 - Fallible software
 
-#NOTES
+# NOTES
 "Even as the clock ticks, better and better computer support for the creative spirit is evolving." - Dan Ingalls.
 
 How does computer support evolve and interact with the creative spirit?

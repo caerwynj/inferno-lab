@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 97 - acme Navigator
 
-#NOTES
+# NOTES
 I created a simple directory browser for acme. Called Navigator, it opens directories in the same window. This makes descending deep but unfamiliar directory hierarchies easier because it avoids the proliferation of windows that clutter the desktop.
 
 ![109418171639-Acme-SAC](109418171639-acme-sac_3543167689_o.png)

@@ -1,7 +1,7 @@
-#NAME
+#   NAME
 lab 101 - limbo B+ tree
 
-#NOTES
+#   NOTES
 This lab is an implementation of a B+ tree. It is code from a much older lab that was overly complicated and buggy. I pulled the B+ tree code out, tried to fix the bugs and clean it up. The interface is roughly the same as dbm(2). Here is a synopsis.
 
 	include "btree.m";

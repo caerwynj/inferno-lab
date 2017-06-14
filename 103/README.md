@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 103 - python content assist
 
-#NOTES
+# NOTES
 Building on lab 102 I've started to write an acme client for python content-assist in python. I read the code for python's IDLE editor and pulled some pieces out of that to help with my implementation. The AutoComplete.py and CallTip.py modules are copied out of idlelib and reduced to just the functions I needed.
 
 Just as in lab 102 the acme client is implemented using pyxp to connect to the acme file system.

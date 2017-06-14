@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 78 - dynamic dispatch
 
-#NOTES
+# NOTES
 While experimenting with creating my own alphabet-like interfaces I found this technique, which I think is fascinating, and I hope to use it soon in further experiments with persistent mounts, something I'll blog about in the future.
 
 Here's a definition of a pick ADT that has some primitive types (I've left out the complete set to keep it short), and some helper functions to get the value from the pick.

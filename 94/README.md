@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 94 - acme content assist
 
-#NOTES
+# NOTES
 This lab explores a way of implementing content assist for acme. I've focused on the user interface and how that might work inside acme and not specific language support.
 
 The command is called Assist. Launch it within an editor window and it will provide assistance for that window only. A new window will open and while you type in the edit window Assist will attempt to match the currently typed word against the content of /lib/words using the command look(1). The results are displayed in the +Assist window.

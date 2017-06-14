@@ -1,6 +1,6 @@
-#NAME
+# NAME
 lab 107 - midiplay
-#NOTES
+# NOTES
 Midiplay plays back MIDI files. It uses the synthesizer I described in lab 62 and the MIDI module from lab 73. The command takes only one argument, the path to the midi file. I've included one in the lab to demonstrate. Bind the audio device before using it.
 
 	% bind -a '#A' /dev

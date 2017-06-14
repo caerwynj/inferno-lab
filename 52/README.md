@@ -1,7 +1,7 @@
-#NAME
+# NAME
 lab 52 - text files
 
-#NOTES
+# NOTES
 Some limbo programs can be replaced with shell one liners, and others can be replaced with more general programs that reduce the limbo line count but increase functionality. I'll look at the few I've discovered.
 
 The /prog filesystem exposes a textual interface that allows existing software tools to work with it. This implies I do not need a custom set of limbo tools to read and write to this filesystem. For example, ps is a 61 line limbo program, but I can do the same thing in one line of shell,
