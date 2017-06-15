@@ -1,8 +1,8 @@
-NAME
+# NAME
 
 lab 84 - gridfs pattern (mapreduce) 
 
-NOTES
+# NOTES
 
 I've mentioned mapreduce in previous posts.  It makes a good example
 application for thinking about grid computing.  This lab is also about
@@ -30,7 +30,10 @@ The mapreduce source files I've included in this lab are a concrete
 (rough and experimental) example of this pattern taken to the next
 level.  The namespace it exports is the following,
 
-  mapreduce/clone mapreduce/n mapreduce/n/ctl mapreduce/n/status
+	  mapreduce/clone 
+	  mapreduce/n 
+	  mapreduce/n/ctl 
+	  mapreduce/n/status
 
 Each worker opens the clone file and gets a unique connection to the
 master process, represented by a numbered directory.  The open clone
@@ -50,9 +53,9 @@ from the mapreduce namespace.
 To try out some examples using mapreduce I need to provide a mapper
 and reducer function.  I wrote a module interface for a mapper,
 
-Mapper : module {
-    map: fn(key, value: string, emit: chan of (string, string));
-};
+	Mapper : module {
+	    map: fn(key, value: string, emit: chan of (string, string));
+	};
 
 This takes a key and value and maps it to an intermediate key and
 value which it emits on a channel; it may emit many intermediate key
@@ -61,36 +64,36 @@ implementation for a mapper that takes a string input, tokenizes it,
 and outputs the token and '1', which will be added later for a
 wordcount.
 
-# the map function may not get the whole file in one go.  maybe 
-# just a segment, or a line.  
-map(nil, value: string, emit: chan of (string,
-string)) {
- if(sys == nil)
-  sys = load Sys Sys->PATH;
- if(str == nil)
-  str = load String String->PATH;
- (nil, f) := sys->tokenize(value,
-	       "[]{}()!@#$%^&*?><\":;.,|\\-_~`'+=/ \t\n\r");
- for ( ; f != nil; f = tl f) {
-  ss := str->tolower(hd f); emit <-= (ss, "1");
- }
-}
+	# the map function may not get the whole file in one go.  maybe 
+	# just a segment, or a line.  
+	map(nil, value: string, emit: chan of (string,
+	string)) {
+	 if(sys == nil)
+	  sys = load Sys Sys->PATH;
+	 if(str == nil)
+	  str = load String String->PATH;
+	 (nil, f) := sys->tokenize(value,
+		       "[]{}()!@#$%^&*?><\":;.,|\\-_~`'+=/ \t\n\r");
+	 for ( ; f != nil; f = tl f) {
+	  ss := str->tolower(hd f); emit <-= (ss, "1");
+	 }
+	}
 
 There is also an interface for a reducer,
 
-Reducer : module {
-    reduce: fn(key: string, input: chan of string, emit: chan of
-    string);
-};
+	Reducer : module {
+	    reduce: fn(key: string, input: chan of string, emit: chan of
+	    string);
+	};
 
 This takes all the intermediate values for a key and emits a value.
 Here's the adder, used by the wordcount.
 
-reduce(nil: string, v: chan of string, emit: chan of string) {
- value := 0; while((s :=<- v) != nil)
-  value += int s;
- emit <-= string value;
-}
+	reduce(nil: string, v: chan of string, emit: chan of string) {
+	 value := 0; while((s :=<- v) != nil)
+	  value += int s;
+	 emit <-= string value;
+	}
 
 The mapper and reducer interfaces are known by a worker process that
 loads them on demand.  An intermediate process that combines values of
@@ -101,9 +104,9 @@ hierarchies and print the file names to all the worker processes.
 Here's an example of a mapreduce command line that counts words in all
 files below /lib/legal.
 
-  % mkdir /mnt/mapreduce 
-  % mapreduce -M4 -R3 wordcount adder  /lib/legal 
-  % ls /mnt/mapreduce /mnt/mapreduce/clone
+	  % mkdir /mnt/mapreduce 
+	  % mapreduce -M4 -R3 wordcount adder  /lib/legal 
+	  % ls /mnt/mapreduce /mnt/mapreduce/clone
 
 Mapreduce should launch and manage all its own processes.  However,
 for the code checked into this lab, to illustrate what is going on, I
@@ -115,8 +118,8 @@ remains.  Therefore, after running the above command and doing a
 cat(1) on /mnt/mapreduce/clone we should see the config line then the
 pathnames for the first worker.
 
-  % cat /mnt/mapreduce/clone worker -m -R 3 -d wordcount -i 1
-  /lib/legal/GPL 0 17982 ...
+	  % cat /mnt/mapreduce/clone worker -m -R 3 -d wordcount -i 1
+	  /lib/legal/GPL 0 17982 ...
 
 The pathnames are divided up among the workers as fast as they process
 them.  So in this sense mapreduce functions almost the same as the
@@ -128,7 +131,7 @@ three more times to see the input to the next 3 workers.  After that
 the next cat you should see the config and input to the reducer.  For
 example from a remote node,
 
-  % rcmd ${nextcpu} cat /n/client/mnt/mapreduce/clone
+	  % rcmd ${nextcpu} cat /n/client/mnt/mapreduce/clone
 
 Doing a listing on the /mnt/mapreduce path should show you the current
 workers connected (if any).  After all reducers have connected, the
@@ -136,9 +139,9 @@ mapreduce filesystem will report it's done and exit.
 
 Lets run it again for real using the mapreduce worker processes.
 
-  % mapreduce -m /mnt/mapreduce -M4 -R3 wordcount adder /lib 
-  % for i in 1 2 3 4 {mapreduce/worker /mnt/mapreduce/clone&} 
-  % for i in 1 2 3 {mapreduce/worker /mnt/mapreduce/clone&}
+	  % mapreduce -m /mnt/mapreduce -M4 -R3 wordcount adder /lib 
+	  % for i in 1 2 3 4 {mapreduce/worker /mnt/mapreduce/clone&} 
+	  % for i in 1 2 3 {mapreduce/worker /mnt/mapreduce/clone&}
 
 You should see the result files in /tmp/out.*
 
@@ -151,7 +154,7 @@ how messages are passed round robin to all the workers.  It would
 permit different configurations of how many to push to each node, how
 many to join from each node, how many commands to duplicate.  E.g.,
 
-  filter | splitjoin -d10 -m5 -n3 {cmd} | filter
+	  filter | splitjoin -d10 -m5 -n3 {cmd} | filter
 
 creates 10 duplicates of the cmd, take input from a pipeline and
 distributes m=5 records at a time round robin to each node and join

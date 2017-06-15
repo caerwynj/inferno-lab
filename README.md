@@ -29,7 +29,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * [lab 101 limbo B+ tree](101)
 * lab 100 limbo tags
 * lab 99 catching up with inferno-os
-* lab 98 acme Ctag
+* [lab 98 acme Ctag](98)
 * [lab 97 acme Navigator](97)
 * lab 96 acme color schemes
 * [lab 95 acme side-by-side diff](95)
@@ -42,7 +42,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 87 mux for nintendo ds
 * lab 86 srv
 * [lab 85 stowage](85)
-* lab 84 gridfs pattern (mapreduce)
+* [lab 84 gridfs pattern (mapreduce)](84)
 * [lab 83 lcmd local cpu](83)
 * lab 82, again txt2iaf
 * lab 82 iaf2txt and iaf2wav
