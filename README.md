@@ -2,7 +2,7 @@ Lightning flashes, Sparks shower. In one blink of your eyes You have missed seei
 
 Inferno Programmer's Notebook
 
-This is the source code from the [Inferno Programmer's Notebook](http://ipn.caerwyn/com)
+This is the source code from the [Inferno Programmer's Notebook](http://ipn.caerwyn.com)
 
 Each entry, when it describes a programming session in Inferno OS, should include at least the following.
 
@@ -90,7 +90,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 44 acme irc client
 * lab 43 acme Wiki
 * lab 42 channels in shell
-* lab 41 venti lite
+* [lab 41 venti lite](41)
 * lab 40 distributing data
 * lab 39 tar and gzip
 * lab 38 Geryon's data sets
