@@ -49,7 +49,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * trainspotting
 * lab 81 Nintendo DS
 * lab 80 drawterm plugin
-* lab 79 acme javascript
+* [lab 79 acme javascript](79)
 * [lab 78 dynamic dispatch](78)
 * lab 77 the unexpected markov
 * lab 76 using svn with code.google.com
@@ -70,7 +70,7 @@ I wanted the labs to cover a wide range of subjects, to cross over disciplinary 
 * lab 63 calendar
 * general update
 * lab 62 software synth csp style
-* lab 61 javascript tool
+* [lab 61 javascript tool](61)
 * lab 60 sequencer using channels
 * lab 59 acme stand alone complex
 * [lab 58 fallible software](58)
