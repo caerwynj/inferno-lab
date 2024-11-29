@@ -1,0 +1,82 @@
+<H1>NAME</H1>
+lab65 - Man pages in Acme
+
+<h1>NOTES</h1>
+This lab's purpose is to have man-pages opened in acme automatically.
+Easiest way to do this is to allow plumb to get it's data piped
+from another program. 
+So we can do:
+<pre>
+	man2txt /man/sec/file | plumb -i -d edit -a action showdata -a filename '/man/file(sec)';
+</pre>
+given that we want to plumb it to acme we have to set the destination port -d edit,
+and instruct acme to show the data with the tag set to the value of the filename argument.
+
+<p>
+So now we can add to our plumbing rules something like:
+<pre>
+	# man pages
+	kind is text
+	data matches '([a-zA-Z0-9\-]+)\(([0-9]+)\)'
+	plumb alwaysstart man # nasty plumbing hack
+	plumb start /dis/sh.dis -c '/usr/salva/dis/man -b $2 $1'
+</pre>
+
+where /usr/salva/dis/man is an adaptation of /rc/bin/man from Plan9,
+and in particular when invoked with the -b option does:
+<pre>
+	man2txt $file |
+	plumb -i -d edit -a action showdata -a filename '/man/'^${index 2 $*}^'('^${index 1 $*}^')'
+</pre>
+
+<p>
+But if we now start to try running it as a substitue to te default rule for opening man pages,
+sooner or later we will find it crashes with the following error, 
+<pre>
+	'Acme: can't read /chan/plumb.edit: buffer too short',
+</pre>
+that advice is generated from <b>/appl/acme/acme.b:/plumbproc()</b>.
+If we dig in the Msg.recv() code we will find that the data received from a channel
+is limited by maxdata, which is set when initializing the module plumbmsg.m,
+and gets it's value Dat->PLUMBSIZE in <b>/appl/acme/acme.b:/init(.*)</b>,
+which is by default 1024, thus sending a file bigger that 1024 bytes will crash the
+plumbproc process.
+To sort out this we can determine the biggest data that we will send to the plumber,
+in particular issuing a:
+<pre>
+	du /man/*/* | sort -n | uniq | tail -n 1
+</pre>
+will return us the size of the biggest man page that we can reach, it turns out to be 58Kb, so
+we set PLUMBSIZE: con 65536, with the following ed script:
+<pre>
+	% ed /appl/acme/dat.m
+	5192
+	/PLUMBSIZE : con 1024/ s/1024/65536
+		PLUMBSIZE : con 65536;
+	w
+	5193
+	q
+</pre>
+
+<p>
+Now we <b>cd /appl/acme</b> and issue a 
+<pre>
+	% mk && mk install
+</pre>
+and we're done.
+
+<p>
+And last, we can addapt 
+<a href="http://plan9.cs.bell-labs.com/sources/plan9/rc/bin/wurl2txt">wurl2txt</a> and
+<a href="http://plan9.cs.bell-labs.com/sources/plan9/rc/bin/wdoc2txt">wdoc2txt</a> and
+add a pair of rules to our <b>$home/lib/plumbing</b> to have url's and .docs opened
+inside acme. 
+You can make and script to emulate hget using
+<pre>
+	webgrab -r -o - ur
+</pre>
+
+<h1>FILES</h1>
+plumb.b man lookman sig hget plumbing
+
+--gualteri

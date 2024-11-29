@@ -1,0 +1,15 @@
+#!/dis/sh.dis
+
+if{~ $#* 0}{
+	exit
+}{~ $#* 1}{
+	url=$"*
+	name=/`{echo $url | sed 's|.*//||; s|$|.|'}^webpage
+	hget $url >[2=1] | {echo $1; echo; os htmlfmt} >[2=1] |
+		plumb -i -d edit -a action showdata -a filename $name
+	exit
+}{~ $#* '*'}{
+	for i in $* {
+		wurl2txt $i
+	}
+}

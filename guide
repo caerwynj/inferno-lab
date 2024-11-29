@@ -1,0 +1,2 @@
+grep '^lab' */{READ*,text*,index*} |sort -n > index
+awk '{sub("\./", "", $2); print $2 | "sort -n "}' ALL > t1

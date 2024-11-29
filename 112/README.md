@@ -8,20 +8,20 @@ I'll be using a a shortcut to Acme.exe in the "Send To" folder. It needs to avoi
 
 By convention inside Acme-SAC windows paths "C:\file name" are mapped to "/n/C/file␣name".  This is represented in the plumbing rule:
 
-	# Microsoft Windows file names
-	kind is text
-	data matches '(^[a-zA-Z]):(.*)'
-	plumb alwaysstart acme
-	plumb start /dis/sh.dis -c 'plumb -d edit /n/^$1^`{echo $2 | tr ''\\ '' /␣}'
+    # Microsoft Windows file names
+    kind is text
+    data matches '(^[a-zA-Z]):(.*)'
+    plumb alwaysstart acme
+    plumb start /dis/sh.dis -c 'plumb -d edit /n/^$1^`{echo $2 | tr ''\\ '' /␣}'
 
 I added a new script /lib/sh/plumb to will be launched by the cell command to send the data to the Acme plumber
 
-	#!/dis/sh
-	ndb/cs
-	mount -A 'tcp!localhost!styx' /n/remote
-	bind /n/remote/chan /chan
-	plumb  $*
-	echo halt > /dev/sysctl
+    #!/dis/sh
+    ndb/cs
+    mount -A 'tcp!localhost!styx' /n/remote
+    bind /n/remote/chan /chan
+    plumb  $*
+    echo halt > /dev/sysctl
 
 The final step is to create a shortcut to the Acme.exe command with the necessary arguments and place the shortcut in the "Send To" folder.  
 

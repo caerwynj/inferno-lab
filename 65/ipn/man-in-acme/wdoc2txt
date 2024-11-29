@@ -1,0 +1,11 @@
+#!/dis/sh.dis
+
+if{~ $#* 0}{
+	exit
+}{~ $#* 1}{
+	doc2txt $1 | plumb -i -d edit -a action showdata -a filename $1
+}{~ $#* '*'}{
+	for i in $* {
+		wdoc2txt $i
+	}
+}

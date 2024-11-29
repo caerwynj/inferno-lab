@@ -1,0 +1,13 @@
+#!/dis/sh.dis
+index=/man/index
+x=$*
+*=`{echo $x|tr A-Z a-z|tr -dc 'a-z0-9_ \012'}	# fold case, delete funny chars
+if {no $*}{
+	echo Usage: lookman key ...
+	exit 1
+}
+
+for i in $* {
+	look $1 $index|sed 's/.*	//'| sort | uniq |sed 's;/man/;;
+		 s;(.*)/(.*);man \1 \2 \# \2(\1);'
+}

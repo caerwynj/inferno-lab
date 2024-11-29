@@ -1,0 +1,66 @@
+1/text:lab 1 - implement ideas from postdate in inferno sh.
+2/text:lab 2 - use file2chan to create a cryptfile that
+3/text:lab 3 - create a filesystem, wavefs, that
+4/text:lab 4 - signalfs; generalize wavefs to a family of file servers
+5/text:lab 5 - signalfs version 2; generalize and enhance the signalfs still further. 
+6/text:lab 6 - signal modules; implement filter (again) 
+7/text:lab 7 - sequencer; create a simple sequencer that can play
+8/text:lab 8 - small update to treemap.
+9/text:lab 9 - create tmap image directly instead of using Tk
+10/text:lab 10 - delay line
+12/text:lab 12 - implement an oscilloscope for signals from
+13/text:lab 13 - flute
+14/text:lab 14 - map reduce functional grid programming
+15/text:lab 15 - cluster 
+16/text:lab 16 - set up a styx service for active essays
+17/text:lab 17 - fixup inferno samterm
+18/text:lab 18 - mux
+19/text:lab 19 - understanding wmclient
+20/text:lab 20 - libmux in limbo
+21/text:lab 21 - popi
+22/text:lab 22 - new aggregator
+23/text:lab 23 - annotating a file system
+24/text:lab 24 - call google api from inferno
+25/text:lab 25 - Accumulator Generator
+26/text:lab 26 - Greenspun's rule
+27/text:lab 27 - sh sexpr
+28/text:lab 28 - side effects
+29/text:lab 29 - embedded graphs
+30/text:lab xx - wikifs for inferno
+31/text:lab 31 - accumulator generator in limbo--and beyond
+41/README.md:lab 41 - venti lite
+44/post:lab 44 - acme irc client
+49/post:lab 49 - wrappers
+50/post:lab 50 - structural expressions
+52/README.md:lab 52 - text files
+53/post:lab 53 - granulator
+54/post:lab 54 - mux for gba
+55/README.md:lab 55 - cut & paste
+56/post:lab 56 - acme web client
+58/README.md:lab 58 - Fallible software
+59/post:lab 59 - acme stand alone complex
+60/post:lab 60 - sequencer using channels
+62/post:lab 62 - software synth CSP style
+63/post:lab 63 - Calendar for acme
+64/post:lab 64 - Chat
+66/post:lab, but we can also get it from hget.c and incorporate
+78/README.md:lab 78 - dynamic dispatch
+83/README.md:lab 83 - lcmd local cpu
+84/README.md:lab 84 - gridfs pattern (mapreduce) 
+85/post:lab  85 - stowage
+85/README.md:lab 85 - stowage
+86/post:lab 86 - srv
+87/post:lab 87 - mux for nintendo ds
+88/README.md:lab 88 - degrees of freedom
+92/post:lab 92 - vxinferno
+94/README.md:lab 94 - acme content assist
+95/README.md:lab 95 - acme side-by-side diff
+97/README.md:lab 97 - acme Navigator
+98/README.md:lab 98 - acme Ctag
+101/README.md:lab 101 - limbo B+ tree
+102/README.md:lab 102 - python acme client
+103/README.md:lab 103 - python content assist
+107/README.md:lab 107 - midiplay
+110/README.md:lab 110 - inferno archive edition
+111/README.md:lab 111 - wavloop
+112/README.md:lab 112 - editinacme
