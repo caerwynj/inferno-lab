@@ -1,0 +1,6 @@
+y.tab.b : sparql.y {yacc sparql.y};
+y.tab.dis : y.tab.b {limbo -gw y.tab.b};
+fn m {make y.tab.dis};
+fn lc {ls -F $args|mc};
+fn t {y.tab samp1 < sample.sparql }
+

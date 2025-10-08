@@ -1,0 +1,10 @@
+PREFIX ex: <http://example.org/book/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+
+SELECT ?title ?name
+WHERE
+{
+	?book dc:title  ?title .
+	?book dc:url ?url .
+	?url dc:title ?name
+}

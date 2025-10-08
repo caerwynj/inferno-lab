@@ -1,0 +1,5 @@
+<http://example.org/book/book1> <http://purl.org/dc/elements/1.1/title> "SPARQL Tutorial" .
+<http://example.org/book/book2> <http://purl.org/dc/elements/1.1/title> "Data Architecture" .
+<http://example.org/book/book3> <http://purl.org/dc/elements/1.1/title> "Semantic Web" .
+<http://example.org/book/book1> <http://purl.org/dc/elements/1.1/url> <http://caerwyn.com>
+<http://caerwyn.com> <http://purl.org/dc/elements/1.1/title> "Caerwyn Computer"

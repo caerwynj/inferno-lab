@@ -1,0 +1,36 @@
+@prefix ex: <http://example.com/> .
+@prefix : <http://empty.com/> .
+@base <http://base.com/> .
+@prefix adms: <http://adms.org/> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+:p :q _:e0 .
+:p :r _:e1 .
+_:e0 :s :u .
+_:e1 :t :u .
+
+:p :f _:e3 ; :g _:e4 .
+
+:p :f [ :g :u ; :h :x ] .
+
+:p :j "1", "2", 3,
+	true, 
+	false .
+<https://example.com/index.html> a dcat:Dataset .
+
+:p ex:z """a long
+quoted string """
+.
+
+<#base> :pref ex:u .
+# some comments
+
+:x :u ( :p1 :p2 :p3) .
+
+[] :u :x .
+
+[  a :AllDisjointClasses ;
+   :members ( <http://purl.obolibrary.org/obo/BFO_0000004>
+                <http://purl.obolibrary.org/obo/BFO_0000020>
+                <http://purl.obolibrary.org/obo/BFO_0000031>
+              )
+] .

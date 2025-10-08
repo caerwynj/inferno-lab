@@ -1,0 +1,10 @@
+PREFIX dc1: <http://purl.org/dc/terms/>
+PREFIX dcat: <http://www.w3.org/ns/dcat#>
+
+SELECT ?uri ?name ?theme
+WHERE
+{
+	?uri a dcat:Dataset ;
+		dcat:name ?name ;
+		dcat:theme ?theme
+}
